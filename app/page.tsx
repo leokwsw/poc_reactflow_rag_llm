@@ -1,9 +1,10 @@
  "use client";
 
  import {useCallback, useState} from "react";
- import type {Node} from "reactflow";
- import Workflow from "@/app/components/workflow";
- import {defaultData} from "@/app/components/workflow/default-data";
+import type {Node} from "reactflow";
+import Workflow from "@/app/components/workflow";
+import {defaultData} from "@/app/components/workflow/default-data";
+import type {WorkflowDataType} from "@/app/components/workflow/types";
 
  export default function Home() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -32,7 +33,11 @@
     [selectedNode],
   );
 
-   const [data, setData] = useState(defaultData)
+  const [data, setData] = useState(defaultData);
+
+  const handleWorkflowDataChange = useCallback((next: WorkflowDataType) => {
+    setData(next);
+  }, []);
 
   return (
     <div className="flex h-screen w-full">
@@ -41,6 +46,7 @@
           initData={data}
           onNodeSelect={setSelectedNode}
           nodeDataPatch={nodeDataPatch}
+          onDataChange={handleWorkflowDataChange}
         />
       </div>
       <aside className="w-80 border-l border-zinc-200 bg-white p-4">

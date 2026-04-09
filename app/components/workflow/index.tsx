@@ -38,6 +38,7 @@ type WorkflowProps = {
     data: Record<string, any>;
     nonce: number;
   } | null;
+  onDataChange?: (data: WorkflowDataType) => void;
 };
 type LayoutNodeInfo = {
   x: number;
@@ -92,7 +93,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   return result;
 }
 
-function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch}: WorkflowProps) {
+function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: WorkflowProps) {
   const [nodes, setNodes] = useNodesState(initData.nodes);
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
@@ -289,6 +290,16 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch}: WorkflowProps) 
     );
   }, [nodeDataPatch, setNodes]);
 
+  useEffect(() => {
+    if (!onDataChange) return;
+    onDataChange({
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
+      readOnly: initData.readOnly,
+      viewport: initData.viewport,
+    });
+  }, [nodes, edges, onDataChange, initData.readOnly, initData.viewport]);
+
   const onConnect = useCallback(
     (connection: Connection) => {
       pushUndoSnapshot();
@@ -452,6 +463,7 @@ export default function Workflow(
     initData,
     onNodeSelect,
     nodeDataPatch,
+    onDataChange,
   }: WorkflowProps) {
   return (
     <ReactFlowProvider>
@@ -459,6 +471,7 @@ export default function Workflow(
         initData={initData}
         onNodeSelect={onNodeSelect}
         nodeDataPatch={nodeDataPatch}
+        onDataChange={onDataChange}
       />
     </ReactFlowProvider>
   );
