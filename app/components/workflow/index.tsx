@@ -223,7 +223,21 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
                     ? { label: "Answer", answer: "{{2.text}}" }
                     : type === "note"
                       ? { text: "New note", author: "You", theme: "yellow" }
-                      : { label: "Simple Node", description: "Simple node content" },
+                      : type === "simple"
+                        ? { label: "Simple Node", description: "Simple node content" }
+                        : type === "knowledgeBase"
+                          ? {
+                              label: "Knowledge Base",
+                              indexingTechnique: "high_quality",
+                              retrievalSearchMethod: "semantic_search",
+                            }
+                          : {
+                              label: "Knowledge Retrieval",
+                              datasets: [
+                                { id: "kb-1", name: "Product Docs" },
+                                { id: "kb-2", name: "Support FAQ" },
+                              ],
+                            },
       };
 
       setNodes((prev) => {

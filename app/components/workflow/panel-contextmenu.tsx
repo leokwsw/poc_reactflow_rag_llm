@@ -70,6 +70,18 @@ export default function PanelContextMenu({
       >
         Add Simple Node
       </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("knowledgeBase")}
+      >
+        Add Knowledge Base Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("knowledgeRetrieval")}
+      >
+        Add Knowledge Retrieval Node
+      </button>
     </div>
   );
 }
