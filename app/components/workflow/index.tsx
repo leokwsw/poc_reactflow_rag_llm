@@ -290,15 +290,22 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     );
   }, [nodeDataPatch, setNodes]);
 
-  useEffect(() => {
+  const notifyDataChange = useCallback(() => {
     if (!onDataChange) return;
+    const viewport = reactflow.viewportInitialized
+      ? reactflow.getViewport()
+      : initData.viewport;
     onDataChange({
       nodes: structuredClone(nodes),
       edges: structuredClone(edges),
       readOnly: initData.readOnly,
-      viewport: initData.viewport,
+      viewport: {...viewport},
     });
-  }, [nodes, edges, onDataChange, initData.readOnly, initData.viewport]);
+  }, [edges, initData.readOnly, initData.viewport, nodes, onDataChange, reactflow]);
+
+  useEffect(() => {
+    notifyDataChange();
+  }, [nodes, edges, notifyDataChange]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -422,6 +429,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
           onNodeSelect?.(null);
         }}
         onPaneContextMenu={handlePaneContextMenu}
+        onMoveEnd={notifyDataChange}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag={controlMode === "pointer" && !initData.readOnly}
         panOnDrag={controlMode === "hand"}
