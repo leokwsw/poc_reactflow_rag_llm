@@ -1,6 +1,6 @@
 "use client";
 
-import type { WorkflowNodeType } from "@/app/components/workflow/nodes/types";
+import {CustomNodeType, WorkflowNodeType} from "@/app/components/workflow/nodes/types";
 
 type PanelContextMenuProps = {
   x: number;
@@ -8,7 +8,7 @@ type PanelContextMenuProps = {
   hasStartNode: boolean;
   hasEndNode: boolean;
   hasAnswerNode: boolean;
-  onAddNode: (type: WorkflowNodeType) => void;
+  onAddNode: (type: WorkflowNodeType, customeNodeType: CustomNodeType) => void;
 };
 
 export default function PanelContextMenu({
@@ -27,60 +27,66 @@ export default function PanelContextMenu({
     >
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => onAddNode("start")}
+        onClick={() => onAddNode("start", "start")}
         disabled={hasStartNode}
       >
         Add Start Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("llm")}
+        onClick={() => onAddNode("llm", "llm")}
       >
         Add LLM Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => onAddNode("end")}
+        onClick={() => onAddNode("end", "end")}
         disabled={hasEndNode}
       >
         Add End Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("ifElse")}
+        onClick={() => onAddNode("ifElse", "ifElse")}
       >
         Add If-Else Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => onAddNode("answer")}
+        onClick={() => onAddNode("answer", "answer")}
         disabled={hasAnswerNode}
       >
         Add Answer Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("note")}
+        onClick={() => onAddNode("note", "note")}
       >
         Add Note Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("simple")}
+        onClick={() => onAddNode("simple", "simple")}
       >
         Add Simple Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("knowledgeBase")}
+        onClick={() => onAddNode("knowledgeBase", "knowledgeBase")}
       >
         Add Knowledge Base Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("knowledgeRetrieval")}
+        onClick={() => onAddNode("knowledgeRetrieval", "knowledgeRetrieval")}
       >
         Add Knowledge Retrieval Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("custom", "start")}
+      >
+        Add Custom Node
       </button>
     </div>
   );

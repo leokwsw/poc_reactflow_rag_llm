@@ -7,6 +7,7 @@ import LlmNode from "@/app/components/workflow/nodes/llm-node";
 import NoteNode from "@/app/components/workflow/nodes/note-node";
 import SimpleNode from "@/app/components/workflow/nodes/simple-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
+import Custom from "@/app/components/workflow/nodes"
 
 export type WorkflowNodeType =
   | "start"
@@ -17,7 +18,19 @@ export type WorkflowNodeType =
   | "note"
   | "simple"
   | "knowledgeBase"
-  | "knowledgeRetrieval";
+  | "knowledgeRetrieval"
+  | "custom";
+
+export type CustomNodeType =
+  | "start"
+  | "llm"
+  | "end"
+  | "ifElse"
+  | "answer"
+  | "note"
+  | "simple"
+  | "knowledgeBase"
+  | "knowledgeRetrieval"
 
 export const nodeTypes = {
   start: StartNode,
@@ -29,4 +42,17 @@ export const nodeTypes = {
   simple: SimpleNode,
   knowledgeBase: KnowledgeBaseNode,
   knowledgeRetrieval: KnowledgeRetrievalNode,
+  custom: Custom
 };
+
+export const customNodeTypes = {
+  start: StartNode,
+  llm: LlmNode,
+  end: EndNode,
+  ifElse: IfElseNode,
+  answer: AnswerNode,
+  note: NoteNode,
+  simple: SimpleNode,
+  knowledgeBase: KnowledgeBaseNode,
+  knowledgeRetrieval: KnowledgeRetrievalNode,
+}

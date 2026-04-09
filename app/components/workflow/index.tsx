@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 import dagre from "dagre";
 import {
@@ -19,7 +19,7 @@ import {
   useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { nodeTypes, type WorkflowNodeType } from "@/app/components/workflow/nodes/types";
+import {CustomNodeType, nodeTypes, type WorkflowNodeType} from "@/app/components/workflow/nodes/types";
 import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
 import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
@@ -66,7 +66,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   nodes.forEach((node) => {
     const width = node.width ?? 220;
     const height = node.height ?? 100;
-    graph.setNode(node.id, { width, height });
+    graph.setNode(node.id, {width, height});
   });
 
   edges.forEach((edge) => {
@@ -92,7 +92,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   return result;
 }
 
-function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatch }: WorkflowProps) {
+function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch}: WorkflowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
@@ -168,7 +168,7 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
       const buttonRect = event.currentTarget.getBoundingClientRect();
       const clientX = buttonRect.right + 8;
       const clientY = buttonRect.top + buttonRect.height / 2;
-      const flowPosition = reactflow.screenToFlowPosition({ x: clientX, y: clientY });
+      const flowPosition = reactflow.screenToFlowPosition({x: clientX, y: clientY});
       if (!flowPosition) return;
 
       setContextMenu({
@@ -189,7 +189,7 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
   );
 
   const addNodeAtPointer = useCallback(
-    (type: WorkflowNodeType) => {
+    (type: WorkflowNodeType, customNodeType: CustomNodeType) => {
       if (!contextMenu) return;
 
       if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.type === type))
@@ -197,47 +197,57 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
 
       pushUndoSnapshot();
 
+      let data: { [key: string]: string | object[] | string[] | boolean | number } = {
+        type: customNodeType
+      }
+
+      if (type === "start") {
+        data = {...data, label: "Start", variables: [{name: "query", required: true, type: "string"}]}
+      } else if (type === "llm") {
+        data = {...data, label: "LLM", provider: "openai", model: "gpt-4o-mini"}
+      } else if (type === "end") {
+        data = {...data, label: "End", outputs: ["2.text"]}
+      }
+
       const newNode: Node = {
         id: crypto.randomUUID(),
         type,
-        position: { x: contextMenu.flowX, y: contextMenu.flowY },
+        position: {x: contextMenu.flowX, y: contextMenu.flowY},
         data:
           type === "start"
-            ? {
-                label: "Start",
-                variables: [{ name: "query", required: true, type: "string" }],
-              }
+            ? {label: "Start", variables: [{name: "query", required: true, type: "string"}],}
             : type === "llm"
-              ? { label: "LLM", provider: "openai", model: "gpt-4o-mini" }
+              ? {label: "LLM", provider: "openai", model: "gpt-4o-mini"}
               : type === "end"
-                ? { label: "End", outputs: ["2.text"] }
+                ? {label: "End", outputs: ["2.text"]}
                 : type === "ifElse"
                   ? {
-                      label: "If / Else",
-                      cases: [
-                        { id: "if", label: "IF", conditions: ["query contains 'help'"] },
-                        { id: "elif-1", label: "ELIF", conditions: ["files count > 0"] },
-                      ],
-                    }
+                    label: "If / Else",
+                    cases: [{id: "if", label: "IF", conditions: ["query contains 'help'"]}, {
+                      id: "elif-1",
+                      label: "ELIF",
+                      conditions: ["files count > 0"]
+                    },],
+                  }
                   : type === "answer"
-                    ? { label: "Answer", answer: "{{2.text}}" }
+                    ? {label: "Answer", answer: "{{2.text}}"}
                     : type === "note"
-                      ? { text: "New note", author: "You", theme: "yellow" }
+                      ? {text: "New note", author: "You", theme: "yellow"}
                       : type === "simple"
-                        ? { label: "Simple Node", description: "Simple node content" }
+                        ? {label: "Simple Node", description: "Simple node content"}
                         : type === "knowledgeBase"
                           ? {
-                              label: "Knowledge Base",
-                              indexingTechnique: "high_quality",
-                              retrievalSearchMethod: "semantic_search",
-                            }
-                          : {
-                              label: "Knowledge Retrieval",
-                              datasets: [
-                                { id: "kb-1", name: "Product Docs" },
-                                { id: "kb-2", name: "Support FAQ" },
-                              ],
-                            },
+                            label: "Knowledge Base",
+                            indexingTechnique: "high_quality",
+                            retrievalSearchMethod: "semantic_search",
+                          }
+                          : type === "custom" ? {
+                            type: customNodeType,
+                            // label: "Start", variables: [{name: "query", required: true, type: "string"}],
+                          } : {
+                            label: "Knowledge Retrieval",
+                            datasets: [{id: "kb-1", name: "Product Docs"}, {id: "kb-2", name: "Support FAQ"},],
+                          }
       };
 
       setNodes((prev) => {
@@ -258,12 +268,12 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
       prev.map((node) =>
         node.id === nodeDataPatch.id
           ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...nodeDataPatch.data,
-              },
-            }
+            ...node,
+            data: {
+              ...node.data,
+              ...nodeDataPatch.data,
+            },
+          }
           : node,
       ),
     );
@@ -276,7 +286,7 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
         addEdge(
           {
             ...connection,
-            style: { strokeDasharray: "4 4", strokeWidth: 1.5 },
+            style: {strokeDasharray: "4 4", strokeWidth: 1.5},
           },
           currentEdges,
         ),
@@ -361,11 +371,13 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
     >
       <div
         className="pointer-events-none absolute left-0 top-0 z-10 flex w-12 items-center justify-center p-1 pl-2"
-        style={{ height: "100%" }}
+        style={{height: "100%"}}
       >
         <Control
           onOpenAddMenu={handleOpenAddMenuFromControl}
           onOrganize={handleLayout}
+          handleModePointer={() => setControlMode("pointer")}
+          handleModeHand={() => setControlMode("hand")}
         />
       </div>
       <Operator
@@ -392,8 +404,8 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
         onPaneContextMenu={handlePaneContextMenu}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag={controlMode === "pointer"}
-        panOnDrag={controlMode === "hand" ? [1] : false}
-        panOnScroll={controlMode === "hand"}
+        panOnDrag={controlMode === "hand"}
+        panOnScroll={controlMode === "pointer"}
         zoomOnPinch={true}
         zoomOnScroll={true}
         zoomOnDoubleClick={true}
@@ -427,11 +439,11 @@ function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatc
 }
 
 export default function Workflow({
-  initialNodes,
-  initialEdges,
-  onNodeSelect,
-  nodeDataPatch,
-}: WorkflowProps) {
+                                   initialNodes,
+                                   initialEdges,
+                                   onNodeSelect,
+                                   nodeDataPatch,
+                                 }: WorkflowProps) {
   return (
     <ReactFlowProvider>
       <WorkflowCanvas
