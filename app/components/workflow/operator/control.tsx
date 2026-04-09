@@ -1,16 +1,14 @@
 "use client";
 
+import * as React from "react"
+
 type ControlProps = {
-  maximizeCanvas: boolean;
   onOpenAddMenu: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onToggleMaximizeCanvas: () => void;
   onOrganize: () => void;
 };
 
 export default function Control({
-  maximizeCanvas,
   onOpenAddMenu,
-  onToggleMaximizeCanvas,
   onOrganize,
 }: ControlProps) {
   return (
@@ -27,12 +25,6 @@ export default function Control({
         onClick={onOrganize}
       >
         Auto
-      </button>
-      <button
-        className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg ${maximizeCanvas ? "bg-state-accent-active text-text-accent" : "hover:bg-state-base-hover hover:text-text-secondary"}`}
-        onClick={onToggleMaximizeCanvas}
-      >
-        {maximizeCanvas ? "Min" : "Max"}
       </button>
     </div>
   );

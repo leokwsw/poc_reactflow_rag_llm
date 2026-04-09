@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import {useCallback, useRef, useState} from "react";
 import {
   addEdge,
   Background,
-  Controls,
+  type Connection,
+  type Edge,
+  type Node,
+  type OnEdgeUpdateFunc,
   ReactFlow,
   ReactFlowProvider,
   SelectionMode,
@@ -12,13 +15,9 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-  type Connection,
-  type Edge,
-  type Node,
-  type OnEdgeUpdateFunc,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { nodeTypes, type WorkflowNodeType } from "@/app/components/workflow/nodes/types";
+import {nodeTypes, type WorkflowNodeType} from "@/app/components/workflow/nodes/types";
 import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
 import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
@@ -220,7 +219,6 @@ function WorkflowCanvas() {
   const hasStartNode = nodes.some((node) => node.type === "start");
   const hasEndNode = nodes.some((node) => node.type === "end");
   const hasAnswerNode = nodes.some((node) => node.type === "answer");
-  const [maximizeCanvas, setMaximizeCanvas] = useState(false);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -273,9 +271,7 @@ function WorkflowCanvas() {
         style={{ height: "100%" }}
       >
         <Control
-          maximizeCanvas={maximizeCanvas}
           onOpenAddMenu={handleOpenAddMenuFromControl}
-          onToggleMaximizeCanvas={() => setMaximizeCanvas((v) => !v)}
           onOrganize={() => reactflow.fitView({ duration: 300 })}
         />
       </div>
@@ -301,9 +297,9 @@ function WorkflowCanvas() {
         selectionOnDrag={controlMode === "pointer"}
         panOnDrag={controlMode === "hand" ? [1] : false}
         panOnScroll={controlMode === "hand"}
-        zoomOnPinch
-        zoomOnScroll
-        zoomOnDoubleClick
+        zoomOnPinch={true}
+        zoomOnScroll={true}
+        zoomOnDoubleClick={true}
         nodesDraggable
         nodesConnectable
         nodesFocusable
@@ -311,10 +307,13 @@ function WorkflowCanvas() {
         edgesUpdatable
         deleteKeyCode={["Backspace", "Delete"]}
         minZoom={0.25}
-        fitView
       >
-        <Background gap={[14, 14]} size={2} />
-        <Controls />
+        <Background
+          gap={[14, 14]}
+          size={2}
+          className="bg-workflow-canvas-workflow-bg"
+          color="rgb(133 133 173 / 0.11)"
+        />
       </ReactFlow>
       {contextMenu && (
         <PanelContextMenu
