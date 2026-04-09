@@ -6,14 +6,16 @@ import {
   Background,
   Controls,
   ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
   updateEdge,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
   type OnEdgeUpdateFunc,
-  type ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import AnswerNode from "@/app/components/workflow/nodes/answer-node";
@@ -62,11 +64,11 @@ const nodeTypes = {
   answer: AnswerNode,
 };
 
-export default function Home() {
+function WorkflowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const wrapperRef = useRef<HTMLElement | null>(null);
-  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
+  const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -84,7 +86,7 @@ export default function Home() {
       event.preventDefault();
 
       const wrapperRect = wrapperRef.current?.getBoundingClientRect();
-      const flowPosition = reactFlowRef.current?.screenToFlowPosition({
+      const flowPosition = reactflow.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
@@ -97,7 +99,7 @@ export default function Home() {
         flowY: flowPosition.y,
       });
     },
-    [],
+    [reactflow],
   );
 
   const addNodeAtPointer = useCallback(
@@ -180,6 +182,7 @@ export default function Home() {
       onClick={closeContextMenu}
     >
       <ReactFlow
+        nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -188,17 +191,25 @@ export default function Home() {
         onEdgeUpdate={onEdgeUpdate}
         onEdgeUpdateStart={onEdgeUpdateStart}
         onEdgeUpdateEnd={onEdgeUpdateEnd}
-        onInit={(instance) => {
-          reactFlowRef.current = instance;
-        }}
         onPaneClick={closeContextMenu}
         onPaneContextMenu={handlePaneContextMenu}
+        selectionMode={SelectionMode.Partial}
+        selectionOnDrag
+        panOnDrag={[1]}
+        panOnScroll
+        zoomOnPinch
+        zoomOnScroll
+        zoomOnDoubleClick
+        nodesDraggable
+        nodesConnectable
+        nodesFocusable
+        edgesFocusable
         edgesUpdatable
         deleteKeyCode={["Backspace", "Delete"]}
-        nodeTypes={nodeTypes}
+        minZoom={0.25}
         fitView
       >
-        <Background />
+        <Background gap={[14, 14]} size={2} />
         <Controls />
       </ReactFlow>
       {contextMenu && (
@@ -243,5 +254,13 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <ReactFlowProvider>
+      <WorkflowCanvas />
+    </ReactFlowProvider>
   );
 }
