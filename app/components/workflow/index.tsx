@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+
 import dagre from "dagre";
 import {
   addEdge,
@@ -205,7 +206,9 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
                         { id: "elif-1", label: "ELIF", conditions: ["files count > 0"] },
                       ],
                     }
-                  : { label: "Answer", answer: "{{2.text}}" },
+                  : type === "answer"
+                    ? { label: "Answer", answer: "{{2.text}}" }
+                    : { text: "New note", author: "You", theme: "yellow" },
       };
 
       setNodes((prev) => {
