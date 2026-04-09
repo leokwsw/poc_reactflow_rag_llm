@@ -16,7 +16,9 @@ import {
   type ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import AnswerNode from "@/app/components/workflow/nodes/answer-node";
 import EndNode from "@/app/components/workflow/nodes/end-node";
+import IfElseNode from "@/app/components/workflow/nodes/if-else-node";
 import LlmNode from "@/app/components/workflow/nodes/llm-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
 
@@ -56,6 +58,8 @@ const nodeTypes = {
   start: StartNode,
   llm: LlmNode,
   end: EndNode,
+  ifElse: IfElseNode,
+  answer: AnswerNode,
 };
 
 export default function Home() {
@@ -97,7 +101,7 @@ export default function Home() {
   );
 
   const addNodeAtPointer = useCallback(
-    (type: "default" | "start" | "llm" | "end") => {
+    (type: "start" | "llm" | "end" | "ifElse" | "answer") => {
       if (!contextMenu) return;
 
       const newNode: Node = {
@@ -114,14 +118,31 @@ export default function Home() {
               ? { label: "LLM", provider: "openai", model: "gpt-4o-mini" }
               : type === "end"
                 ? { label: "End", outputs: ["2.text"] }
-                : { label: "New Node" },
+            : type === "ifElse"
+              ? {
+                  label: "If / Else",
+                  cases: [
+                    { id: "if", label: "IF", conditions: ["query contains 'help'"] },
+                    { id: "elif-1", label: "ELIF", conditions: ["files count > 0"] },
+                  ],
+                }
+            : { label: "Answer", answer: "{{2.text}}" },
       };
 
-      setNodes((prev) => [...prev, newNode]);
+      setNodes((prev) => {
+        const limitedTypes = new Set(["start", "end", "answer"]);
+        const hasSameType = prev.some((node) => node.type === type);
+        if (limitedTypes.has(type) && hasSameType) return prev;
+        return [...prev, newNode];
+      });
       closeContextMenu();
     },
     [closeContextMenu, contextMenu, setNodes],
   );
+
+  const hasStartNode = nodes.some((node) => node.type === "start");
+  const hasEndNode = nodes.some((node) => node.type === "end");
+  const hasAnswerNode = nodes.some((node) => node.type === "answer");
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -187,14 +208,9 @@ export default function Home() {
           onClick={(event) => event.stopPropagation()}
         >
           <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-            onClick={() => addNodeAtPointer("default")}
-          >
-            Add Default Node
-          </button>
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => addNodeAtPointer("start")}
+            disabled={hasStartNode}
           >
             Add Start Node
           </button>
@@ -205,10 +221,24 @@ export default function Home() {
             Add LLM Node
           </button>
           <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => addNodeAtPointer("end")}
+            disabled={hasEndNode}
           >
             Add End Node
+          </button>
+          <button
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+            onClick={() => addNodeAtPointer("ifElse")}
+          >
+            Add If-Else Node
+          </button>
+          <button
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => addNodeAtPointer("answer")}
+            disabled={hasAnswerNode}
+          >
+            Add Answer Node
           </button>
         </div>
       )}

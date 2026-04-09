@@ -1,0 +1,69 @@
+"use client";
+
+import { Handle, Position, type NodeProps } from "reactflow";
+import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+
+type IfElseCase = {
+  id: string;
+  label: string;
+  conditions: string[];
+};
+
+type IfElseNodeData = {
+  label?: string;
+  cases?: IfElseCase[];
+};
+
+export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
+  const cases = data.cases ?? [];
+  const branchCount = cases.length + 1; // +1 for ELSE
+
+  return (
+    <BaseNode title={data.label || "If / Else"} tone="zinc" hasTarget hasSource={false}>
+      <div className="space-y-2 pr-6">
+        {cases.map((branch, index) => {
+          const top = ((index + 1) / (branchCount + 1)) * 100;
+          return (
+            <div key={branch.id} className="relative rounded-md bg-zinc-100 p-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[10px] font-semibold text-zinc-500">
+                  {index === 0 ? "IF" : `ELIF ${index}`}
+                </span>
+                <span className="text-[10px] text-zinc-500">{branch.label}</span>
+              </div>
+              <div className="space-y-1">
+                {branch.conditions.length > 0 ? (
+                  branch.conditions.map((condition) => (
+                    <p key={condition} className="truncate text-xs text-zinc-700">
+                      {condition}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-xs text-zinc-500">Condition not set</p>
+                )}
+              </div>
+              <Handle
+                type="source"
+                id={branch.id}
+                position={Position.Right}
+                style={{ top: `${top}%` }}
+                className="h-3 w-3 border-2! border-white! bg-zinc-600!"
+              />
+            </div>
+          );
+        })}
+
+        <div className="relative rounded-md border border-dashed border-zinc-300 px-2 py-1.5">
+          <p className="text-xs font-semibold text-zinc-600">ELSE</p>
+          <Handle
+            type="source"
+            id="else"
+            position={Position.Right}
+            style={{ top: `${(branchCount / (branchCount + 1)) * 100}%` }}
+            className="h-3 w-3 border-2! border-white! bg-zinc-600!"
+          />
+        </div>
+      </div>
+    </BaseNode>
+  );
+}
