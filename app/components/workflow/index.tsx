@@ -98,6 +98,8 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
   const wrapperRef = useRef<HTMLElement | null>(null);
+  const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
+  initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
   const historyRef = useRef<{ undo: FlowSnapshot[]; redo: FlowSnapshot[] }>({
@@ -292,16 +294,17 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
 
   const notifyDataChange = useCallback(() => {
     if (!onDataChange) return;
+    const meta = initMetaRef.current;
     const viewport = reactflow.viewportInitialized
       ? reactflow.getViewport()
-      : initData.viewport;
+      : meta.viewport;
     onDataChange({
       nodes: structuredClone(nodes),
       edges: structuredClone(edges),
-      readOnly: initData.readOnly,
+      readOnly: meta.readOnly,
       viewport: {...viewport},
     });
-  }, [edges, initData.readOnly, initData.viewport, nodes, onDataChange, reactflow]);
+  }, [edges, nodes, onDataChange, reactflow]);
 
   useEffect(() => {
     notifyDataChange();
