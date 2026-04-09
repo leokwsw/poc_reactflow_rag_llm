@@ -23,6 +23,8 @@ import EndNode from "@/app/components/workflow/nodes/end-node";
 import IfElseNode from "@/app/components/workflow/nodes/if-else-node";
 import LlmNode from "@/app/components/workflow/nodes/llm-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
+import Control from "@/app/components/workflow/operator/control";
+import Operator from "@/app/components/workflow/operator";
 
 const initialNodes: Node[] = [
   {
@@ -82,12 +84,30 @@ const nodeTypes = {
   answer: AnswerNode,
 };
 
+type ControlMode = "pointer" | "hand";
+type FlowSnapshot = {
+  nodes: Node[];
+  edges: Edge[];
+};
+
+function cloneFlowSnapshot(nodes: Node[], edges: Edge[]): FlowSnapshot {
+  return {
+    nodes: structuredClone(nodes),
+    edges: structuredClone(edges),
+  };
+}
+
 function WorkflowCanvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [controlMode, setControlMode] = useState<ControlMode>("pointer");
   const wrapperRef = useRef<HTMLElement | null>(null);
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
+  const historyRef = useRef<{ undo: FlowSnapshot[]; redo: FlowSnapshot[] }>({
+    undo: [],
+    redo: [],
+  });
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -98,6 +118,29 @@ function WorkflowCanvas() {
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
   }, []);
+
+  const pushUndoSnapshot = useCallback(() => {
+    historyRef.current.undo.push(cloneFlowSnapshot(nodes, edges));
+    historyRef.current.redo = [];
+  }, [edges, nodes]);
+
+  const handleHistoryBack = useCallback(() => {
+    const previous = historyRef.current.undo.pop();
+    if (!previous) return;
+
+    historyRef.current.redo.push(cloneFlowSnapshot(nodes, edges));
+    setNodes(previous.nodes);
+    setEdges(previous.edges);
+  }, [edges, nodes, setEdges, setNodes]);
+
+  const handleHistoryForward = useCallback(() => {
+    const next = historyRef.current.redo.pop();
+    if (!next) return;
+
+    historyRef.current.undo.push(cloneFlowSnapshot(nodes, edges));
+    setNodes(next.nodes);
+    setEdges(next.edges);
+  }, [edges, nodes, setEdges, setNodes]);
 
   const handlePaneContextMenu = useCallback(
     (event: React.MouseEvent) => {
@@ -123,6 +166,11 @@ function WorkflowCanvas() {
   const addNodeAtPointer = useCallback(
     (type: "start" | "llm" | "end" | "ifElse" | "answer") => {
       if (!contextMenu) return;
+
+      if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.type === type))
+        return;
+
+      pushUndoSnapshot();
 
       const newNode: Node = {
         id: crypto.randomUUID(),
@@ -150,22 +198,21 @@ function WorkflowCanvas() {
       };
 
       setNodes((prev) => {
-        const limitedTypes = new Set(["start", "end", "answer"]);
-        const hasSameType = prev.some((node) => node.type === type);
-        if (limitedTypes.has(type) && hasSameType) return prev;
         return [...prev, newNode];
       });
       closeContextMenu();
     },
-    [closeContextMenu, contextMenu, setNodes],
+    [closeContextMenu, contextMenu, nodes, pushUndoSnapshot, setNodes],
   );
 
   const hasStartNode = nodes.some((node) => node.type === "start");
   const hasEndNode = nodes.some((node) => node.type === "end");
   const hasAnswerNode = nodes.some((node) => node.type === "answer");
+  const [maximizeCanvas, setMaximizeCanvas] = useState(false);
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      pushUndoSnapshot();
       setEdges((currentEdges) =>
         addEdge(
           {
@@ -176,7 +223,7 @@ function WorkflowCanvas() {
         ),
       );
     },
-    [setEdges],
+    [pushUndoSnapshot, setEdges],
   );
 
   const onEdgeUpdateStart = useCallback(() => {
@@ -185,20 +232,22 @@ function WorkflowCanvas() {
 
   const onEdgeUpdate = useCallback<OnEdgeUpdateFunc>(
     (oldEdge, newConnection) => {
+      pushUndoSnapshot();
       edgeUpdateSuccessful.current = true;
       setEdges((currentEdges) => updateEdge(oldEdge, newConnection, currentEdges));
     },
-    [setEdges],
+    [pushUndoSnapshot, setEdges],
   );
 
   const onEdgeUpdateEnd = useCallback(
     (_: MouseEvent | TouchEvent, edge: Edge) => {
       if (!edgeUpdateSuccessful.current) {
+        pushUndoSnapshot();
         setEdges((currentEdges) => currentEdges.filter((e) => e.id !== edge.id));
       }
       edgeUpdateSuccessful.current = true;
     },
-    [setEdges],
+    [pushUndoSnapshot, setEdges],
   );
 
   return (
@@ -207,6 +256,25 @@ function WorkflowCanvas() {
       className="relative h-screen w-full bg-zinc-50"
       onClick={closeContextMenu}
     >
+      <div
+        className="pointer-events-none absolute left-0 top-0 z-10 flex w-12 items-center justify-center p-1 pl-2"
+        style={{ height: "100%" }}
+      >
+        <Control
+          mode={controlMode}
+          maximizeCanvas={maximizeCanvas}
+          onModePointer={() => setControlMode("pointer")}
+          onModeHand={() => setControlMode("hand")}
+          onToggleMaximizeCanvas={() => setMaximizeCanvas((v) => !v)}
+          onOrganize={() => reactflow.fitView({ duration: 300 })}
+        />
+      </div>
+      <Operator
+        handleUndo={handleHistoryBack}
+        handleRedo={handleHistoryForward}
+        canUndo={historyRef.current.undo.length > 0}
+        canRedo={historyRef.current.redo.length > 0}
+      />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -220,9 +288,9 @@ function WorkflowCanvas() {
         onPaneClick={closeContextMenu}
         onPaneContextMenu={handlePaneContextMenu}
         selectionMode={SelectionMode.Partial}
-        selectionOnDrag
-        panOnDrag={[1]}
-        panOnScroll
+        selectionOnDrag={controlMode === "pointer"}
+        panOnDrag={controlMode === "hand" ? [1] : false}
+        panOnScroll={controlMode === "hand"}
         zoomOnPinch
         zoomOnScroll
         zoomOnDoubleClick
