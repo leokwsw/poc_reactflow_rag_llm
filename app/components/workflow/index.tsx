@@ -4,11 +4,11 @@ import {useCallback, useEffect, useRef, useState} from "react";
 
 import dagre from "dagre";
 import {
-  addEdge,
+  addEdge, applyEdgeChanges, applyNodeChanges,
   Background,
   type Connection,
-  type Edge,
-  type Node,
+  type Edge, EdgeChange,
+  type Node, NodeChange,
   type OnEdgeUpdateFunc,
   ReactFlow,
   ReactFlowProvider,
@@ -23,6 +23,7 @@ import {CustomNodeType, nodeTypes} from "@/app/components/workflow/nodes/types";
 import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
 import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
+import {WorkflowDataType} from "@/app/components/workflow/types";
 
 type ControlMode = "pointer" | "hand";
 type FlowSnapshot = {
@@ -30,8 +31,7 @@ type FlowSnapshot = {
   edges: Edge[];
 };
 type WorkflowProps = {
-  initialNodes: Node[];
-  initialEdges: Edge[];
+  initData: WorkflowDataType
   onNodeSelect?: (node: Node | null) => void;
   nodeDataPatch?: {
     id: string;
@@ -92,9 +92,9 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   return result;
 }
 
-function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch}: WorkflowProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch}: WorkflowProps) {
+  const [nodes, setNodes] = useNodesState(initData.nodes);
+  const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
   const wrapperRef = useRef<HTMLElement | null>(null);
   const reactflow = useReactFlow();
@@ -180,6 +180,19 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
     },
     [reactflow],
   );
+
+  const _onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes(nds => applyNodeChanges(changes, nds))
+    },
+    [],
+  )
+  const _onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges(edges => applyEdgeChanges(changes, edges))
+    },
+    [],
+  )
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -279,15 +292,14 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
   const onConnect = useCallback(
     (connection: Connection) => {
       pushUndoSnapshot();
-      setEdges((currentEdges) =>
-        addEdge(
+      const newEdge = addEdge(
           {
             ...connection,
             style: {strokeDasharray: "4 4", strokeWidth: 1.5},
           },
-          currentEdges,
-        ),
-      );
+          edges,
+        )
+      setEdges(newEdge);
     },
     [pushUndoSnapshot, setEdges],
   );
@@ -387,9 +399,9 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
         nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={_onNodesChange}
         onNodeClick={handleNodeClick}
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={_onEdgesChange}
         onConnect={onConnect}
         onEdgeUpdate={onEdgeUpdate}
         onEdgeUpdateStart={onEdgeUpdateStart}
@@ -400,16 +412,16 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
         }}
         onPaneContextMenu={handlePaneContextMenu}
         selectionMode={SelectionMode.Partial}
-        selectionOnDrag={controlMode === "pointer"}
+        selectionOnDrag={controlMode === "pointer" && !initData.readOnly}
         panOnDrag={controlMode === "hand"}
-        panOnScroll={controlMode === "pointer"}
+        panOnScroll={controlMode === "pointer" && !initData.readOnly}
         zoomOnPinch={true}
         zoomOnScroll={true}
         zoomOnDoubleClick={true}
-        nodesDraggable
-        nodesConnectable
-        nodesFocusable
-        edgesFocusable
+        nodesDraggable={!initData.readOnly}
+        nodesConnectable={!initData.readOnly}
+        nodesFocusable={!initData.readOnly}
+        edgesFocusable={!initData.readOnly}
         edgesUpdatable
         deleteKeyCode={["Backspace", "Delete"]}
         minZoom={0.25}
@@ -435,17 +447,16 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
   );
 }
 
-export default function Workflow({
-                                   initialNodes,
-                                   initialEdges,
-                                   onNodeSelect,
-                                   nodeDataPatch,
-                                 }: WorkflowProps) {
+export default function Workflow(
+  {
+    initData,
+    onNodeSelect,
+    nodeDataPatch,
+  }: WorkflowProps) {
   return (
     <ReactFlowProvider>
       <WorkflowCanvas
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        initData={initData}
         onNodeSelect={onNodeSelect}
         nodeDataPatch={nodeDataPatch}
       />

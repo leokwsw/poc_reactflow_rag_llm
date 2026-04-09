@@ -1,11 +1,11 @@
  "use client";
 
-import { useCallback, useState } from "react";
-import type { Node } from "reactflow";
-import Workflow from "@/app/components/workflow";
-import { defaultInitialEdges, defaultInitialNodes } from "@/app/components/workflow/default-data";
+ import {useCallback, useState} from "react";
+ import type {Node} from "reactflow";
+ import Workflow from "@/app/components/workflow";
+ import {defaultData} from "@/app/components/workflow/default-data";
 
-export default function Home() {
+ export default function Home() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodeDataPatch, setNodeDataPatch] = useState<{
     id: string;
@@ -32,12 +32,13 @@ export default function Home() {
     [selectedNode],
   );
 
+   const [data, setData] = useState(defaultData)
+
   return (
     <div className="flex h-screen w-full">
       <div className="min-w-0 flex-1">
         <Workflow
-          initialNodes={defaultInitialNodes}
-          initialEdges={defaultInitialEdges}
+          initData={data}
           onNodeSelect={setSelectedNode}
           nodeDataPatch={nodeDataPatch}
         />
@@ -106,9 +107,13 @@ export default function Home() {
           </div>
         )}
 
-        {selectedNode && !["start", "llm"].includes(selectedNode.type ?? "") && (
+        {selectedNode && !["start", "llm"].includes(selectedNode.data.type ?? "") && (
           <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
         )}
+
+        <br/>
+        <br/>
+        {JSON.stringify(data)}
       </aside>
     </div>
   );
