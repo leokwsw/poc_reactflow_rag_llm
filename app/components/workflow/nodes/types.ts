@@ -3,9 +3,10 @@ import EndNode from "@/app/components/workflow/nodes/end-node";
 import IfElseNode from "@/app/components/workflow/nodes/if-else-node";
 import LlmNode from "@/app/components/workflow/nodes/llm-node";
 import NoteNode from "@/app/components/workflow/nodes/note-node";
+import SimpleNode from "@/app/components/workflow/nodes/simple-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
 
-export type WorkflowNodeType = "start" | "llm" | "end" | "ifElse" | "answer" | "note";
+export type WorkflowNodeType = "start" | "llm" | "end" | "ifElse" | "answer" | "note" | "simple";
 
 export const nodeTypes = {
   start: StartNode,
@@ -14,4 +15,5 @@ export const nodeTypes = {
   ifElse: IfElseNode,
   answer: AnswerNode,
   note: NoteNode,
+  simple: SimpleNode,
 };

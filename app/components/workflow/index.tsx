@@ -208,7 +208,9 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
                     }
                   : type === "answer"
                     ? { label: "Answer", answer: "{{2.text}}" }
-                    : { text: "New note", author: "You", theme: "yellow" },
+                    : type === "note"
+                      ? { text: "New note", author: "You", theme: "yellow" }
+                      : { label: "Simple Node", description: "Simple node content" },
       };
 
       setNodes((prev) => {
