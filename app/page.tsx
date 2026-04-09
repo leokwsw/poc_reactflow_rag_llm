@@ -16,6 +16,8 @@ import {
   type ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import EndNode from "@/app/components/workflow/nodes/end-node";
+import LlmNode from "@/app/components/workflow/nodes/llm-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
 
 const initialNodes: Node[] = [
@@ -31,8 +33,18 @@ const initialNodes: Node[] = [
       ],
     },
   },
-  { id: "2", position: { x: 360, y: 120 }, data: { label: "LLM" } },
-  { id: "3", position: { x: 620, y: 120 }, data: { label: "Response" } },
+  {
+    id: "2",
+    type: "llm",
+    position: { x: 380, y: 120 },
+    data: { label: "LLM", provider: "openai", model: "gpt-4o-mini" },
+  },
+  {
+    id: "3",
+    type: "end",
+    position: { x: 680, y: 120 },
+    data: { label: "End", outputs: ["2.text", "2.usage.total_tokens"] },
+  },
 ];
 
 const initialEdges: Edge[] = [
@@ -42,6 +54,8 @@ const initialEdges: Edge[] = [
 
 const nodeTypes = {
   start: StartNode,
+  llm: LlmNode,
+  end: EndNode,
 };
 
 export default function Home() {
@@ -83,7 +97,7 @@ export default function Home() {
   );
 
   const addNodeAtPointer = useCallback(
-    (type: "default" | "start") => {
+    (type: "default" | "start" | "llm" | "end") => {
       if (!contextMenu) return;
 
       const newNode: Node = {
@@ -96,7 +110,11 @@ export default function Home() {
                 label: "Start",
                 variables: [{ name: "query", required: true, type: "string" }],
               }
-            : { label: "New Node" },
+            : type === "llm"
+              ? { label: "LLM", provider: "openai", model: "gpt-4o-mini" }
+              : type === "end"
+                ? { label: "End", outputs: ["2.text"] }
+                : { label: "New Node" },
       };
 
       setNodes((prev) => [...prev, newNode]);
@@ -179,6 +197,18 @@ export default function Home() {
             onClick={() => addNodeAtPointer("start")}
           >
             Add Start Node
+          </button>
+          <button
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+            onClick={() => addNodeAtPointer("llm")}
+          >
+            Add LLM Node
+          </button>
+          <button
+            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+            onClick={() => addNodeAtPointer("end")}
+          >
+            Add End Node
           </button>
         </div>
       )}
