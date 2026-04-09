@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import dagre from "dagre";
 import {
@@ -32,12 +32,13 @@ type FlowSnapshot = {
 type WorkflowProps = {
   initialNodes: Node[];
   initialEdges: Edge[];
+  onNodeSelect?: (node: Node | null) => void;
+  nodeDataPatch?: {
+    id: string;
+    data: Record<string, any>;
+    nonce: number;
+  } | null;
 };
-type NodeSettingsState = {
-  id: string;
-  type?: string;
-  data: Record<string, any>;
-} | null;
 type LayoutNodeInfo = {
   x: number;
   y: number;
@@ -91,7 +92,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   return result;
 }
 
-function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
+function WorkflowCanvas({ initialNodes, initialEdges, onNodeSelect, nodeDataPatch }: WorkflowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
@@ -108,14 +109,9 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
     flowX: number;
     flowY: number;
   } | null>(null);
-  const [nodeSettings, setNodeSettings] = useState<NodeSettingsState>(null);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
-  }, []);
-
-  const closeNodeSettings = useCallback(() => {
-    setNodeSettings(null);
   }, []);
 
   const pushUndoSnapshot = useCallback(() => {
@@ -185,13 +181,12 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
     [reactflow],
   );
 
-  const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    setNodeSettings({
-      id: node.id,
-      type: node.type,
-      data: structuredClone((node.data || {}) as Record<string, any>),
-    });
-  }, []);
+  const handleNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      onNodeSelect?.(node);
+    },
+    [onNodeSelect],
+  );
 
   const addNodeAtPointer = useCallback(
     (type: WorkflowNodeType) => {
@@ -242,6 +237,23 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
   const hasStartNode = nodes.some((node) => node.type === "start");
   const hasEndNode = nodes.some((node) => node.type === "end");
   const hasAnswerNode = nodes.some((node) => node.type === "answer");
+
+  useEffect(() => {
+    if (!nodeDataPatch) return;
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeDataPatch.id
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                ...nodeDataPatch.data,
+              },
+            }
+          : node,
+      ),
+    );
+  }, [nodeDataPatch, setNodes]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -327,25 +339,6 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
     });
   }, [pushUndoSnapshot, nodes, edges, setNodes, reactflow]);
 
-  const saveNodeSettings = useCallback(() => {
-    if (!nodeSettings) return;
-
-    pushUndoSnapshot();
-    setNodes((prev) =>
-      prev.map((node) => {
-        if (node.id !== nodeSettings.id) return node;
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            ...nodeSettings.data,
-          },
-        };
-      }),
-    );
-    closeNodeSettings();
-  }, [closeNodeSettings, nodeSettings, pushUndoSnapshot, setNodes]);
-
   return (
     <main
       ref={wrapperRef}
@@ -378,7 +371,10 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
         onEdgeUpdate={onEdgeUpdate}
         onEdgeUpdateStart={onEdgeUpdateStart}
         onEdgeUpdateEnd={onEdgeUpdateEnd}
-        onPaneClick={closeContextMenu}
+        onPaneClick={() => {
+          closeContextMenu();
+          onNodeSelect?.(null);
+        }}
         onPaneContextMenu={handlePaneContextMenu}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag={controlMode === "pointer"}
@@ -412,120 +408,24 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
           onAddNode={addNodeAtPointer}
         />
       )}
-      {nodeSettings && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 p-4">
-          <div
-            className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-4 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 className="mb-3 text-base font-semibold text-zinc-900">Node Settings</h3>
-
-            {nodeSettings.type === "start" && (
-              <div className="space-y-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs text-zinc-600">Query Variable</span>
-                  <input
-                    className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                    value={nodeSettings.data.variables?.[0]?.name ?? "query"}
-                    onChange={(event) => {
-                      const queryName = event.target.value;
-                      setNodeSettings((prev) => {
-                        if (!prev) return prev;
-                        const variables = [...(prev.data.variables ?? [])];
-                        variables[0] = {
-                          ...(variables[0] ?? {}),
-                          name: queryName,
-                          required: true,
-                          type: variables[0]?.type ?? "string",
-                        };
-                        return { ...prev, data: { ...prev.data, variables } };
-                      });
-                    }}
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs text-zinc-600">Files Variable</span>
-                  <input
-                    className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                    value={nodeSettings.data.variables?.[1]?.name ?? "files"}
-                    onChange={(event) => {
-                      const filesName = event.target.value;
-                      setNodeSettings((prev) => {
-                        if (!prev) return prev;
-                        const variables = [...(prev.data.variables ?? [])];
-                        variables[1] = {
-                          ...(variables[1] ?? {}),
-                          name: filesName,
-                          type: variables[1]?.type ?? "file[]",
-                        };
-                        return { ...prev, data: { ...prev.data, variables } };
-                      });
-                    }}
-                  />
-                </label>
-              </div>
-            )}
-
-            {nodeSettings.type === "llm" && (
-              <div className="space-y-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs text-zinc-600">Provider</span>
-                  <input
-                    className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                    value={nodeSettings.data.provider ?? ""}
-                    onChange={(event) => {
-                      const provider = event.target.value;
-                      setNodeSettings((prev) =>
-                        prev ? { ...prev, data: { ...prev.data, provider } } : prev,
-                      );
-                    }}
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs text-zinc-600">Model</span>
-                  <input
-                    className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
-                    value={nodeSettings.data.model ?? ""}
-                    onChange={(event) => {
-                      const model = event.target.value;
-                      setNodeSettings((prev) =>
-                        prev ? { ...prev, data: { ...prev.data, model } } : prev,
-                      );
-                    }}
-                  />
-                </label>
-              </div>
-            )}
-
-            {!["start", "llm"].includes(nodeSettings.type ?? "") && (
-              <p className="text-sm text-zinc-600">No configurable fields for this node type yet.</p>
-            )}
-
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                className="rounded border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-                onClick={closeNodeSettings}
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
-                onClick={saveNodeSettings}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
 
-export default function Workflow({ initialNodes, initialEdges }: WorkflowProps) {
+export default function Workflow({
+  initialNodes,
+  initialEdges,
+  onNodeSelect,
+  nodeDataPatch,
+}: WorkflowProps) {
   return (
     <ReactFlowProvider>
-      <WorkflowCanvas initialNodes={initialNodes} initialEdges={initialEdges} />
+      <WorkflowCanvas
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
+        onNodeSelect={onNodeSelect}
+        nodeDataPatch={nodeDataPatch}
+      />
     </ReactFlowProvider>
   );
 }
