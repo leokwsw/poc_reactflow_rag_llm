@@ -1,29 +1,30 @@
-import type { Edge, Node } from "reactflow";
+import type {Edge, Node} from "reactflow";
 
 export const defaultInitialNodes: Node[] = [
   {
     id: "1",
-    type: "start",
-    position: { x: 100, y: 120 },
+    type: "custom",
+    position: {x: 100, y: 120},
     data: {
+      type: "start",
       label: "Start",
       variables: [
-        { name: "query", required: true, type: "string" },
-        { name: "files", type: "file[]" },
+        {name: "query", required: true, type: "string"},
+        {name: "files", type: "file[]"},
       ],
     },
   },
   {
     id: "2",
-    type: "llm",
-    position: { x: 380, y: 120 },
-    data: { label: "LLM", provider: "openai", model: "gpt-4o-mini" },
+    type: "custom",
+    position: {x: 380, y: 120},
+    data: {type: "llm", label: "LLM", provider: "openai", model: "gpt-4o-mini"},
   },
   {
     id: "3",
-    type: "end",
-    position: { x: 680, y: 120 },
-    data: { label: "End", outputs: ["2.text", "2.usage.total_tokens"] },
+    type: "custom",
+    position: {x: 680, y: 120},
+    data: {type: "end", label: "End", outputs: ["2.text", "2.usage.total_tokens"]},
   },
 ];
 

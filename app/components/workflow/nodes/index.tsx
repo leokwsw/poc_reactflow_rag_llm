@@ -1,13 +1,7 @@
 import {NodeProps} from "reactflow";
-import {cloneElement, ComponentType, FC, ReactElement, useMemo} from "react";
-import StartNode from "@/app/components/workflow/nodes/start-node";
-import EndNode from "@/app/components/workflow/nodes/end-node";
+import {cloneElement, FC, ReactElement, useMemo} from "react";
 import EntryNodeContainer, {StartNodeTypeEnum} from "@/app/components/workflow/nodes/entry-node-container";
-
-const NodeComponentMap: Record<string, ComponentType<any>> = {
-  ["start"]: StartNode,
-  ["end"]: EndNode
-}
+import {NodeComponentMap} from "@/app/components/workflow/nodes/types";
 
 type NodeChildProps = {
   id: string
@@ -35,9 +29,8 @@ const BaseNode: FC<BaseNodeProps> = (
   )
 
   const isStartNode = data.type === "start"
-  const isEntryNode = isStartNode // isTriggerNode(data.type as any) || isStartNode
 
-  return isEntryNode
+  return isStartNode
     ? (
       <EntryNodeContainer
         nodeType={isStartNode ? StartNodeTypeEnum.Start : StartNodeTypeEnum.Trigger}
@@ -57,6 +50,7 @@ const CustomNode = (props: NodeProps) => {
     <>
       <BaseNode id={props.id} data={props.data}>
         <NodeComponent/>
+        {/*{nodeData.type}*/}
       </BaseNode>
     </>
   )

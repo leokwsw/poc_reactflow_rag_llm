@@ -8,18 +8,7 @@ import NoteNode from "@/app/components/workflow/nodes/note-node";
 import SimpleNode from "@/app/components/workflow/nodes/simple-node";
 import StartNode from "@/app/components/workflow/nodes/start-node";
 import Custom from "@/app/components/workflow/nodes"
-
-export type WorkflowNodeType =
-  | "start"
-  | "llm"
-  | "end"
-  | "ifElse"
-  | "answer"
-  | "note"
-  | "simple"
-  | "knowledgeBase"
-  | "knowledgeRetrieval"
-  | "custom";
+import {ComponentType} from "react";
 
 export type CustomNodeType =
   | "start"
@@ -33,19 +22,10 @@ export type CustomNodeType =
   | "knowledgeRetrieval"
 
 export const nodeTypes = {
-  start: StartNode,
-  llm: LlmNode,
-  end: EndNode,
-  ifElse: IfElseNode,
-  answer: AnswerNode,
-  note: NoteNode,
-  simple: SimpleNode,
-  knowledgeBase: KnowledgeBaseNode,
-  knowledgeRetrieval: KnowledgeRetrievalNode,
   custom: Custom
 };
 
-export const customNodeTypes = {
+export const NodeComponentMap: Record<string, ComponentType<any>> = {
   start: StartNode,
   llm: LlmNode,
   end: EndNode,

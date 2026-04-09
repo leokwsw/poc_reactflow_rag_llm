@@ -19,7 +19,7 @@ import {
   useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import {CustomNodeType, nodeTypes, type WorkflowNodeType} from "@/app/components/workflow/nodes/types";
+import {CustomNodeType, nodeTypes} from "@/app/components/workflow/nodes/types";
 import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
 import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
@@ -189,7 +189,7 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
   );
 
   const addNodeAtPointer = useCallback(
-    (type: WorkflowNodeType, customNodeType: CustomNodeType) => {
+    (type: CustomNodeType) => {
       if (!contextMenu) return;
 
       if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.type === type))
@@ -198,56 +198,53 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
       pushUndoSnapshot();
 
       let data: { [key: string]: string | object[] | string[] | boolean | number } = {
-        type: customNodeType
+        type: type
       }
 
       if (type === "start") {
-        data = {...data, label: "Start", variables: [{name: "query", required: true, type: "string"}]}
+        data = {...data, label: "Start", variables: [{name: "query", required: true, type: "string"}]};
       } else if (type === "llm") {
-        data = {...data, label: "LLM", provider: "openai", model: "gpt-4o-mini"}
+        data = {...data, label: "LLM", provider: "openai", model: "gpt-4o-mini"};
       } else if (type === "end") {
-        data = {...data, label: "End", outputs: ["2.text"]}
+        data = {...data, label: "End", outputs: ["2.text"]};
+      } else if (type === "ifElse") {
+        data = {
+          ...data,
+          label: "If / Else",
+          cases: [
+            {id: "if", label: "IF", conditions: ["query contains 'help'"]},
+            {id: "elif-1", label: "ELIF", conditions: ["files count > 0"]},
+          ],
+        };
+      } else if (type === "answer") {
+        data = {...data, label: "Answer", answer: "{{2.text}}"};
+      } else if (type === "note") {
+        data = {...data, text: "New note", author: "You", theme: "yellow"};
+      } else if (type === "simple") {
+        data = {...data, label: "Simple Node", description: "Simple node content"};
+      } else if (type === "knowledgeBase") {
+        data = {
+          ...data,
+          label: "Knowledge Base",
+          indexingTechnique: "high_quality",
+          retrievalSearchMethod: "semantic_search",
+        };
+      } else {
+        data = {
+          ...data,
+          label: "Knowledge Retrieval",
+          datasets: [
+            {id: "kb-1", name: "Product Docs"},
+            {id: "kb-2", name: "Support FAQ"},
+          ],
+        };
       }
 
       const newNode: Node = {
         id: crypto.randomUUID(),
-        type,
+        type: "custom",
         position: {x: contextMenu.flowX, y: contextMenu.flowY},
-        data:
-          type === "start"
-            ? {label: "Start", variables: [{name: "query", required: true, type: "string"}],}
-            : type === "llm"
-              ? {label: "LLM", provider: "openai", model: "gpt-4o-mini"}
-              : type === "end"
-                ? {label: "End", outputs: ["2.text"]}
-                : type === "ifElse"
-                  ? {
-                    label: "If / Else",
-                    cases: [{id: "if", label: "IF", conditions: ["query contains 'help'"]}, {
-                      id: "elif-1",
-                      label: "ELIF",
-                      conditions: ["files count > 0"]
-                    },],
-                  }
-                  : type === "answer"
-                    ? {label: "Answer", answer: "{{2.text}}"}
-                    : type === "note"
-                      ? {text: "New note", author: "You", theme: "yellow"}
-                      : type === "simple"
-                        ? {label: "Simple Node", description: "Simple node content"}
-                        : type === "knowledgeBase"
-                          ? {
-                            label: "Knowledge Base",
-                            indexingTechnique: "high_quality",
-                            retrievalSearchMethod: "semantic_search",
-                          }
-                          : type === "custom" ? {
-                            type: customNodeType,
-                            // label: "Start", variables: [{name: "query", required: true, type: "string"}],
-                          } : {
-                            label: "Knowledge Retrieval",
-                            datasets: [{id: "kb-1", name: "Product Docs"}, {id: "kb-2", name: "Support FAQ"},],
-                          }
+        data
       };
 
       setNodes((prev) => {
@@ -258,9 +255,9 @@ function WorkflowCanvas({initialNodes, initialEdges, onNodeSelect, nodeDataPatch
     [closeContextMenu, contextMenu, nodes, pushUndoSnapshot, setNodes],
   );
 
-  const hasStartNode = nodes.some((node) => node.type === "start");
-  const hasEndNode = nodes.some((node) => node.type === "end");
-  const hasAnswerNode = nodes.some((node) => node.type === "answer");
+  const hasStartNode = nodes.some((node) => node.data.type === "start");
+  const hasEndNode = nodes.some((node) => node.data.type === "end");
+  const hasAnswerNode = nodes.some((node) => node.data.type === "answer");
 
   useEffect(() => {
     if (!nodeDataPatch) return;

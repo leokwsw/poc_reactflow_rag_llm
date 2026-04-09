@@ -47,7 +47,7 @@ export default function Home() {
 
         {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
 
-        {selectedNode?.type === "start" && (
+        {selectedNode?.data.type === "start" && (
           <div className="space-y-3">
             <label className="block">
               <span className="mb-1 block text-xs text-zinc-600">Query Variable</span>
@@ -85,7 +85,7 @@ export default function Home() {
           </div>
         )}
 
-        {selectedNode?.type === "llm" && (
+        {selectedNode?.data.type === "llm" && (
           <div className="space-y-3">
             <label className="block">
               <span className="mb-1 block text-xs text-zinc-600">Provider</span>
