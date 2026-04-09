@@ -52,8 +52,26 @@ const initialNodes: Node[] = [
 ];
 
 const initialEdges: Edge[] = [
-  { id: "e1-2", source: "1", target: "2", animated: true },
-  { id: "e2-3", source: "2", target: "3", animated: true },
+  {
+    id: "e1-2",
+    source: "1",
+    target: "2",
+    style: {
+      strokeDasharray: undefined,
+      opacity: 1,
+      strokeWidth: 2
+    },
+  },
+  {
+    id: "e2-3",
+    source: "2",
+    target: "3",
+    style: {
+      strokeDasharray: undefined,
+      opacity: 1,
+      strokeWidth: 2
+    },
+  },
 ];
 
 const nodeTypes = {
@@ -148,7 +166,15 @@ function WorkflowCanvas() {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((currentEdges) => addEdge({ ...connection, animated: true }, currentEdges));
+      setEdges((currentEdges) =>
+        addEdge(
+          {
+            ...connection,
+            style: { strokeDasharray: "4 4", strokeWidth: 1.5 },
+          },
+          currentEdges,
+        ),
+      );
     },
     [setEdges],
   );
