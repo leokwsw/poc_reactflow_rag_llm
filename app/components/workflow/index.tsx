@@ -214,6 +214,24 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
     [pushUndoSnapshot, setEdges],
   );
 
+  const handleLayout = useCallback(() => {
+    pushUndoSnapshot();
+    setNodes((prev) =>
+      prev.map((node, index) => {
+        const col = index % 4;
+        const row = Math.floor(index / 4);
+        return {
+          ...node,
+          position: {
+            x: 120 + col * 280,
+            y: 120 + row * 180,
+          },
+        };
+      }),
+    );
+    setTimeout(() => reactflow.fitView({ duration: 300, padding: 0.2 }), 0);
+  }, [pushUndoSnapshot, reactflow, setNodes]);
+
   return (
     <main
       ref={wrapperRef}
@@ -226,7 +244,7 @@ function WorkflowCanvas({ initialNodes, initialEdges }: WorkflowProps) {
       >
         <Control
           onOpenAddMenu={handleOpenAddMenuFromControl}
-          onOrganize={() => reactflow.fitView({ duration: 300 })}
+          onOrganize={handleLayout}
         />
       </div>
       <Operator
