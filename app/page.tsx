@@ -18,13 +18,10 @@ import {
   type OnEdgeUpdateFunc,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import AnswerNode from "@/app/components/workflow/nodes/answer-node";
-import EndNode from "@/app/components/workflow/nodes/end-node";
-import IfElseNode from "@/app/components/workflow/nodes/if-else-node";
-import LlmNode from "@/app/components/workflow/nodes/llm-node";
-import StartNode from "@/app/components/workflow/nodes/start-node";
+import { nodeTypes, type WorkflowNodeType } from "@/app/components/workflow/nodes/types";
 import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
+import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
 
 const initialNodes: Node[] = [
   {
@@ -75,14 +72,6 @@ const initialEdges: Edge[] = [
     },
   },
 ];
-
-const nodeTypes = {
-  start: StartNode,
-  llm: LlmNode,
-  end: EndNode,
-  ifElse: IfElseNode,
-  answer: AnswerNode,
-};
 
 type ControlMode = "pointer" | "hand";
 type FlowSnapshot = {
@@ -163,8 +152,31 @@ function WorkflowCanvas() {
     [reactflow],
   );
 
+  const handleOpenAddMenuFromControl = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+
+      const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+      if (!wrapperRect) return;
+
+      const buttonRect = event.currentTarget.getBoundingClientRect();
+      const clientX = buttonRect.right + 8;
+      const clientY = buttonRect.top + buttonRect.height / 2;
+      const flowPosition = reactflow.screenToFlowPosition({ x: clientX, y: clientY });
+      if (!flowPosition) return;
+
+      setContextMenu({
+        x: clientX - wrapperRect.left,
+        y: clientY - wrapperRect.top,
+        flowX: flowPosition.x,
+        flowY: flowPosition.y,
+      });
+    },
+    [reactflow],
+  );
+
   const addNodeAtPointer = useCallback(
-    (type: "start" | "llm" | "end" | "ifElse" | "answer") => {
+    (type: WorkflowNodeType) => {
       if (!contextMenu) return;
 
       if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.type === type))
@@ -261,10 +273,8 @@ function WorkflowCanvas() {
         style={{ height: "100%" }}
       >
         <Control
-          mode={controlMode}
           maximizeCanvas={maximizeCanvas}
-          onModePointer={() => setControlMode("pointer")}
-          onModeHand={() => setControlMode("hand")}
+          onOpenAddMenu={handleOpenAddMenuFromControl}
           onToggleMaximizeCanvas={() => setMaximizeCanvas((v) => !v)}
           onOrganize={() => reactflow.fitView({ duration: 300 })}
         />
@@ -307,45 +317,14 @@ function WorkflowCanvas() {
         <Controls />
       </ReactFlow>
       {contextMenu && (
-        <div
-          className="absolute z-20 min-w-44 rounded-md border border-zinc-200 bg-white p-1 shadow-lg"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => addNodeAtPointer("start")}
-            disabled={hasStartNode}
-          >
-            Add Start Node
-          </button>
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-            onClick={() => addNodeAtPointer("llm")}
-          >
-            Add LLM Node
-          </button>
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => addNodeAtPointer("end")}
-            disabled={hasEndNode}
-          >
-            Add End Node
-          </button>
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-            onClick={() => addNodeAtPointer("ifElse")}
-          >
-            Add If-Else Node
-          </button>
-          <button
-            className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => addNodeAtPointer("answer")}
-            disabled={hasAnswerNode}
-          >
-            Add Answer Node
-          </button>
-        </div>
+        <PanelContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          hasStartNode={hasStartNode}
+          hasEndNode={hasEndNode}
+          hasAnswerNode={hasAnswerNode}
+          onAddNode={addNodeAtPointer}
+        />
       )}
     </main>
   );
