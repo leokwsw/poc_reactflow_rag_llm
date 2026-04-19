@@ -24,7 +24,7 @@ const BaseNode: FC<BaseNodeProps> = (
   const nodeContent = (
     <div>
       Icon + Title
-      {cloneElement(children, { id, data } as any)}
+      {cloneElement(children, { id, data })}
     </div>
   )
 

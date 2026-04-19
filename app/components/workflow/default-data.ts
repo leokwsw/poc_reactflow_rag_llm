@@ -19,7 +19,15 @@ export const defaultData: WorkflowDataType = {
       id: "2",
       type: "custom",
       position: {x: 380, y: 120},
-      data: {type: "llm", label: "LLM", provider: "openai", model: "gpt-4o-mini"},
+      data: {
+        type: "llm",
+        label: "LLM",
+        provider: "openai",
+        apiBaseUrl: "https://api.openai.com/v1",
+        apiKey: "",
+        model: "gpt-4o-mini",
+        systemPrompt: "You are a helpful assistant.",
+      },
     },
     {
       id: "3",

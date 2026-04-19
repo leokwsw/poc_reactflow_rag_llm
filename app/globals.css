@@ -4,6 +4,8 @@
   color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
+  --font-geist-sans: "SF Pro Text", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, monospace;
 }
 
 @theme inline {

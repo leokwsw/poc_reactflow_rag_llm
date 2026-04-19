@@ -35,7 +35,7 @@ type WorkflowProps = {
   onNodeSelect?: (node: Node | null) => void;
   nodeDataPatch?: {
     id: string;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
     nonce: number;
   } | null;
   onDataChange?: (data: WorkflowDataType) => void;
@@ -97,9 +97,9 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
   const [nodes, setNodes] = useNodesState(initData.nodes);
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("pointer");
+  const [historyState, setHistoryState] = useState({undo: 0, redo: 0});
   const wrapperRef = useRef<HTMLElement | null>(null);
   const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
-  initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
   const historyRef = useRef<{ undo: FlowSnapshot[]; redo: FlowSnapshot[] }>({
@@ -117,9 +117,17 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     setContextMenu(null);
   }, []);
 
+  useEffect(() => {
+    initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
+  }, [initData.readOnly, initData.viewport]);
+
   const pushUndoSnapshot = useCallback(() => {
     historyRef.current.undo.push(cloneFlowSnapshot(nodes, edges));
     historyRef.current.redo = [];
+    setHistoryState({
+      undo: historyRef.current.undo.length,
+      redo: historyRef.current.redo.length,
+    });
   }, [edges, nodes]);
 
   const handleHistoryBack = useCallback(() => {
@@ -129,6 +137,10 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     historyRef.current.redo.push(cloneFlowSnapshot(nodes, edges));
     setNodes(previous.nodes);
     setEdges(previous.edges);
+    setHistoryState({
+      undo: historyRef.current.undo.length,
+      redo: historyRef.current.redo.length,
+    });
   }, [edges, nodes, setEdges, setNodes]);
 
   const handleHistoryForward = useCallback(() => {
@@ -138,6 +150,10 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     historyRef.current.undo.push(cloneFlowSnapshot(nodes, edges));
     setNodes(next.nodes);
     setEdges(next.edges);
+    setHistoryState({
+      undo: historyRef.current.undo.length,
+      redo: historyRef.current.redo.length,
+    });
   }, [edges, nodes, setEdges, setNodes]);
 
   const handlePaneContextMenu = useCallback(
@@ -188,13 +204,13 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     (changes: NodeChange[]) => {
       setNodes(nds => applyNodeChanges(changes, nds))
     },
-    [],
+    [setNodes],
   )
   const _onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       setEdges(edges => applyEdgeChanges(changes, edges))
     },
-    [],
+    [setEdges],
   )
 
   const handleNodeClick = useCallback(
@@ -208,19 +224,27 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     (type: CustomNodeType) => {
       if (!contextMenu) return;
 
-      if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.type === type))
+      if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.data.type === type))
         return;
 
       pushUndoSnapshot();
 
-      let data: { [key: string]: string | object[] | string[] | boolean | number } = {
+      let data: Record<string, unknown> = {
         type: type
       }
 
       if (type === "start") {
         data = {...data, label: "Start", variables: [{name: "query", required: true, type: "string"}]};
       } else if (type === "llm") {
-        data = {...data, label: "LLM", provider: "openai", model: "gpt-4o-mini"};
+        data = {
+          ...data,
+          label: "LLM",
+          provider: "openai",
+          apiBaseUrl: "https://api.openai.com/v1",
+          apiKey: "",
+          model: "gpt-4o-mini",
+          systemPrompt: "You are a helpful assistant.",
+        };
       } else if (type === "end") {
         data = {...data, label: "End", outputs: ["2.text"]};
       } else if (type === "ifElse") {
@@ -322,7 +346,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
         )
       setEdges(newEdge);
     },
-    [pushUndoSnapshot, setEdges],
+    [pushUndoSnapshot, edges, setEdges],
   );
 
   const onEdgeUpdateStart = useCallback(() => {
@@ -413,8 +437,8 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
       <Operator
         handleUndo={handleHistoryBack}
         handleRedo={handleHistoryForward}
-        canUndo={historyRef.current.undo.length > 0}
-        canRedo={historyRef.current.redo.length > 0}
+        canUndo={historyState.undo > 0}
+        canRedo={historyState.redo > 0}
       />
       <ReactFlow
         nodeTypes={nodeTypes}
