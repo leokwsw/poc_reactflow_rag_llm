@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import dagre from "dagre";
+import { useReactFlow, useStoreApi } from "reactflow";
 import type { Edge, Node } from "reactflow";
 
 type LayoutNodeInfo = {
@@ -14,10 +15,7 @@ type LayoutNodeInfo = {
 
 type UseWorkflowOrganizeOptions = {
   canOrganize: () => boolean;
-  getNodes: () => Node[];
-  getEdges: () => Edge[];
   setNodes: (payload: Node[]) => void;
-  setViewport: (payload: { x: number; y: number; zoom: number }) => void;
   onBeforeOrganize?: () => void;
   onAfterOrganize?: () => void;
 };
@@ -108,33 +106,33 @@ function organizeNodes(nodes: Node[], layout: Map<string, LayoutNodeInfo>) {
 
 export const useWorkflowOrganize = ({
   canOrganize,
-  getNodes,
-  getEdges,
   setNodes,
-  setViewport,
   onBeforeOrganize,
   onAfterOrganize,
 }: UseWorkflowOrganizeOptions) => {
+  const store = useStoreApi();
+  const reactflow = useReactFlow();
+
   const handleLayout = useCallback(async () => {
     if (!canOrganize())
       return;
 
     onBeforeOrganize?.();
 
+    const { getNodes, edges } = store.getState();
     const nodes = getNodes();
-    const edges = getEdges();
     const layout = await getLayoutByDagre(nodes, edges);
     const nextNodes = organizeNodes(nodes, layout);
 
     setNodes(nextNodes);
-    setViewport({
+    reactflow.setViewport({
       x: 0,
       y: 0,
       zoom: 0.7,
     });
 
     onAfterOrganize?.();
-  }, [canOrganize, getNodes, getEdges, setNodes, setViewport, onBeforeOrganize, onAfterOrganize]);
+  }, [canOrganize, onBeforeOrganize, store, setNodes, reactflow, onAfterOrganize]);
 
   return {
     handleLayout,
