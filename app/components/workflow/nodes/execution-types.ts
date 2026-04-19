@@ -43,5 +43,5 @@ export type NodeExecutionResult = {
   detail?: string;
   finalOutput?: string;
   finalOutputs?: Record<string, unknown>;
+  selectedSourceHandles?: string[];
 };
-

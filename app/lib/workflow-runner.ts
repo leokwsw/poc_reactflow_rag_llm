@@ -8,12 +8,14 @@ import type {
   WorkflowRunResult,
   WorkflowTraceItem,
 } from "@/app/components/workflow/nodes/execution-types";
+import { executeIfElseNode } from "@/app/components/workflow/nodes/if-else/execution";
 import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
 import { executeStartNode } from "@/app/components/workflow/nodes/start/execution";
 import { getNodeType, getOutgoingEdges } from "@/app/components/workflow/nodes/execution-utils";
 
 const nodeExecutors: Record<string, (context: NodeExecutionContext) => Promise<NodeExecutionResult>> = {
   start: executeStartNode,
+  ifElse: executeIfElseNode,
   llm: executeLlmNode,
   end: executeEndNode,
 };
@@ -39,48 +41,16 @@ export async function runWorkflow(
     throw new Error("Workflow requires one start node.");
   }
 
-  const reachableNodeIds = new Set<string>();
-  const queue = [startNode.id];
-  while (queue.length > 0) {
-    const nodeId = queue.shift();
-    if (!nodeId || reachableNodeIds.has(nodeId)) continue;
-    reachableNodeIds.add(nodeId);
-
-    for (const edge of getOutgoingEdges(nodeId, edges)) {
-      queue.push(edge.target);
-    }
-  }
-
-  const inDegree = new Map<string, number>();
-  reachableNodeIds.forEach((nodeId) => {
-    const degree = edges.filter((edge) => edge.target === nodeId && reachableNodeIds.has(edge.source)).length;
-    inDegree.set(nodeId, degree);
-  });
-
-  const ready = Array.from(reachableNodeIds).filter((nodeId) => (inDegree.get(nodeId) ?? 0) === 0);
-  const executionOrder: string[] = [];
-  while (ready.length > 0) {
-    const nodeId = ready.shift()!;
-    executionOrder.push(nodeId);
-
-    for (const edge of getOutgoingEdges(nodeId, edges)) {
-      if (!reachableNodeIds.has(edge.target)) continue;
-      const nextDegree = (inDegree.get(edge.target) ?? 0) - 1;
-      inDegree.set(edge.target, nextDegree);
-      if (nextDegree === 0) ready.push(edge.target);
-    }
-  }
-
-  if (executionOrder.length !== reachableNodeIds.size) {
-    throw new Error("Workflow contains a cycle or unsupported graph structure.");
-  }
-
   let finalOutput = "";
   let finalOutputs: Record<string, unknown> = {};
+  const executionQueue: string[] = [startNode.id];
+  const queuedNodeIds = new Set<string>([startNode.id]);
+  const executedNodeIds = new Set<string>();
 
-  for (const nodeId of executionOrder) {
+  while (executionQueue.length > 0) {
+    const nodeId = executionQueue.shift()!;
     const node = nodeMap.get(nodeId);
-    if (!node) continue;
+    if (!node || executedNodeIds.has(nodeId)) continue;
 
     const nodeType = getNodeType(node);
     trace.push({ nodeId, nodeType, status: "running" });
@@ -114,6 +84,20 @@ export async function runWorkflow(
       status: "completed",
       detail: result.detail,
     };
+
+    executedNodeIds.add(nodeId);
+
+    const allOutgoingEdges = getOutgoingEdges(nodeId, edges);
+    const activeOutgoingEdges = result.selectedSourceHandles && result.selectedSourceHandles.length > 0
+      ? allOutgoingEdges.filter((edge) => edge.sourceHandle ? result.selectedSourceHandles?.includes(edge.sourceHandle) : false)
+      : allOutgoingEdges;
+
+    for (const edge of activeOutgoingEdges) {
+      if (!queuedNodeIds.has(edge.target) && !executedNodeIds.has(edge.target)) {
+        executionQueue.push(edge.target);
+        queuedNodeIds.add(edge.target);
+      }
+    }
   }
 
   return {
