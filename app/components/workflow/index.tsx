@@ -1,8 +1,6 @@
 "use client";
 
 import {useCallback, useEffect, useRef, useState} from "react";
-
-import dagre from "dagre";
 import {
   addEdge, applyEdgeChanges, applyNodeChanges,
   Background,
@@ -24,6 +22,7 @@ import Control from "@/app/components/workflow/operator/control";
 import Operator from "@/app/components/workflow/operator";
 import PanelContextMenu from "@/app/components/workflow/panel-contextmenu";
 import {WorkflowDataType} from "@/app/components/workflow/types";
+import {useWorkflowOrganize} from "@/app/components/workflow/hooks/use-workflow-organize";
 
 type ControlMode = "pointer" | "hand";
 type FlowSnapshot = {
@@ -44,57 +43,11 @@ type WorkflowProps = {
   } | null;
   onDataChange?: (data: WorkflowDataType) => void;
 };
-type LayoutNodeInfo = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  layer?: number;
-};
-
 function cloneFlowSnapshot(nodes: Node[], edges: Edge[]): FlowSnapshot {
   return {
     nodes: structuredClone(nodes),
     edges: structuredClone(edges),
   };
-}
-
-async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
-  const graph = new dagre.graphlib.Graph();
-  graph.setDefaultEdgeLabel(() => ({}));
-  graph.setGraph({
-    rankdir: "LR",
-    ranksep: 120,
-    nodesep: 80,
-  });
-
-  nodes.forEach((node) => {
-    const width = node.width ?? 220;
-    const height = node.height ?? 100;
-    graph.setNode(node.id, {width, height});
-  });
-
-  edges.forEach((edge) => {
-    if (edge.source && edge.target) graph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(graph);
-
-  const result = new Map<string, LayoutNodeInfo>();
-  nodes.forEach((node) => {
-    const layoutNode = graph.node(node.id);
-    if (!layoutNode) return;
-
-    result.set(node.id, {
-      x: layoutNode.x - layoutNode.width / 2,
-      y: layoutNode.y - layoutNode.height / 2,
-      width: layoutNode.width,
-      height: layoutNode.height,
-      layer: Math.round(layoutNode.x / 100),
-    });
-  });
-
-  return result;
 }
 
 function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange}: WorkflowProps) {
@@ -134,6 +87,14 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
       redo: historyRef.current.redo.length,
     });
   }, [edges, nodes]);
+
+  const {handleLayout} = useWorkflowOrganize({
+    nodes,
+    edges,
+    pushUndoSnapshot,
+    setNodes,
+    reactflow,
+  });
 
   const handleHistoryBack = useCallback(() => {
     const previous = historyRef.current.undo.pop();
@@ -439,50 +400,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
     },
     [pushUndoSnapshot, setEdges],
   );
-
-  const handleLayout = useCallback(async () => {
-    pushUndoSnapshot();
-    const layout = await getLayoutByDagre(nodes, edges);
-
-    const layerMap = new Map<number, { minY: number; maxHeight: number }>();
-    layout.forEach((layoutInfo) => {
-      if (layoutInfo.layer === undefined) return;
-      const existing = layerMap.get(layoutInfo.layer);
-      layerMap.set(layoutInfo.layer, {
-        minY: existing ? Math.min(existing.minY, layoutInfo.y) : layoutInfo.y,
-        maxHeight: existing ? Math.max(existing.maxHeight, layoutInfo.height) : layoutInfo.height,
-      });
-    });
-
-    const newNodes = structuredClone(nodes).map((node) => {
-      const layoutInfo = layout.get(node.id);
-      if (!layoutInfo) return node;
-
-      let yPosition = layoutInfo.y;
-      if (layoutInfo.layer !== undefined) {
-        const layerInfo = layerMap.get(layoutInfo.layer);
-        if (layerInfo) {
-          const layerCenterY = layerInfo.minY + layerInfo.maxHeight / 2;
-          yPosition = layerCenterY - layoutInfo.height / 2;
-        }
-      }
-
-      return {
-        ...node,
-        position: {
-          x: layoutInfo.x,
-          y: yPosition,
-        },
-      };
-    });
-
-    setNodes(newNodes);
-    reactflow.setViewport({
-      x: 0,
-      y: 0,
-      zoom: 0.7,
-    });
-  }, [pushUndoSnapshot, nodes, edges, setNodes, reactflow]);
 
   return (
     <main
