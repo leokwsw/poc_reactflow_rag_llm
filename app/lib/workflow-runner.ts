@@ -53,7 +53,12 @@ export async function runWorkflow(
     if (!node || executedNodeIds.has(nodeId)) continue;
 
     const nodeType = getNodeType(node);
-    trace.push({ nodeId, nodeType, status: "running" });
+    trace.push({
+      nodeId,
+      nodeType,
+      status: "running",
+      node: structuredClone(node),
+    });
 
     const executor = nodeExecutors[nodeType];
     if (!executor) {
@@ -83,6 +88,7 @@ export async function runWorkflow(
       nodeType,
       status: "completed",
       detail: result.detail,
+      node: structuredClone(node),
     };
 
     executedNodeIds.add(nodeId);

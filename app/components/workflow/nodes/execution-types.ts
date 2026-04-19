@@ -13,6 +13,7 @@ export type WorkflowTraceItem = {
   nodeType: string;
   status: "pending" | "running" | "completed";
   detail?: string;
+  node: Node;
 };
 
 export type WorkflowRunInput = {

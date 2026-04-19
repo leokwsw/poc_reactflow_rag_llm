@@ -296,8 +296,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
   );
 
   const hasStartNode = nodes.some((node) => node.data.type === "start");
-  const hasEndNode = nodes.some((node) => node.data.type === "end");
-  const hasAnswerNode = nodes.some((node) => node.data.type === "answer");
 
   useEffect(() => {
     if (!nodeDataPatch) return;
@@ -484,8 +482,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
           x={contextMenu.x}
           y={contextMenu.y}
           hasStartNode={hasStartNode}
-          hasEndNode={hasEndNode}
-          hasAnswerNode={hasAnswerNode}
           onAddNode={addNodeAtPointer}
         />
       )}

@@ -16,6 +16,7 @@ type WorkflowRunResponse = {
       nodeType: string;
       status: string;
       detail?: string;
+      node: Node;
     }>;
   };
   error?: string;
@@ -205,6 +206,12 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-6">
+                  <h3 className="mb-2 text-sm font-semibold text-zinc-900">Trace JSON</h3>
+                  <pre className="max-h-96 overflow-auto rounded-lg bg-zinc-950 p-3 text-xs text-zinc-100">
+                    {JSON.stringify(runResult.trace, null, 2)}
+                  </pre>
+                </div>
               </div>
             </div>
           )}
@@ -229,7 +236,7 @@ export default function Home() {
                     required: true,
                     type: variables[0]?.type ?? "string",
                   };
-                  patchSelectedNodeData({ variables });
+                  patchSelectedNodeData({variables});
                 }}
               />
             </label>
@@ -245,7 +252,7 @@ export default function Home() {
                     name: event.target.value,
                     type: variables[1]?.type ?? "file[]",
                   };
-                  patchSelectedNodeData({ variables });
+                  patchSelectedNodeData({variables});
                 }}
               />
             </label>
@@ -259,7 +266,7 @@ export default function Home() {
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 value={selectedLlmData.apiBaseUrl ?? "https://api.openai.com/v1"}
-                onChange={(event) => patchSelectedNodeData({ apiBaseUrl: event.target.value })}
+                onChange={(event) => patchSelectedNodeData({apiBaseUrl: event.target.value})}
               />
             </label>
             <label className="block">
@@ -268,7 +275,7 @@ export default function Home() {
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 type="password"
                 value={selectedLlmData.apiKey ?? ""}
-                onChange={(event) => patchSelectedNodeData({ apiKey: event.target.value })}
+                onChange={(event) => patchSelectedNodeData({apiKey: event.target.value})}
               />
             </label>
             <label className="block">
@@ -276,7 +283,7 @@ export default function Home() {
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 value={selectedLlmData.provider ?? ""}
-                onChange={(event) => patchSelectedNodeData({ provider: event.target.value })}
+                onChange={(event) => patchSelectedNodeData({provider: event.target.value})}
               />
             </label>
             <label className="block">
@@ -284,7 +291,7 @@ export default function Home() {
               <input
                 className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 value={selectedLlmData.model ?? ""}
-                onChange={(event) => patchSelectedNodeData({ model: event.target.value })}
+                onChange={(event) => patchSelectedNodeData({model: event.target.value})}
               />
             </label>
             <label className="block">
@@ -292,7 +299,7 @@ export default function Home() {
               <textarea
                 className="min-h-28 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
                 value={selectedLlmData.systemPrompt ?? ""}
-                onChange={(event) => patchSelectedNodeData({ systemPrompt: event.target.value })}
+                onChange={(event) => patchSelectedNodeData({systemPrompt: event.target.value})}
               />
             </label>
           </div>

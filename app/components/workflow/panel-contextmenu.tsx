@@ -15,8 +15,6 @@ export default function PanelContextMenu({
   x,
   y,
   hasStartNode,
-  hasEndNode,
-  hasAnswerNode,
   onAddNode,
 }: PanelContextMenuProps) {
   return (
@@ -41,7 +39,6 @@ export default function PanelContextMenu({
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onAddNode("end")}
-        disabled={hasEndNode}
       >
         Add End Node
       </button>
@@ -54,7 +51,6 @@ export default function PanelContextMenu({
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onAddNode("answer")}
-        disabled={hasAnswerNode}
       >
         Add Answer Node
       </button>
