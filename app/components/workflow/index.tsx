@@ -57,6 +57,8 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
   const [historyState, setHistoryState] = useState({undo: 0, redo: 0});
   const wrapperRef = useRef<HTMLElement | null>(null);
   const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
+  const nodesRef = useRef<Node[]>(initData.nodes);
+  const edgesRef = useRef<Edge[]>(initData.edges);
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
   const handledFocusNonceRef = useRef<number | null>(null);
@@ -79,6 +81,14 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
     initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
   }, [initData.readOnly, initData.viewport]);
 
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
+
   const pushUndoSnapshot = useCallback(() => {
     historyRef.current.undo.push(cloneFlowSnapshot(nodes, edges));
     historyRef.current.redo = [];
@@ -89,11 +99,12 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
   }, [edges, nodes]);
 
   const {handleLayout} = useWorkflowOrganize({
-    nodes,
-    edges,
-    pushUndoSnapshot,
+    canOrganize: () => !initMetaRef.current.readOnly,
+    getNodes: () => nodesRef.current,
+    getEdges: () => edgesRef.current,
     setNodes,
-    reactflow,
+    setViewport: reactflow.setViewport,
+    onBeforeOrganize: pushUndoSnapshot,
   });
 
   const handleHistoryBack = useCallback(() => {

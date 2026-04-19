@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import dagre from "dagre";
-import type { Edge, Node, ReactFlowInstance } from "reactflow";
+import type { Edge, Node } from "reactflow";
 
 type LayoutNodeInfo = {
   x: number;
@@ -13,11 +13,13 @@ type LayoutNodeInfo = {
 };
 
 type UseWorkflowOrganizeOptions = {
-  nodes: Node[];
-  edges: Edge[];
-  pushUndoSnapshot: () => void;
+  canOrganize: () => boolean;
+  getNodes: () => Node[];
+  getEdges: () => Edge[];
   setNodes: (payload: Node[]) => void;
-  reactflow: ReactFlowInstance;
+  setViewport: (payload: { x: number; y: number; zoom: number }) => void;
+  onBeforeOrganize?: () => void;
+  onAfterOrganize?: () => void;
 };
 
 async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
@@ -77,7 +79,7 @@ function buildLayerMap(layout: Map<string, LayoutNodeInfo>) {
   return layerMap;
 }
 
-function applyLayoutToNodes(nodes: Node[], layout: Map<string, LayoutNodeInfo>) {
+function organizeNodes(nodes: Node[], layout: Map<string, LayoutNodeInfo>) {
   const layerMap = buildLayerMap(layout);
 
   return structuredClone(nodes).map((node) => {
@@ -105,25 +107,34 @@ function applyLayoutToNodes(nodes: Node[], layout: Map<string, LayoutNodeInfo>) 
 }
 
 export const useWorkflowOrganize = ({
-  nodes,
-  edges,
-  pushUndoSnapshot,
+  canOrganize,
+  getNodes,
+  getEdges,
   setNodes,
-  reactflow,
+  setViewport,
+  onBeforeOrganize,
+  onAfterOrganize,
 }: UseWorkflowOrganizeOptions) => {
   const handleLayout = useCallback(async () => {
-    pushUndoSnapshot();
+    if (!canOrganize())
+      return;
 
+    onBeforeOrganize?.();
+
+    const nodes = getNodes();
+    const edges = getEdges();
     const layout = await getLayoutByDagre(nodes, edges);
-    const nextNodes = applyLayoutToNodes(nodes, layout);
+    const nextNodes = organizeNodes(nodes, layout);
 
     setNodes(nextNodes);
-    reactflow.setViewport({
+    setViewport({
       x: 0,
       y: 0,
       zoom: 0.7,
     });
-  }, [pushUndoSnapshot, nodes, edges, setNodes, reactflow]);
+
+    onAfterOrganize?.();
+  }, [canOrganize, getNodes, getEdges, setNodes, setViewport, onBeforeOrganize, onAfterOrganize]);
 
   return {
     handleLayout,
