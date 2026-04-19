@@ -1,4 +1,3 @@
-import AnswerNode from "@/app/components/workflow/nodes/answer/ui";
 import EndNode from "@/app/components/workflow/nodes/end/ui";
 import IfElseNode from "@/app/components/workflow/nodes/if-else/ui";
 import KnowledgeBaseNode from "@/app/components/workflow/nodes/knowledge-base/ui";
@@ -16,7 +15,6 @@ export type CustomNodeType =
   | "llm"
   | "end"
   | "ifElse"
-  | "answer"
   | "note"
   | "simple"
   | "knowledgeBase"
@@ -31,7 +29,6 @@ export const NodeComponentMap: Record<string, ComponentType<Partial<NodeProps>>>
   llm: LlmNode as ComponentType<Partial<NodeProps>>,
   end: EndNode as ComponentType<Partial<NodeProps>>,
   ifElse: IfElseNode as ComponentType<Partial<NodeProps>>,
-  answer: AnswerNode as ComponentType<Partial<NodeProps>>,
   note: NoteNode as ComponentType<Partial<NodeProps>>,
   simple: SimpleNode as ComponentType<Partial<NodeProps>>,
   knowledgeBase: KnowledgeBaseNode as ComponentType<Partial<NodeProps>>,

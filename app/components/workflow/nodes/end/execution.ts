@@ -7,10 +7,13 @@ export async function executeEndNode({
   nodeOutputs,
   aliasMap,
 }: NodeExecutionContext): Promise<NodeExecutionResult> {
+  const answerExpression = typeof node.data?.answer === "string" ? node.data.answer.trim() : "";
   const configuredOutputs = Array.isArray(node.data?.outputs) ? (node.data.outputs as string[]) : [];
   const incomingEdges = getIncomingEdges(node.id, edges);
   const fallbackSourceId = incomingEdges[0]?.source;
-  const outputExpressions = configuredOutputs.length > 0
+  const outputExpressions = answerExpression
+    ? [answerExpression]
+    : configuredOutputs.length > 0
     ? configuredOutputs
     : fallbackSourceId
       ? [`${fallbackSourceId}.text`]
@@ -34,10 +37,10 @@ export async function executeEndNode({
     output: {
       output: finalOutput,
       outputs: finalOutputs,
+      answer: answerExpression || undefined,
     },
     detail: `outputs=${outputExpressions.length}`,
     finalOutput,
     finalOutputs,
   };
 }
-

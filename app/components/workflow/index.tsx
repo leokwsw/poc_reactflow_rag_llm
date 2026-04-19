@@ -224,7 +224,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     (type: CustomNodeType) => {
       if (!contextMenu) return;
 
-      if (["start", "end", "answer"].includes(type) && nodes.some((node) => node.data.type === type))
+      if (["start", "end"].includes(type) && nodes.some((node) => node.data.type === type))
         return;
 
       pushUndoSnapshot();
@@ -256,8 +256,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
             {id: "elif-1", label: "ELIF", conditions: ["files count > 0"]},
           ],
         };
-      } else if (type === "answer") {
-        data = {...data, label: "Answer", answer: "{{2.text}}"};
       } else if (type === "note") {
         data = {...data, text: "New note", author: "You", theme: "yellow"};
       } else if (type === "simple") {
@@ -296,8 +294,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
   );
 
   const hasStartNode = nodes.some((node) => node.data.type === "start");
-  const hasEndNode = nodes.some((node) => node.data.type === "end");
-  const hasAnswerNode = nodes.some((node) => node.data.type === "answer");
 
   useEffect(() => {
     if (!nodeDataPatch) return;
@@ -484,8 +480,6 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
           x={contextMenu.x}
           y={contextMenu.y}
           hasStartNode={hasStartNode}
-          hasEndNode={hasEndNode}
-          hasAnswerNode={hasAnswerNode}
           onAddNode={addNodeAtPointer}
         />
       )}

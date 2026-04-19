@@ -6,8 +6,6 @@ type PanelContextMenuProps = {
   x: number;
   y: number;
   hasStartNode: boolean;
-  hasEndNode: boolean;
-  hasAnswerNode: boolean;
   onAddNode: (type: CustomNodeType) => void;
 };
 
@@ -47,12 +45,6 @@ export default function PanelContextMenu({
         onClick={() => onAddNode("ifElse")}
       >
         Add If-Else Node
-      </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => onAddNode("answer")}
-      >
-        Add Answer Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
