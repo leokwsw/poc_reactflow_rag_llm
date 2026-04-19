@@ -25,3 +25,4 @@ export default function EndNode({ data }: NodeProps<EndNodeData>) {
     </BaseNode>
   );
 }
+

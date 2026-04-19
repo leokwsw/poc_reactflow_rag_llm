@@ -39,3 +39,4 @@ export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
     </BaseNode>
   );
 }
+

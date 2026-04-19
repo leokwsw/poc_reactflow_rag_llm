@@ -35,3 +35,4 @@ export default function StartNode({ data }: NodeProps<StartNodeData>) {
     </BaseNode>
   );
 }
+
