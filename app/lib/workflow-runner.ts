@@ -10,12 +10,14 @@ import type {
 } from "@/app/components/workflow/nodes/execution-types";
 import { executeIfElseNode } from "@/app/components/workflow/nodes/if-else/execution";
 import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
+import { executeQuestionClassifierNode } from "@/app/components/workflow/nodes/question-classifier/execution";
 import { executeStartNode } from "@/app/components/workflow/nodes/start/execution";
 import { getNodeType, getOutgoingEdges } from "@/app/components/workflow/nodes/execution-utils";
 
 const nodeExecutors: Record<string, (context: NodeExecutionContext) => Promise<NodeExecutionResult>> = {
   start: executeStartNode,
   ifElse: executeIfElseNode,
+  questionClassifier: executeQuestionClassifierNode,
   llm: executeLlmNode,
   end: executeEndNode,
 };

@@ -285,7 +285,15 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
       } else if (type === "parameterExtractor") {
         data = {...data, label: "Parameter Extractor", parameters: [{name: "product", type: "string"}]};
       } else if (type === "questionClassifier") {
-        data = {...data, label: "Question Classifier", classes: [{id: "sales", name: "Sales"}, {id: "support", name: "Support"}]};
+        data = {
+          ...data,
+          label: "Question Classifier",
+          apiBaseUrl: "https://api.openai.com/v1",
+          apiKey: "",
+          model: "gpt-4o-mini",
+          instruction: "Classify the query into exactly one class and return the class id only.",
+          classes: [{id: "sales", name: "Sales"}, {id: "support", name: "Support"}],
+        };
       } else if (type === "simple") {
         data = {...data, label: "Simple Node", description: "Simple node content"};
       } else if (type === "templateTransform") {

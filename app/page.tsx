@@ -54,6 +54,21 @@ type IfElseNodeData = {
   cases?: IfElseCase[];
 };
 
+type QuestionClass = {
+  id: string;
+  name: string;
+};
+
+type QuestionClassifierNodeData = {
+  type?: string;
+  label?: string;
+  apiBaseUrl?: string;
+  apiKey?: string;
+  model?: string;
+  instruction?: string;
+  classes?: QuestionClass[];
+};
+
 export default function Home() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodeDataPatch, setNodeDataPatch] = useState<{
@@ -97,6 +112,7 @@ export default function Home() {
   const selectedStartData = (selectedNode?.data as StartNodeData | undefined) ?? {};
   const selectedLlmData = (selectedNode?.data as LlmNodeData | undefined) ?? {};
   const selectedIfElseData = (selectedNode?.data as IfElseNodeData | undefined) ?? {};
+  const selectedQuestionClassifierData = (selectedNode?.data as QuestionClassifierNodeData | undefined) ?? {};
 
   const handleRun = useCallback(async () => {
     setIsRunning(true);
@@ -409,7 +425,112 @@ export default function Home() {
           </div>
         )}
 
-        {selectedNode && !["start", "llm", "ifElse"].includes(selectedNode.data.type ?? "") && (
+        {selectedNode?.data.type === "questionClassifier" && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={selectedQuestionClassifierData.label ?? "Question Classifier"}
+                onChange={(event) => patchSelectedNodeData({label: event.target.value})}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">API Base URL</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={selectedQuestionClassifierData.apiBaseUrl ?? "https://api.openai.com/v1"}
+                onChange={(event) => patchSelectedNodeData({apiBaseUrl: event.target.value})}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">API Key</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                type="password"
+                value={selectedQuestionClassifierData.apiKey ?? ""}
+                onChange={(event) => patchSelectedNodeData({apiKey: event.target.value})}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Model</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={selectedQuestionClassifierData.model ?? ""}
+                onChange={(event) => patchSelectedNodeData({model: event.target.value})}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Instruction</span>
+              <textarea
+                className="min-h-24 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={selectedQuestionClassifierData.instruction ?? ""}
+                onChange={(event) => patchSelectedNodeData({instruction: event.target.value})}
+              />
+            </label>
+            <div className="space-y-3">
+              {(selectedQuestionClassifierData.classes ?? []).map((classItem, index) => (
+                <div key={classItem.id} className="rounded-lg border border-zinc-200 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-zinc-700">Class {index + 1}</p>
+                    <button
+                      className="text-xs text-red-600 hover:text-red-700"
+                      type="button"
+                      onClick={() => {
+                        const classes = (selectedQuestionClassifierData.classes ?? []).filter((item) => item.id !== classItem.id);
+                        patchSelectedNodeData({classes});
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <label className="mb-2 block">
+                    <span className="mb-1 block text-xs text-zinc-600">Class ID</span>
+                    <input
+                      className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                      value={classItem.id}
+                      onChange={(event) => {
+                        const classes = (selectedQuestionClassifierData.classes ?? []).map((item, itemIndex) =>
+                          itemIndex === index ? {...item, id: event.target.value} : item,
+                        );
+                        patchSelectedNodeData({classes});
+                      }}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-zinc-600">Class Name</span>
+                    <input
+                      className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                      value={classItem.name}
+                      onChange={(event) => {
+                        const classes = (selectedQuestionClassifierData.classes ?? []).map((item, itemIndex) =>
+                          itemIndex === index ? {...item, name: event.target.value} : item,
+                        );
+                        patchSelectedNodeData({classes});
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              type="button"
+              onClick={() => {
+                const classes = [...(selectedQuestionClassifierData.classes ?? [])];
+                classes.push({
+                  id: `class_${Date.now()}`,
+                  name: `Class ${classes.length + 1}`,
+                });
+                patchSelectedNodeData({classes});
+              }}
+            >
+              Add Class
+            </button>
+          </div>
+        )}
+
+        {selectedNode && !["start", "llm", "ifElse", "questionClassifier"].includes(selectedNode.data.type ?? "") && (
           <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
         )}
 
