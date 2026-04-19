@@ -38,6 +38,10 @@ type WorkflowProps = {
     data: Record<string, unknown>;
     nonce: number;
   } | null;
+  focusNodeRequest?: {
+    id: string;
+    nonce: number;
+  } | null;
   onDataChange?: (data: WorkflowDataType) => void;
 };
 type LayoutNodeInfo = {
@@ -93,7 +97,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   return result;
 }
 
-function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: WorkflowProps) {
+function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange}: WorkflowProps) {
   const [nodes, setNodes] = useNodesState(initData.nodes);
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("hand");
@@ -102,6 +106,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
   const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
+  const handledFocusNonceRef = useRef<number | null>(null);
   const historyRef = useRef<{ undo: FlowSnapshot[]; redo: FlowSnapshot[] }>({
     undo: [],
     redo: [],
@@ -354,6 +359,30 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: W
     );
   }, [nodeDataPatch, setNodes]);
 
+  useEffect(() => {
+    if (!focusNodeRequest) return;
+    if (handledFocusNonceRef.current === focusNodeRequest.nonce) return;
+
+    const targetNode = nodes.find((node) => node.id === focusNodeRequest.id);
+    if (!targetNode) return;
+    handledFocusNonceRef.current = focusNodeRequest.nonce;
+
+    setNodes((prev) =>
+      prev.map((node) => ({
+        ...node,
+        selected: node.id === focusNodeRequest.id,
+      })),
+    );
+    onNodeSelect?.(targetNode);
+
+    const width = targetNode.width ?? 220;
+    const height = targetNode.height ?? 120;
+    reactflow.setCenter(targetNode.position.x + width / 2, targetNode.position.y + height / 2, {
+      zoom: Math.max(reactflow.getZoom(), 0.7),
+      duration: 500,
+    });
+  }, [focusNodeRequest, nodes, onNodeSelect, reactflow, setNodes]);
+
   const notifyDataChange = useCallback(() => {
     if (!onDataChange) return;
     const meta = initMetaRef.current;
@@ -534,6 +563,7 @@ export default function Workflow(
     initData,
     onNodeSelect,
     nodeDataPatch,
+    focusNodeRequest,
     onDataChange,
   }: WorkflowProps) {
   return (
@@ -542,6 +572,7 @@ export default function Workflow(
         initData={initData}
         onNodeSelect={onNodeSelect}
         nodeDataPatch={nodeDataPatch}
+        focusNodeRequest={focusNodeRequest}
         onDataChange={onDataChange}
       />
     </ReactFlowProvider>

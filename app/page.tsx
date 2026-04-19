@@ -38,6 +38,10 @@ export default function Home() {
     data: Record<string, unknown>;
     nonce: number;
   } | null>(null);
+  const [focusNodeRequest, setFocusNodeRequest] = useState<{
+    id: string;
+    nonce: number;
+  } | null>(null);
 
   const patchSelectedNodeData = useCallback(
     (nextData: Record<string, unknown>) => {
@@ -113,6 +117,7 @@ export default function Home() {
           initData={data}
           onNodeSelect={setSelectedNode}
           nodeDataPatch={nodeDataPatch}
+          focusNodeRequest={focusNodeRequest}
           onDataChange={handleWorkflowDataChange}
         />
       </div>
@@ -189,10 +194,21 @@ export default function Home() {
                 <p className="mb-1 text-xs font-medium text-zinc-700">Trace</p>
                 <div className="space-y-1">
                   {runResult.trace.map((item) => (
-                    <div key={`${item.nodeId}-${item.status}`} className="text-xs text-zinc-500">
+                    <button
+                      key={`${item.nodeId}-${item.status}`}
+                      className="block w-full rounded-md px-2 py-1 text-left text-xs text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800"
+                      type="button"
+                      onClick={() => {
+                        setSelectedNode(item.node);
+                        setFocusNodeRequest({
+                          id: item.nodeId,
+                          nonce: Date.now(),
+                        });
+                      }}
+                    >
                       {item.nodeType} ({item.nodeId}) - {item.status}
                       {item.detail ? ` - ${item.detail}` : ""}
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <div className="mt-6">
