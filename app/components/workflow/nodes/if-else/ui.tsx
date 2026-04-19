@@ -22,7 +22,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
   return (
     <BaseNode title={data.label || "If / Else"} subtitle="Conditional branch routing" tone="amber" hasTarget hasSource={false}>
       <NodeSection label="Branches">
-      <div className="space-y-2 pr-6">
+      <div className="space-y-2">
         {cases.map((branch, index) => {
           const top = ((index + 1) / (branchCount + 1)) * 100;
           return (
