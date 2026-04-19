@@ -69,6 +69,104 @@ type QuestionClassifierNodeData = {
   classes?: QuestionClass[];
 };
 
+type LabelNodeData = {
+  type?: string;
+  label?: string;
+};
+
+type AgentNodeData = LabelNodeData & {
+  role?: string;
+  tools?: string[];
+};
+
+type AssignerNodeData = LabelNodeData & {
+  assignments?: Array<{ target: string; value: string }>;
+};
+
+type CodeNodeData = LabelNodeData & {
+  language?: string;
+  code?: string;
+};
+
+type DataSourceNodeData = LabelNodeData & {
+  sourceType?: string;
+  variableName?: string;
+};
+
+type DataSourceEmptyNodeData = LabelNodeData & {
+  message?: string;
+};
+
+type HttpNodeData = LabelNodeData & {
+  method?: string;
+  url?: string;
+};
+
+type IterationNodeData = LabelNodeData & {
+  iterator?: string;
+  itemName?: string;
+};
+
+type ScopeNodeData = LabelNodeData & {
+  scopeName?: string;
+};
+
+type ListOperatorNodeData = LabelNodeData & {
+  operation?: string;
+  targetList?: string;
+};
+
+type EndNodeData = LabelNodeData & {
+  answer?: string;
+  outputs?: string[];
+};
+
+type LoopNodeData = LabelNodeData & {
+  condition?: string;
+  maxIterations?: number;
+};
+
+type LoopEndNodeData = LabelNodeData & {
+  aggregate?: string;
+};
+
+type NoteNodeData = {
+  type?: string;
+  text?: string;
+  author?: string;
+  theme?: "yellow" | "blue" | "green" | "purple";
+};
+
+type ParameterExtractorNodeData = LabelNodeData & {
+  parameters?: Array<{ name: string; type?: string }>;
+};
+
+type SimpleNodeData = LabelNodeData & {
+  description?: string;
+};
+
+type TemplateTransformNodeData = LabelNodeData & {
+  template?: string;
+};
+
+type ToolNodeData = LabelNodeData & {
+  toolName?: string;
+  outputSchema?: string[];
+};
+
+type VariableAssignerNodeData = LabelNodeData & {
+  variables?: Array<{ name: string; expression: string }>;
+};
+
+type KnowledgeBaseNodeData = LabelNodeData & {
+  indexingTechnique?: string;
+  retrievalSearchMethod?: string;
+};
+
+type KnowledgeRetrievalNodeData = LabelNodeData & {
+  datasets?: Array<{ id: string; name: string }>;
+};
+
 export default function Home() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodeDataPatch, setNodeDataPatch] = useState<{
@@ -113,6 +211,27 @@ export default function Home() {
   const selectedLlmData = (selectedNode?.data as LlmNodeData | undefined) ?? {};
   const selectedIfElseData = (selectedNode?.data as IfElseNodeData | undefined) ?? {};
   const selectedQuestionClassifierData = (selectedNode?.data as QuestionClassifierNodeData | undefined) ?? {};
+  const selectedAgentData = (selectedNode?.data as AgentNodeData | undefined) ?? {};
+  const selectedAssignerData = (selectedNode?.data as AssignerNodeData | undefined) ?? {};
+  const selectedCodeData = (selectedNode?.data as CodeNodeData | undefined) ?? {};
+  const selectedDataSourceData = (selectedNode?.data as DataSourceNodeData | undefined) ?? {};
+  const selectedDataSourceEmptyData = (selectedNode?.data as DataSourceEmptyNodeData | undefined) ?? {};
+  const selectedHttpData = (selectedNode?.data as HttpNodeData | undefined) ?? {};
+  const selectedIterationData = (selectedNode?.data as IterationNodeData | undefined) ?? {};
+  const selectedIterationStartData = (selectedNode?.data as ScopeNodeData | undefined) ?? {};
+  const selectedListOperatorData = (selectedNode?.data as ListOperatorNodeData | undefined) ?? {};
+  const selectedEndData = (selectedNode?.data as EndNodeData | undefined) ?? {};
+  const selectedLoopData = (selectedNode?.data as LoopNodeData | undefined) ?? {};
+  const selectedLoopEndData = (selectedNode?.data as LoopEndNodeData | undefined) ?? {};
+  const selectedLoopStartData = (selectedNode?.data as ScopeNodeData | undefined) ?? {};
+  const selectedNoteData = (selectedNode?.data as NoteNodeData | undefined) ?? {};
+  const selectedParameterExtractorData = (selectedNode?.data as ParameterExtractorNodeData | undefined) ?? {};
+  const selectedSimpleData = (selectedNode?.data as SimpleNodeData | undefined) ?? {};
+  const selectedTemplateTransformData = (selectedNode?.data as TemplateTransformNodeData | undefined) ?? {};
+  const selectedToolData = (selectedNode?.data as ToolNodeData | undefined) ?? {};
+  const selectedVariableAssignerData = (selectedNode?.data as VariableAssignerNodeData | undefined) ?? {};
+  const selectedKnowledgeBaseData = (selectedNode?.data as KnowledgeBaseNodeData | undefined) ?? {};
+  const selectedKnowledgeRetrievalData = (selectedNode?.data as KnowledgeRetrievalNodeData | undefined) ?? {};
 
   const handleRun = useCallback(async () => {
     setIsRunning(true);
@@ -252,6 +371,14 @@ export default function Home() {
 
         {selectedNode?.data.type === "start" && (
           <div className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={(selectedNode.data.label as string | undefined) ?? "Start"}
+                onChange={(event) => patchSelectedNodeData({label: event.target.value})}
+              />
+            </label>
             <label className="block">
               <span className="mb-1 block text-xs text-zinc-600">Query Variable</span>
               <input
@@ -530,7 +657,270 @@ export default function Home() {
           </div>
         )}
 
-        {selectedNode && !["start", "llm", "ifElse", "questionClassifier"].includes(selectedNode.data.type ?? "") && (
+        {selectedNode?.data.type === "agent" && (
+          <div className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedAgentData.label ?? "Agent"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Role</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedAgentData.role ?? ""} onChange={(event) => patchSelectedNodeData({role: event.target.value})} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Tools (comma separated)</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={(selectedAgentData.tools ?? []).join(", ")} onChange={(event) => patchSelectedNodeData({tools: event.target.value.split(",").map(item => item.trim()).filter(Boolean)})} />
+            </label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "assigner" && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedAssignerData.label ?? "Assigner"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} />
+            </label>
+            {(selectedAssignerData.assignments ?? []).map((assignment, index) => (
+              <div key={`${assignment.target}-${index}`} className="rounded-lg border border-zinc-200 p-3 space-y-2">
+                <div className="flex justify-end">
+                  <button
+                    className="text-xs text-red-600 hover:text-red-700"
+                    type="button"
+                    onClick={() => patchSelectedNodeData({assignments: (selectedAssignerData.assignments ?? []).filter((_, itemIndex) => itemIndex !== index)})}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Target" value={assignment.target} onChange={(event) => patchSelectedNodeData({assignments: (selectedAssignerData.assignments ?? []).map((item, itemIndex) => itemIndex === index ? {...item, target: event.target.value} : item)})} />
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Value" value={assignment.value} onChange={(event) => patchSelectedNodeData({assignments: (selectedAssignerData.assignments ?? []).map((item, itemIndex) => itemIndex === index ? {...item, value: event.target.value} : item)})} />
+              </div>
+            ))}
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              type="button"
+              onClick={() => patchSelectedNodeData({assignments: [...(selectedAssignerData.assignments ?? []), {target: "", value: ""}]})}
+            >
+              Add Assignment
+            </button>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "code" && (
+          <div className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedCodeData.label ?? "Code"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Language</span>
+              <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedCodeData.language ?? "JavaScript"} onChange={(event) => patchSelectedNodeData({language: event.target.value})} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Code</span>
+              <textarea className="min-h-32 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm font-mono" value={selectedCodeData.code ?? ""} onChange={(event) => patchSelectedNodeData({code: event.target.value})} />
+            </label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "dataSource" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedDataSourceData.label ?? "Data Source"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Source Type</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedDataSourceData.sourceType ?? ""} onChange={(event) => patchSelectedNodeData({sourceType: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Variable Name</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedDataSourceData.variableName ?? ""} onChange={(event) => patchSelectedNodeData({variableName: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "dataSourceEmpty" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedDataSourceEmptyData.label ?? "Data Source Empty"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Message</span><textarea className="min-h-24 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedDataSourceEmptyData.message ?? ""} onChange={(event) => patchSelectedNodeData({message: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "http" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedHttpData.label ?? "HTTP"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Method</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedHttpData.method ?? "GET"} onChange={(event) => patchSelectedNodeData({method: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">URL</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedHttpData.url ?? ""} onChange={(event) => patchSelectedNodeData({url: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "iteration" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedIterationData.label ?? "Iteration"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Iterator</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedIterationData.iterator ?? ""} onChange={(event) => patchSelectedNodeData({iterator: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Item Name</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedIterationData.itemName ?? ""} onChange={(event) => patchSelectedNodeData({itemName: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "iterationStart" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedIterationStartData.label ?? "Iteration Start"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Scope Name</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedIterationStartData.scopeName ?? ""} onChange={(event) => patchSelectedNodeData({scopeName: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "listOperator" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedListOperatorData.label ?? "List Operator"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Operation</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedListOperatorData.operation ?? ""} onChange={(event) => patchSelectedNodeData({operation: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Target List</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedListOperatorData.targetList ?? ""} onChange={(event) => patchSelectedNodeData({targetList: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "end" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedEndData.label ?? "End"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Answer Expression</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedEndData.answer ?? ""} onChange={(event) => patchSelectedNodeData({answer: event.target.value})} placeholder="{{3.text}}" /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Outputs (comma separated)</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={(selectedEndData.outputs ?? []).join(", ")} onChange={(event) => patchSelectedNodeData({outputs: event.target.value.split(",").map(item => item.trim()).filter(Boolean)})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "loop" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopData.label ?? "Loop"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Condition</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopData.condition ?? ""} onChange={(event) => patchSelectedNodeData({condition: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Max Iterations</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" type="number" value={selectedLoopData.maxIterations ?? 10} onChange={(event) => patchSelectedNodeData({maxIterations: Number(event.target.value)})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "loopEnd" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopEndData.label ?? "Loop End"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Aggregate</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopEndData.aggregate ?? ""} onChange={(event) => patchSelectedNodeData({aggregate: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "loopStart" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopStartData.label ?? "Loop Start"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Scope Name</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedLoopStartData.scopeName ?? ""} onChange={(event) => patchSelectedNodeData({scopeName: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "note" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Text</span><textarea className="min-h-28 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedNoteData.text ?? ""} onChange={(event) => patchSelectedNodeData({text: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Author</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedNoteData.author ?? ""} onChange={(event) => patchSelectedNodeData({author: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Theme</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedNoteData.theme ?? "yellow"} onChange={(event) => patchSelectedNodeData({theme: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "parameterExtractor" && (
+          <div className="space-y-4">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedParameterExtractorData.label ?? "Parameter Extractor"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            {(selectedParameterExtractorData.parameters ?? []).map((parameter, index) => (
+              <div key={`${parameter.name}-${index}`} className="rounded-lg border border-zinc-200 p-3 space-y-2">
+                <div className="flex justify-end">
+                  <button
+                    className="text-xs text-red-600 hover:text-red-700"
+                    type="button"
+                    onClick={() => patchSelectedNodeData({parameters: (selectedParameterExtractorData.parameters ?? []).filter((_, itemIndex) => itemIndex !== index)})}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Name" value={parameter.name} onChange={(event) => patchSelectedNodeData({parameters: (selectedParameterExtractorData.parameters ?? []).map((item, itemIndex) => itemIndex === index ? {...item, name: event.target.value} : item)})} />
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Type" value={parameter.type ?? ""} onChange={(event) => patchSelectedNodeData({parameters: (selectedParameterExtractorData.parameters ?? []).map((item, itemIndex) => itemIndex === index ? {...item, type: event.target.value} : item)})} />
+              </div>
+            ))}
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              type="button"
+              onClick={() => patchSelectedNodeData({parameters: [...(selectedParameterExtractorData.parameters ?? []), {name: "", type: "string"}]})}
+            >
+              Add Parameter
+            </button>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "simple" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedSimpleData.label ?? "Simple Node"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Description</span><textarea className="min-h-24 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedSimpleData.description ?? ""} onChange={(event) => patchSelectedNodeData({description: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "templateTransform" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedTemplateTransformData.label ?? "Template Transform"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Template</span><textarea className="min-h-28 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm font-mono" value={selectedTemplateTransformData.template ?? ""} onChange={(event) => patchSelectedNodeData({template: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "tool" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedToolData.label ?? "Tool"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Tool Name</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedToolData.toolName ?? ""} onChange={(event) => patchSelectedNodeData({toolName: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Output Schema (comma separated)</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={(selectedToolData.outputSchema ?? []).join(", ")} onChange={(event) => patchSelectedNodeData({outputSchema: event.target.value.split(",").map(item => item.trim()).filter(Boolean)})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "variableAssigner" && (
+          <div className="space-y-4">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedVariableAssignerData.label ?? "Variable Assigner"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            {(selectedVariableAssignerData.variables ?? []).map((variable, index) => (
+              <div key={`${variable.name}-${index}`} className="rounded-lg border border-zinc-200 p-3 space-y-2">
+                <div className="flex justify-end">
+                  <button
+                    className="text-xs text-red-600 hover:text-red-700"
+                    type="button"
+                    onClick={() => patchSelectedNodeData({variables: (selectedVariableAssignerData.variables ?? []).filter((_, itemIndex) => itemIndex !== index)})}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Variable Name" value={variable.name} onChange={(event) => patchSelectedNodeData({variables: (selectedVariableAssignerData.variables ?? []).map((item, itemIndex) => itemIndex === index ? {...item, name: event.target.value} : item)})} />
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Expression" value={variable.expression} onChange={(event) => patchSelectedNodeData({variables: (selectedVariableAssignerData.variables ?? []).map((item, itemIndex) => itemIndex === index ? {...item, expression: event.target.value} : item)})} />
+              </div>
+            ))}
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              type="button"
+              onClick={() => patchSelectedNodeData({variables: [...(selectedVariableAssignerData.variables ?? []), {name: "", expression: ""}]})}
+            >
+              Add Variable
+            </button>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "knowledgeBase" && (
+          <div className="space-y-3">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedKnowledgeBaseData.label ?? "Knowledge Base"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Indexing Technique</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedKnowledgeBaseData.indexingTechnique ?? ""} onChange={(event) => patchSelectedNodeData({indexingTechnique: event.target.value})} /></label>
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Retrieval Search Method</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedKnowledgeBaseData.retrievalSearchMethod ?? ""} onChange={(event) => patchSelectedNodeData({retrievalSearchMethod: event.target.value})} /></label>
+          </div>
+        )}
+
+        {selectedNode?.data.type === "knowledgeRetrieval" && (
+          <div className="space-y-4">
+            <label className="block"><span className="mb-1 block text-xs text-zinc-600">Label</span><input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" value={selectedKnowledgeRetrievalData.label ?? "Knowledge Retrieval"} onChange={(event) => patchSelectedNodeData({label: event.target.value})} /></label>
+            {(selectedKnowledgeRetrievalData.datasets ?? []).map((dataset, index) => (
+              <div key={`${dataset.id}-${index}`} className="rounded-lg border border-zinc-200 p-3 space-y-2">
+                <div className="flex justify-end">
+                  <button
+                    className="text-xs text-red-600 hover:text-red-700"
+                    type="button"
+                    onClick={() => patchSelectedNodeData({datasets: (selectedKnowledgeRetrievalData.datasets ?? []).filter((_, itemIndex) => itemIndex !== index)})}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Dataset ID" value={dataset.id} onChange={(event) => patchSelectedNodeData({datasets: (selectedKnowledgeRetrievalData.datasets ?? []).map((item, itemIndex) => itemIndex === index ? {...item, id: event.target.value} : item)})} />
+                <input className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm" placeholder="Dataset Name" value={dataset.name} onChange={(event) => patchSelectedNodeData({datasets: (selectedKnowledgeRetrievalData.datasets ?? []).map((item, itemIndex) => itemIndex === index ? {...item, name: event.target.value} : item)})} />
+              </div>
+            ))}
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              type="button"
+              onClick={() => patchSelectedNodeData({datasets: [...(selectedKnowledgeRetrievalData.datasets ?? []), {id: "", name: ""}]})}
+            >
+              Add Dataset
+            </button>
+          </div>
+        )}
+
+        {selectedNode && !["start", "llm", "ifElse", "questionClassifier", "agent", "assigner", "code", "dataSource", "dataSourceEmpty", "http", "iteration", "iterationStart", "listOperator", "end", "loop", "loopEnd", "loopStart", "note", "parameterExtractor", "simple", "templateTransform", "tool", "variableAssigner", "knowledgeBase", "knowledgeRetrieval"].includes(selectedNode.data.type ?? "") && (
           <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
         )}
 
