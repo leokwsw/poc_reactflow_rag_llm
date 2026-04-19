@@ -30,6 +30,42 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("agent")}
+      >
+        Add Agent Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("assigner")}
+      >
+        Add Assigner Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("code")}
+      >
+        Add Code Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("dataSource")}
+      >
+        Add Data Source Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("dataSourceEmpty")}
+      >
+        Add Data Source Empty Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("http")}
+      >
+        Add HTTP Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("llm")}
       >
         Add LLM Node
@@ -42,15 +78,63 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("iteration")}
+      >
+        Add Iteration Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("iterationStart")}
+      >
+        Add Iteration Start Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("ifElse")}
       >
         Add If-Else Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("listOperator")}
+      >
+        Add List Operator Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("loop")}
+      >
+        Add Loop Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("loopEnd")}
+      >
+        Add Loop End Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("loopStart")}
+      >
+        Add Loop Start Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("note")}
       >
         Add Note Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("parameterExtractor")}
+      >
+        Add Parameter Extractor Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("questionClassifier")}
+      >
+        Add Question Classifier Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
@@ -63,6 +147,24 @@ export default function PanelContextMenu({
         onClick={() => onAddNode("knowledgeBase")}
       >
         Add Knowledge Base Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("templateTransform")}
+      >
+        Add Template Transform Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("tool")}
+      >
+        Add Tool Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("variableAssigner")}
+      >
+        Add Variable Assigner Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
