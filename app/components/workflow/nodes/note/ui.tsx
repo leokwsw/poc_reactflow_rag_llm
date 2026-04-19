@@ -1,6 +1,8 @@
 "use client";
 
 import type { NodeProps } from "reactflow";
+import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 
 type NoteNodeData = {
   text?: string;
@@ -8,27 +10,33 @@ type NoteNodeData = {
   theme?: "yellow" | "blue" | "green" | "purple";
 };
 
-const themeMap: Record<NonNullable<NoteNodeData["theme"]>, string> = {
-  yellow: "bg-amber-100 border-amber-200",
-  blue: "bg-sky-100 border-sky-200",
-  green: "bg-emerald-100 border-emerald-200",
-  purple: "bg-violet-100 border-violet-200",
+const themeMap: Record<NonNullable<NoteNodeData["theme"]>, { subtitle: string; className: string }> = {
+  yellow: { subtitle: "Sticky note", className: "bg-amber-50 border-amber-200 text-amber-900" },
+  blue: { subtitle: "Reference note", className: "bg-sky-50 border-sky-200 text-sky-900" },
+  green: { subtitle: "Checklist note", className: "bg-emerald-50 border-emerald-200 text-emerald-900" },
+  purple: { subtitle: "Idea note", className: "bg-violet-50 border-violet-200 text-violet-900" },
 };
 
-export default function NoteNode({ data, selected }: NodeProps<NoteNodeData>) {
+export default function NoteNode({ data }: NodeProps<NoteNodeData>) {
   const theme = data.theme ?? "yellow";
-  const themeClass = themeMap[theme];
+  const themeMeta = themeMap[theme];
 
   return (
-    <div
-      className={`min-h-[96px] min-w-[240px] max-w-[320px] rounded-md border p-3 shadow-sm ${themeClass} ${
-        selected ? "ring-2 ring-zinc-300" : ""
-      }`}
+    <BaseNode
+      title={data.author || "Note"}
+      subtitle={themeMeta.subtitle}
+      tone="amber"
+      hasTarget={false}
+      hasSource={false}
+      minWidthClassName="min-w-[240px] max-w-[320px]"
     >
-      <p className="whitespace-pre-wrap text-sm text-zinc-800">
-        {data.text || "Write your workflow note here..."}
-      </p>
-      {data.author && <p className="mt-3 text-xs text-zinc-600">{data.author}</p>}
-    </div>
+      <div className={`rounded-xl border px-3 py-2.5 ${themeMeta.className}`}>
+        <NodeSection label="Content">
+          <p className="whitespace-pre-wrap text-xs leading-5 text-current">
+            {data.text || "Write your workflow note here..."}
+          </p>
+        </NodeSection>
+      </div>
+    </BaseNode>
   );
 }

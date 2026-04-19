@@ -2,6 +2,7 @@
 
 import { Handle, Position, type NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 
 type IfElseCase = {
   id: string;
@@ -19,12 +20,13 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
   const branchCount = cases.length + 1; // +1 for ELSE
 
   return (
-    <BaseNode title={data.label || "If / Else"} tone="zinc" hasTarget hasSource={false}>
+    <BaseNode title={data.label || "If / Else"} subtitle="Conditional branch routing" tone="amber" hasTarget hasSource={false}>
+      <NodeSection label="Branches">
       <div className="space-y-2 pr-6">
         {cases.map((branch, index) => {
           const top = ((index + 1) / (branchCount + 1)) * 100;
           return (
-            <div key={branch.id} className="relative rounded-md bg-zinc-100 p-2">
+            <div key={branch.id} className="relative rounded-lg border border-zinc-200 bg-zinc-100 p-2.5">
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-[10px] font-semibold text-zinc-500">
                   {index === 0 ? "IF" : `ELIF ${index}`}
@@ -53,7 +55,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
           );
         })}
 
-        <div className="relative rounded-md border border-dashed border-zinc-300 px-2 py-1.5">
+        <div className="relative rounded-lg border border-dashed border-zinc-300 px-2.5 py-1.5">
           <p className="text-xs font-semibold text-zinc-600">ELSE</p>
           <Handle
             type="source"
@@ -64,6 +66,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
           />
         </div>
       </div>
+      </NodeSection>
     </BaseNode>
   );
 }

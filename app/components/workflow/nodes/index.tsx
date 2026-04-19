@@ -21,12 +21,7 @@ const BaseNode: FC<BaseNodeProps> = (
     children,
   }) => {
 
-  const nodeContent = (
-    <div>
-      Icon + Title
-      {cloneElement(children, { id, data })}
-    </div>
-  )
+  const nodeContent = cloneElement(children, { id, data })
 
   const isStartNode = data.type === "start"
 
@@ -50,7 +45,6 @@ const CustomNode = (props: NodeProps) => {
     <>
       <BaseNode id={props.id} data={props.data}>
         <NodeComponent/>
-        {/*{nodeData.type}*/}
       </BaseNode>
     </>
   )

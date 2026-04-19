@@ -2,6 +2,7 @@
 
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 
 type SimpleNodeData = {
   label?: string;
@@ -10,8 +11,10 @@ type SimpleNodeData = {
 
 export default function SimpleNode({ data }: NodeProps<SimpleNodeData>) {
   return (
-    <BaseNode title={data.label || "Simple Node"} tone="zinc" hasTarget hasSource={false}>
-      <p className="text-xs text-zinc-600">{data.description || "A simple placeholder workflow node."}</p>
+    <BaseNode title={data.label || "Simple Node"} subtitle="Generic placeholder block" tone="zinc" hasTarget hasSource={false}>
+      <NodeSection label="Description">
+        <p className="text-xs text-zinc-600">{data.description || "A simple placeholder workflow node."}</p>
+      </NodeSection>
     </BaseNode>
   );
 }

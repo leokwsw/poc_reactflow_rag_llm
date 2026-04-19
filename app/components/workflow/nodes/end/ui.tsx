@@ -2,6 +2,8 @@
 
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type EndNodeData = {
   label?: string;
@@ -14,22 +16,23 @@ export default function EndNode({ data }: NodeProps<EndNodeData>) {
   const answer = data.answer?.trim();
 
   return (
-    <BaseNode title={data.label || "End"} tone="emerald" hasTarget hasSource={false}>
+    <BaseNode title={data.label || "End"} subtitle="Final return values" tone="emerald" hasTarget hasSource={false}>
       {answer ? (
-        <div className="space-y-1">
-          <p className="text-xs font-semibold text-zinc-500">Answer</p>
-          <div className="rounded-md bg-zinc-100 px-2 py-1.5 text-xs text-zinc-700">
+        <NodeSection label="Answer">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-700">
             {answer}
           </div>
-        </div>
+        </NodeSection>
       ) : outputs.length === 0 ? (
-        <p className="text-xs text-zinc-500">No output variables</p>
+        <NodeToken muted>No output variables</NodeToken>
       ) : (
-        outputs.map((output) => (
-          <p key={output} className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-700">
-            {output}
-          </p>
-        ))
+        <NodeSection label="Outputs">
+          <div className="space-y-1.5">
+            {outputs.map((output) => (
+              <NodeToken key={output}>{output}</NodeToken>
+            ))}
+          </div>
+        </NodeSection>
       )}
     </BaseNode>
   );

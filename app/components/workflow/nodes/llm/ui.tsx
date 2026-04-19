@@ -2,6 +2,8 @@
 
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type LlmNodeData = {
   label?: string;
@@ -15,28 +17,26 @@ export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
   const hasModel = Boolean(data.model);
 
   return (
-    <BaseNode title={data.label || "LLM"} tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "LLM"} subtitle="Model call and prompt execution" tone="indigo" hasTarget hasSource>
       {hasModel ? (
         <>
-          <p className="text-xs text-zinc-500">Base URL</p>
-          <p className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-700">
-            {data.apiBaseUrl || "https://api.openai.com/v1"}
-          </p>
-          <p className="mt-2 text-xs text-zinc-500">Model</p>
-          <p className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-700">{data.model}</p>
+          <NodeSection label="Endpoint">
+            <NodeToken>{data.apiBaseUrl || "https://api.openai.com/v1"}</NodeToken>
+          </NodeSection>
+          <NodeSection label="Model">
+            <NodeToken>{data.model}</NodeToken>
+          </NodeSection>
           {data.systemPrompt && (
-            <>
-              <p className="mt-2 text-xs text-zinc-500">System Prompt</p>
-              <p className="line-clamp-3 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-700">
+            <NodeSection label="System Prompt">
+              <p className="line-clamp-3 rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-700">
                 {data.systemPrompt}
               </p>
-            </>
+            </NodeSection>
           )}
         </>
       ) : (
-        <p className="text-xs text-zinc-500">No model selected</p>
+        <NodeToken muted>No model selected</NodeToken>
       )}
     </BaseNode>
   );
 }
-
