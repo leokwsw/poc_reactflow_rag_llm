@@ -42,6 +42,18 @@ type LlmNodeData = {
   systemPrompt?: string;
 };
 
+type IfElseCase = {
+  id: string;
+  label: string;
+  conditions?: string[];
+};
+
+type IfElseNodeData = {
+  type?: string;
+  label?: string;
+  cases?: IfElseCase[];
+};
+
 export default function Home() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodeDataPatch, setNodeDataPatch] = useState<{
@@ -84,6 +96,7 @@ export default function Home() {
   const startVariables = ((startNode?.data as StartNodeData | undefined)?.variables ?? []);
   const selectedStartData = (selectedNode?.data as StartNodeData | undefined) ?? {};
   const selectedLlmData = (selectedNode?.data as LlmNodeData | undefined) ?? {};
+  const selectedIfElseData = (selectedNode?.data as IfElseNodeData | undefined) ?? {};
 
   const handleRun = useCallback(async () => {
     setIsRunning(true);
@@ -305,7 +318,98 @@ export default function Home() {
           </div>
         )}
 
-        {selectedNode && !["start", "llm"].includes(selectedNode.data.type ?? "") && (
+        {selectedNode?.data.type === "ifElse" && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-600">Label</span>
+              <input
+                className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                value={selectedIfElseData.label ?? "If / Else"}
+                onChange={(event) => patchSelectedNodeData({label: event.target.value})}
+              />
+            </label>
+
+            <div className="space-y-3">
+              {(selectedIfElseData.cases ?? []).map((caseItem, index) => (
+                <div key={caseItem.id} className="rounded-lg border border-zinc-200 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-zinc-700">
+                      {index === 0 ? "IF Case" : `ELSE IF ${index}`}
+                    </p>
+                    <button
+                      className="text-xs text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        const cases = (selectedIfElseData.cases ?? []).filter((item) => item.id !== caseItem.id);
+                        patchSelectedNodeData({cases});
+                      }}
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block">
+                    <span className="mb-1 block text-xs text-zinc-600">Branch Label</span>
+                    <input
+                      className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                      value={caseItem.label}
+                      onChange={(event) => {
+                        const cases = (selectedIfElseData.cases ?? []).map((item) =>
+                          item.id === caseItem.id
+                            ? {
+                              ...item,
+                              label: event.target.value,
+                            }
+                            : item,
+                        );
+                        patchSelectedNodeData({cases});
+                      }}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-zinc-600">Condition</span>
+                    <input
+                      className="w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+                      value={caseItem.conditions?.[0] ?? ""}
+                      placeholder="query contains 'help'"
+                      onChange={(event) => {
+                        const cases = (selectedIfElseData.cases ?? []).map((item) =>
+                          item.id === caseItem.id
+                            ? {
+                              ...item,
+                              conditions: [event.target.value],
+                            }
+                            : item,
+                        );
+                        patchSelectedNodeData({cases});
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              onClick={() => {
+                const cases = [...(selectedIfElseData.cases ?? [])];
+                const nextIndex = cases.length;
+                cases.push({
+                  id: `elif-${Date.now()}`,
+                  label: `ELSE IF ${nextIndex}`,
+                  conditions: [""],
+                });
+                patchSelectedNodeData({cases});
+              }}
+              type="button"
+            >
+              Add Else If Case
+            </button>
+          </div>
+        )}
+
+        {selectedNode && !["start", "llm", "ifElse"].includes(selectedNode.data.type ?? "") && (
           <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
         )}
 

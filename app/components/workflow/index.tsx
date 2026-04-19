@@ -96,7 +96,7 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
 function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, onDataChange}: WorkflowProps) {
   const [nodes, setNodes] = useNodesState(initData.nodes);
   const [edges, setEdges] = useEdgesState(initData.edges);
-  const [controlMode, setControlMode] = useState<ControlMode>("pointer");
+  const [controlMode, setControlMode] = useState<ControlMode>("hand");
   const [historyState, setHistoryState] = useState({undo: 0, redo: 0});
   const wrapperRef = useRef<HTMLElement | null>(null);
   const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
