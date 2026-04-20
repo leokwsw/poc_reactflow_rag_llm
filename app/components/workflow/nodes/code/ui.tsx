@@ -3,6 +3,7 @@
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type CodeNodeData = {
   label?: string;
@@ -11,17 +12,17 @@ type CodeNodeData = {
 };
 
 export default function CodeNode({ data }: NodeProps<CodeNodeData>) {
+  const code = data.code || "return { result: input };";
+  const lineCount = code.split("\n").filter((line) => line.trim()).length;
+
   return (
     <BaseNode title={data.label || "Code"} subtitle="Execute custom logic" tone="amber" hasTarget hasSource>
       <NodeSection label="Runtime">
-        <p className="text-xs text-zinc-600">{data.language || "JavaScript"}</p>
+        <NodeToken>{data.language || "JavaScript"}</NodeToken>
       </NodeSection>
-      <NodeSection label="Snippet">
-        <pre className="line-clamp-4 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-2 text-xs text-zinc-700">
-          {data.code || "return { result: input };"}
-        </pre>
+      <NodeSection label="Script">
+        <NodeToken>{`${lineCount} line${lineCount === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

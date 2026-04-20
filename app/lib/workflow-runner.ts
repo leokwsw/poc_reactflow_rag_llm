@@ -8,9 +8,33 @@ import type {
 import { nodeExecutors } from "@/app/components/workflow/nodes/executors";
 import { getNodeType, getOutgoingEdges } from "@/app/components/workflow/nodes/execution-utils";
 
+type WorkflowRunEvent =
+  | {
+      type: "node_running";
+      traceItem: WorkflowTraceItem;
+    }
+  | {
+      type: "node_completed";
+      traceItem: WorkflowTraceItem;
+    }
+  | {
+      type: "node_error";
+      traceItem: WorkflowTraceItem;
+      error: string;
+    }
+  | {
+      type: "workflow_completed";
+      result: WorkflowRunResult;
+    };
+
+type RunWorkflowOptions = {
+  onEvent?: (event: WorkflowRunEvent) => void;
+};
+
 export async function runWorkflow(
   workflow: WorkflowDataType,
   input: WorkflowRunInput,
+  options: RunWorkflowOptions = {},
 ): Promise<WorkflowRunResult> {
   const nodes = workflow.nodes;
   const edges = workflow.edges;
@@ -24,9 +48,9 @@ export async function runWorkflow(
     if (label) aliasMap.set(label, node.id);
   });
 
-  const startNode = nodes.find((node) => getNodeType(node) === "start");
+  const startNode = nodes.find((node) => ["start", "triggerSchedule", "triggerWebhook"].includes(getNodeType(node)));
   if (!startNode) {
-    throw new Error("Workflow requires one start node.");
+    throw new Error("Workflow requires one entry node.");
   }
 
   let finalOutput = "";
@@ -47,21 +71,56 @@ export async function runWorkflow(
       status: "running",
       node: structuredClone(node),
     });
+    options.onEvent?.({
+      type: "node_running",
+      traceItem: trace[trace.length - 1],
+    });
 
     const executor = nodeExecutors[nodeType];
     if (!executor) {
-      throw new Error(`Unsupported node type "${nodeType}" in runner.`);
+      const errorMessage = `Unsupported node type "${nodeType}" in runner.`;
+      trace[trace.length - 1] = {
+        nodeId,
+        nodeType,
+        status: "error",
+        detail: errorMessage,
+        node: structuredClone(node),
+      };
+      options.onEvent?.({
+        type: "node_error",
+        traceItem: trace[trace.length - 1],
+        error: errorMessage,
+      });
+      throw new Error(errorMessage);
     }
 
-    const result = await executor({
-      node,
-      nodeId,
-      workflow,
-      input,
-      edges,
-      nodeOutputs,
-      aliasMap,
-    });
+    let result;
+    try {
+      result = await executor({
+        node,
+        nodeId,
+        workflow,
+        input,
+        edges,
+        nodeOutputs,
+        aliasMap,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : `Node "${nodeId}" execution failed.`;
+      trace[trace.length - 1] = {
+        nodeId,
+        nodeType,
+        status: "error",
+        detail: errorMessage,
+        node: structuredClone(node),
+      };
+      options.onEvent?.({
+        type: "node_error",
+        traceItem: trace[trace.length - 1],
+        error: errorMessage,
+      });
+      throw error;
+    }
 
     nodeOutputs[nodeId] = result.output;
     if (result.finalOutput !== undefined) {
@@ -78,6 +137,10 @@ export async function runWorkflow(
       detail: result.detail,
       node: structuredClone(node),
     };
+    options.onEvent?.({
+      type: "node_completed",
+      traceItem: trace[trace.length - 1],
+    });
 
     executedNodeIds.add(nodeId);
 
@@ -94,9 +157,15 @@ export async function runWorkflow(
     }
   }
 
-  return {
+  const workflowResult = {
     output: finalOutput,
     outputs: finalOutputs,
     trace,
   };
+  options.onEvent?.({
+    type: "workflow_completed",
+    result: workflowResult,
+  });
+
+  return workflowResult;
 }

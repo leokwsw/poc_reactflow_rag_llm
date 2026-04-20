@@ -7,6 +7,7 @@ type ControlProps = {
   onOrganize: () => void;
   handleModePointer: () => void;
   handleModeHand: () => void;
+  mode: "pointer" | "hand";
 };
 
 export default function Control(
@@ -14,35 +15,39 @@ export default function Control(
     onOpenAddMenu,
     onOrganize,
     handleModePointer,
-    handleModeHand
+    handleModeHand,
+    mode,
   }: ControlProps) {
+  const buttonClassName = "flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition hover:bg-zinc-100 hover:text-zinc-900";
+  const activeButtonClassName = "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200";
+
   return (
-    <div
-      className="pointer-events-auto flex flex-col items-center rounded-lg border-[0.5px] border-components-actionbar-border bg-components-actionbar-bg p-0.5 text-text-tertiary shadow-lg">
+    <div className="pointer-events-auto flex flex-col items-center gap-2 rounded-[20px] border border-zinc-200/80 bg-white/92 p-2 text-zinc-500 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)] backdrop-blur">
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-state-base-hover hover:text-text-secondary"
+        className={buttonClassName}
         onClick={onOpenAddMenu}
+        title="Add Node"
       >
-        +
+        <span className="text-lg leading-none">+</span>
       </button>
-      <div className="my-1 w-3.5 border-b border-zinc-200"/>
+      <div className="h-px w-6 bg-zinc-200"/>
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-state-base-hover hover:text-text-secondary"
+        className={`${buttonClassName} ${mode === "pointer" ? activeButtonClassName : ""}`.trim()}
         onClick={handleModePointer}>
-        Point
+        <span aria-hidden="true">↖</span>
       </button>
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-state-base-hover hover:text-text-secondary"
+        className={`${buttonClassName} ${mode === "hand" ? activeButtonClassName : ""}`.trim()}
         onClick={handleModeHand}>
-        Hand
+        <span aria-hidden="true">✋</span>
       </button>
-      <div className="my-1 w-3.5 border-b border-zinc-200"/>
+      <div className="h-px w-6 bg-zinc-200"/>
       <button
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-state-base-hover hover:text-text-secondary"
+        className={buttonClassName}
         onClick={onOrganize}
         title="Workflow Organize"
       >
-        Org
+        <span className="text-xs font-semibold tracking-wide">Org</span>
       </button>
     </div>
   );

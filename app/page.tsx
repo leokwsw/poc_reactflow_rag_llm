@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback, useState} from "react";
+import {useCallback, useRef, useState} from "react";
 import {nodeSettingsPanelMap} from "@/app/components/workflow/nodes/panels";
 import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
@@ -32,6 +32,7 @@ type StartNodeData = {
 };
 
 export default function Home() {
+  const runStreamAbortRef = useRef<AbortController | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [nodeDataPatch, setNodeDataPatch] = useState<{
     id: string;
@@ -63,11 +64,18 @@ export default function Home() {
   );
 
   const [data, setData] = useState(defaultData);
-  const [runQuery, setRunQuery] = useState("Hello, introduce yourself in one short sentence.");
+  const [runQuery, setRunQuery] = useState("I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn");
   const [runFiles, setRunFiles] = useState<File[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<WorkflowRunResponse["result"] | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [liveTrace, setLiveTrace] = useState<NonNullable<WorkflowRunResponse["result"]>["trace"]>([]);
+  const [runNodeState, setRunNodeState] = useState<{
+    activeNodeId?: string | null;
+    errorNodeId?: string | null;
+    completedNodeIds?: string[];
+  } | null>(null);
+  const [isJsonCopied, setIsJsonCopied] = useState(false);
 
   const handleWorkflowDataChange = useCallback((next: WorkflowDataType) => {
     setData(next);
@@ -79,9 +87,18 @@ export default function Home() {
   const SelectedNodePanel = selectedNodeType ? nodeSettingsPanelMap[selectedNodeType] : undefined;
 
   const handleRun = useCallback(async () => {
+    runStreamAbortRef.current?.abort();
+    const abortController = new AbortController();
+    runStreamAbortRef.current = abortController;
     setIsRunning(true);
     setRunError(null);
     setRunResult(null);
+    setLiveTrace([]);
+    setRunNodeState({
+      activeNodeId: null,
+      errorNodeId: null,
+      completedNodeIds: [],
+    });
 
     try {
       const formData = new FormData();
@@ -94,24 +111,135 @@ export default function Home() {
       const response = await fetch("/api/workflow/run", {
         method: "POST",
         body: formData,
+        headers: {
+          Accept: "text/event-stream",
+        },
+        signal: abortController.signal,
       });
 
-      const payload = (await response.json()) as WorkflowRunResponse;
-
-      if (!response.ok || !payload.success || !payload.result) {
-        throw new Error(payload.error ?? "Workflow execution failed.");
+      if (!response.ok || !response.body) {
+        throw new Error("Workflow stream failed to start.");
       }
 
-      setRunResult(payload.result);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      const applyTraceItem = (traceItem: NonNullable<WorkflowRunResponse["result"]>["trace"][number]) => {
+        setLiveTrace((prev) => {
+          const next = [...prev];
+          const index = next.findIndex((item) => item.nodeId === traceItem.nodeId);
+          if (index >= 0) {
+            next[index] = traceItem;
+          } else {
+            next.push(traceItem);
+          }
+          return next;
+        });
+      };
+
+      const processEvent = (eventType: string, payload: Record<string, unknown>) => {
+        if (eventType === "node_running" && payload.traceItem) {
+          const traceItem = payload.traceItem as NonNullable<WorkflowRunResponse["result"]>["trace"][number];
+          applyTraceItem(traceItem);
+          setRunNodeState((prev) => ({
+            activeNodeId: traceItem.nodeId,
+            errorNodeId: prev?.errorNodeId ?? null,
+            completedNodeIds: prev?.completedNodeIds ?? [],
+          }));
+          return;
+        }
+
+        if (eventType === "node_completed" && payload.traceItem) {
+          const traceItem = payload.traceItem as NonNullable<WorkflowRunResponse["result"]>["trace"][number];
+          applyTraceItem(traceItem);
+          setRunNodeState((prev) => ({
+            activeNodeId: null,
+            errorNodeId: prev?.errorNodeId ?? null,
+            completedNodeIds: Array.from(new Set([...(prev?.completedNodeIds ?? []), traceItem.nodeId])),
+          }));
+          return;
+        }
+
+        if (eventType === "node_error" && payload.traceItem) {
+          const traceItem = payload.traceItem as NonNullable<WorkflowRunResponse["result"]>["trace"][number];
+          applyTraceItem(traceItem);
+          setRunNodeState((prev) => ({
+            activeNodeId: null,
+            errorNodeId: traceItem.nodeId,
+            completedNodeIds: prev?.completedNodeIds ?? [],
+          }));
+          setSelectedNode(traceItem.node);
+          setFocusNodeRequest({
+            id: traceItem.nodeId,
+            nonce: Date.now(),
+          });
+          setRunError(String(payload.error ?? traceItem.detail ?? "Workflow execution failed."));
+          return;
+        }
+
+        if (eventType === "workflow_completed" && payload.result) {
+          const result = payload.result as NonNullable<WorkflowRunResponse["result"]>;
+          setRunResult(result);
+          setLiveTrace(result.trace);
+          setRunNodeState((prev) => ({
+            activeNodeId: null,
+            errorNodeId: prev?.errorNodeId ?? null,
+            completedNodeIds: result.trace.filter((item) => item.status === "completed").map((item) => item.nodeId),
+          }));
+          return;
+        }
+
+        if (eventType === "workflow_error") {
+          setRunError(String(payload.error ?? "Workflow execution failed."));
+        }
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        while (buffer.includes("\n\n")) {
+          const boundaryIndex = buffer.indexOf("\n\n");
+          const rawEvent = buffer.slice(0, boundaryIndex);
+          buffer = buffer.slice(boundaryIndex + 2);
+
+          const eventLine = rawEvent.split("\n").find((line) => line.startsWith("event:"));
+          const dataLine = rawEvent.split("\n").find((line) => line.startsWith("data:"));
+          if (!eventLine || !dataLine) {
+            continue;
+          }
+
+          const eventType = eventLine.slice(6).trim();
+          const payload = JSON.parse(dataLine.slice(5).trim()) as Record<string, unknown>;
+          processEvent(eventType, payload);
+        }
+      }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       setRunError(error instanceof Error ? error.message : "Workflow execution failed.");
     } finally {
+      runStreamAbortRef.current = null;
       setIsRunning(false);
     }
   }, [data, runFiles, runQuery]);
 
+  const handleCopyWorkflowJson = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify({graph: data}, null, 2));
+      setIsJsonCopied(true);
+      window.setTimeout(() => setIsJsonCopied(false), 1500);
+    } catch {
+      setIsJsonCopied(false);
+    }
+  }, [data]);
+
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full bg-[#f5f7fb]">
       <div className="min-w-0 flex-1">
         <Workflow
           initData={data}
@@ -119,17 +247,30 @@ export default function Home() {
           nodeDataPatch={nodeDataPatch}
           focusNodeRequest={focusNodeRequest}
           onDataChange={handleWorkflowDataChange}
+          runNodeState={runNodeState}
         />
       </div>
-      <aside className="w-96 overflow-y-auto border-l border-zinc-200 bg-white p-4">
-        <section className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+      <aside className="w-[420px] overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
+        <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-zinc-200/80 bg-white/92 px-4 pb-4 pt-1 backdrop-blur">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Workflow Studio</p>
+              <h1 className="mt-1 text-lg font-semibold text-zinc-900">Node Setting</h1>
+            </div>
+            <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+              {selectedNodeType || "Inspector"}
+            </div>
+          </div>
+        </div>
+
+        <section className="mb-6 rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-zinc-900">Run Workflow</h2>
               <p className="text-xs text-zinc-500">Send current `data` JSON to the backend runner.</p>
             </div>
             <button
-              className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
               onClick={handleRun}
               disabled={isRunning}
             >
@@ -143,7 +284,7 @@ export default function Home() {
               {startVariables[0]?.name ? ` (${startVariables[0].name})` : ""}
             </span>
             <textarea
-              className="min-h-28 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
+              className="min-h-28 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
               value={runQuery}
               onChange={(event) => setRunQuery(event.target.value)}
               placeholder="Type the start node input here..."
@@ -156,7 +297,7 @@ export default function Home() {
               {startVariables[1]?.name ? ` (${startVariables[1].name})` : ""}
             </span>
             <input
-              className="block w-full text-sm text-zinc-600"
+              className="block w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 shadow-sm"
               type="file"
               multiple
               onChange={(event) => setRunFiles(Array.from(event.target.files ?? []))}
@@ -164,7 +305,7 @@ export default function Home() {
           </label>
 
           {runFiles.length > 0 && (
-            <div className="mb-3 rounded-lg border border-zinc-200 bg-white p-3">
+            <div className="mb-3 rounded-2xl border border-zinc-200 bg-white p-3">
               <p className="mb-2 text-xs font-medium text-zinc-700">Selected files</p>
               <div className="space-y-1">
                 {runFiles.map((file) => (
@@ -177,26 +318,32 @@ export default function Home() {
           )}
 
           {runError && (
-            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {runError}
             </div>
           )}
 
-          {runResult && (
+          {(runResult || liveTrace.length > 0) && (
             <div className="space-y-3">
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
+              <div className="rounded-2xl border border-zinc-200 bg-white p-3">
                 <p className="mb-1 text-xs font-medium text-zinc-700">Final Output</p>
                 <pre className="whitespace-pre-wrap break-words text-sm text-zinc-800">
-                  {runResult.output}
+                  {runResult?.output || (isRunning ? "Running..." : "")}
                 </pre>
               </div>
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
+              <div className="rounded-2xl border border-zinc-200 bg-white p-3">
                 <p className="mb-1 text-xs font-medium text-zinc-700">Trace</p>
                 <div className="space-y-1">
-                  {runResult.trace.map((item) => (
+                  {(runResult?.trace ?? liveTrace).map((item) => (
                     <button
                       key={`${item.nodeId}-${item.status}`}
-                      className="block w-full rounded-md px-2 py-1 text-left text-xs text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800"
+                      className={`block w-full rounded-xl px-2.5 py-2 text-left text-xs transition hover:bg-zinc-100 hover:text-zinc-800 ${
+                        item.status === "running"
+                          ? "bg-sky-50 text-sky-700"
+                          : item.status === "error"
+                            ? "bg-red-50 text-red-700"
+                            : "text-zinc-500"
+                      }`}
                       type="button"
                       onClick={() => {
                         setSelectedNode(item.node);
@@ -213,8 +360,8 @@ export default function Home() {
                 </div>
                 <div className="mt-6">
                   <h3 className="mb-2 text-sm font-semibold text-zinc-900">Trace JSON</h3>
-                  <pre className="max-h-96 overflow-auto rounded-lg bg-zinc-950 p-3 text-xs text-zinc-100">
-                    {JSON.stringify(runResult.trace, null, 2)}
+                  <pre className="max-h-96 overflow-auto rounded-2xl bg-zinc-950 p-3 text-xs text-zinc-100">
+                    {JSON.stringify(runResult?.trace ?? liveTrace, null, 2)}
                   </pre>
                 </div>
               </div>
@@ -222,22 +369,43 @@ export default function Home() {
           )}
         </section>
 
-        <h2 className="mb-3 text-base font-semibold text-zinc-900">Node Settings</h2>
+        <section className="rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-900">Node Settings</h2>
+              <p className="text-xs text-zinc-500">Configure the selected workflow block.</p>
+            </div>
+            {selectedNode && (
+              <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm">
+                {selectedNode.id}
+              </div>
+            )}
+          </div>
 
-        {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
+          {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
 
-        {selectedNode && SelectedNodePanel && (
-          <SelectedNodePanel node={selectedNode} patchNodeData={patchSelectedNodeData} />
-        )}
+          {selectedNode && SelectedNodePanel && (
+            <SelectedNodePanel node={selectedNode} patchNodeData={patchSelectedNodeData} allNodes={data.nodes} />
+          )}
 
-        {selectedNode && !SelectedNodePanel && (
-          <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
-        )}
+          {selectedNode && !SelectedNodePanel && (
+            <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
+          )}
+        </section>
 
         <div className="mt-6">
-          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Current Workflow JSON</h3>
-          <pre className="max-h-96 overflow-auto rounded-lg bg-zinc-950 p-3 text-xs text-zinc-100">
-            {JSON.stringify(data, null, 2)}
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-zinc-900">Current Workflow JSON</h3>
+            <button
+              className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+              type="button"
+              onClick={handleCopyWorkflowJson}
+            >
+              {isJsonCopied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <pre className="max-h-96 overflow-auto rounded-2xl bg-zinc-950 p-3 text-xs text-zinc-100">
+            {JSON.stringify({graph: data}, null, 2)}
           </pre>
         </div>
       </aside>

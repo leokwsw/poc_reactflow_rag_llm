@@ -1,11 +1,17 @@
 "use client";
 
-import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 
 type AgentNodeData = {
   label?: string;
+  apiBaseUrl?: string;
+  apiKey?: string;
+  model?: string;
   role?: string;
+  instruction?: string;
+  query?: string;
+  maximumIterations?: number;
   tools?: string[];
 };
 
@@ -17,8 +23,32 @@ export default function AgentPanel({ node, patchNodeData }: NodePanelProps) {
       <PanelField label="Label">
         <PanelInput value={data.label ?? "Agent"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
+      <PanelField label="API Base URL">
+        <PanelInput value={data.apiBaseUrl ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
+      </PanelField>
+      <PanelField label="API Key">
+        <PanelInput type="password" value={data.apiKey ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
+      </PanelField>
+      <PanelField label="Model">
+        <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
+      </PanelField>
       <PanelField label="Role">
         <PanelInput value={data.role ?? ""} onChange={(event) => patchNodeData({ role: event.target.value })} />
+      </PanelField>
+      <PanelField label="Instruction">
+        <PanelTextArea rows={5} value={data.instruction ?? ""} onChange={(event) => patchNodeData({ instruction: event.target.value })} />
+      </PanelField>
+      <PanelField label="Query">
+        <PanelInput value={data.query ?? "{{query}}"} onChange={(event) => patchNodeData({ query: event.target.value })} />
+      </PanelField>
+      <PanelField label="Maximum Iterations">
+        <PanelInput
+          type="number"
+          min={1}
+          max={20}
+          value={String(data.maximumIterations ?? 3)}
+          onChange={(event) => patchNodeData({ maximumIterations: Math.max(1, Number(event.target.value) || 1) })}
+        />
       </PanelField>
       <PanelField label="Tools (comma separated)">
         <PanelInput

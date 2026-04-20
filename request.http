@@ -1,0 +1,20 @@
+### Models
+GET https://omlx-server.octopus-tech.com/v1/models
+Authorization: Bearer octopusPass
+
+### Chat
+POST https://omlx-server.octopus-tech.com/v1/chat/completions
+Authorization: Bearer octopusPass
+Content-Type: application/json
+
+{
+  "model": "gpt-oss-120b-MXFP4-Q8",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Who are you?"
+    }
+  ],
+  "temperature": 0.7,
+  "stream": false
+}

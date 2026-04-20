@@ -12,13 +12,14 @@ type StartNodeData = {
     required?: boolean;
     type?: string;
   }>;
+  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function StartNode({ data }: NodeProps<StartNodeData>) {
   const variables = data.variables ?? [];
 
   return (
-    <BaseNode title={data.label || "Start"} subtitle="Entry point and input variables" tone="zinc" hasTarget={false} hasSource>
+    <BaseNode title={data.label || "Start"} subtitle="Entry point and input variables" tone="zinc" hasTarget={false} hasSource runStatus={data.runStatus}>
       <NodeSection label="Inputs">
         {variables.length === 0 ? (
           <NodeToken muted>No input variables</NodeToken>

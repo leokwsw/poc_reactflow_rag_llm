@@ -41,9 +41,14 @@ type WorkflowProps = {
     nonce: number;
   } | null;
   onDataChange?: (data: WorkflowDataType) => void;
+  runNodeState?: {
+    activeNodeId?: string | null;
+    errorNodeId?: string | null;
+    completedNodeIds?: string[];
+  } | null;
 };
 
-function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange}: WorkflowProps) {
+function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange, runNodeState}: WorkflowProps) {
   const [nodes, setNodes] = useNodesState(initData.nodes);
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("hand");
@@ -127,6 +132,37 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
     );
   }, [nodeDataPatch, setNodes]);
 
+  useEffect(() => {
+    const activeNodeId = runNodeState?.activeNodeId ?? null;
+    const errorNodeId = runNodeState?.errorNodeId ?? null;
+    const completedNodeIds = new Set(runNodeState?.completedNodeIds ?? []);
+
+    setNodes((prev) =>
+      prev.map((node) => {
+        const currentStatus = typeof node.data?.runStatus === "string" ? node.data.runStatus : "idle";
+        const nextStatus = errorNodeId === node.id
+          ? "error"
+          : activeNodeId === node.id
+            ? "running"
+            : completedNodeIds.has(node.id)
+              ? "completed"
+              : "idle";
+
+        if (currentStatus === nextStatus) {
+          return node;
+        }
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            runStatus: nextStatus,
+          },
+        };
+      }),
+    );
+  }, [runNodeState, setNodes]);
+
   useWorkflowFocusNode({
     focusNodeRequest,
     nodes,
@@ -159,7 +195,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
       const newEdge = addEdge(
           {
             ...connection,
-            style: {strokeDasharray: "4 4", strokeWidth: 1.5},
+            style: {opacity: 1, strokeWidth: 2},
           },
           edges,
         )
@@ -207,6 +243,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
           onOrganize={handleLayout}
           handleModePointer={() => setControlMode("pointer")}
           handleModeHand={() => setControlMode("hand")}
+          mode={controlMode}
         />
       </div>
       <Operator
@@ -219,6 +256,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
         nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
+        defaultViewport={initData.viewport}
         onNodesChange={_onNodesChange}
         onNodeClick={handleNodeClick}
         onEdgesChange={_onEdgesChange}
@@ -273,6 +311,7 @@ export default function Workflow(
     nodeDataPatch,
     focusNodeRequest,
     onDataChange,
+    runNodeState,
   }: WorkflowProps) {
   return (
     <ReactFlowProvider>
@@ -282,6 +321,7 @@ export default function Workflow(
         nodeDataPatch={nodeDataPatch}
         focusNodeRequest={focusNodeRequest}
         onDataChange={onDataChange}
+        runNodeState={runNodeState}
       />
     </ReactFlowProvider>
   );

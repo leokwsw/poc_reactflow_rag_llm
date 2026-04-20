@@ -17,17 +17,16 @@ type VariableAssignerNodeData = {
 
 export default function VariableAssignerNode({ data }: NodeProps<VariableAssignerNodeData>) {
   const variables = data.variables ?? [];
+  const firstName = variables[0]?.name;
 
   return (
     <BaseNode title={data.label || "Variable Assigner"} subtitle="Create or overwrite variables" tone="zinc" hasTarget hasSource>
-      <NodeSection label="Variables">
-        {variables.length === 0 ? <NodeToken muted>No variables configured</NodeToken> : (
-          <div className="space-y-1.5">
-            {variables.map((item) => <NodeToken key={item.name}>{item.name} = {item.expression}</NodeToken>)}
-          </div>
-        )}
+      <NodeSection label="Count">
+        <NodeToken>{`${variables.length} variable${variables.length === 1 ? "" : "s"}`}</NodeToken>
+      </NodeSection>
+      <NodeSection label="First Variable">
+        <NodeToken muted={!firstName}>{firstName || "No variables configured"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

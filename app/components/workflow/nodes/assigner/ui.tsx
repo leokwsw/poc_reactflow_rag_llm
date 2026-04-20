@@ -17,19 +17,16 @@ type AssignerNodeData = {
 
 export default function AssignerNode({ data }: NodeProps<AssignerNodeData>) {
   const assignments = data.assignments ?? [];
+  const firstTarget = assignments[0]?.target;
 
   return (
     <BaseNode title={data.label || "Assigner"} subtitle="Map values into variables" tone="zinc" hasTarget hasSource>
-      <NodeSection label="Assignments">
-        {assignments.length === 0 ? <NodeToken muted>No assignments configured</NodeToken> : (
-          <div className="space-y-1.5">
-            {assignments.map((item, index) => (
-              <NodeToken key={`${item.target}-${index}`}>{item.target} = {item.value}</NodeToken>
-            ))}
-          </div>
-        )}
+      <NodeSection label="Count">
+        <NodeToken>{`${assignments.length} assignment${assignments.length === 1 ? "" : "s"}`}</NodeToken>
+      </NodeSection>
+      <NodeSection label="First Target">
+        <NodeToken muted={!firstTarget}>{firstTarget || "No assignments configured"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

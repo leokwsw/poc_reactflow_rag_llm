@@ -10,9 +10,9 @@ export function getPrimaryParentOutput(context: NodeExecutionContext) {
 export function interpolateTemplate(template: string, context: NodeExecutionContext) {
   return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, rawExpression: string) => {
     const expression = rawExpression.trim();
-    if (expression === "query")
+    if (expression === "query" || expression === "sys.query")
       return context.input.query;
-    if (expression === "files")
+    if (expression === "files" || expression === "sys.files")
       return JSON.stringify(context.input.files);
 
     const resolved = resolveExpression(expression, context.nodeOutputs, context.aliasMap);
@@ -27,9 +27,9 @@ export function interpolateTemplate(template: string, context: NodeExecutionCont
 export function getInputValue(context: NodeExecutionContext, selector?: string) {
   if (!selector)
     return getPrimaryParentOutput(context);
-  if (selector === "query")
+  if (selector === "query" || selector === "sys.query")
     return context.input.query;
-  if (selector === "files")
+  if (selector === "files" || selector === "sys.files")
     return context.input.files;
   return resolveExpression(selector, context.nodeOutputs, context.aliasMap);
 }
@@ -39,4 +39,3 @@ export function toRecord(value: unknown, fallbackKey = "value"): Record<string, 
     return value as Record<string, unknown>;
   return { [fallbackKey]: value };
 }
-

@@ -10,7 +10,7 @@ type LayoutNodeInfo = {
   y: number;
   width: number;
   height: number;
-  layer?: number;
+  layerX: number;
 };
 
 type UseWorkflowOrganizeOptions = {
@@ -25,13 +25,17 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
   graph.setDefaultEdgeLabel(() => ({}));
   graph.setGraph({
     rankdir: "LR",
-    ranksep: 120,
-    nodesep: 80,
+    ranksep: 180,
+    nodesep: 90,
+    edgesep: 40,
+    marginx: 24,
+    marginy: 24,
   });
 
   nodes.forEach((node) => {
-    const width = node.width ?? 220;
-    const height = node.height ?? 100;
+    const measured = node as Node & { measured?: { width?: number; height?: number } };
+    const width = measured.measured?.width ?? node.width ?? 260;
+    const height = measured.measured?.height ?? node.height ?? 120;
     graph.setNode(node.id, { width, height });
   });
 
@@ -53,53 +57,138 @@ async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
       y: layoutNode.y - layoutNode.height / 2,
       width: layoutNode.width,
       height: layoutNode.height,
-      layer: Math.round(layoutNode.x / 100),
+      layerX: layoutNode.x,
     });
   });
 
   return result;
 }
 
-function buildLayerMap(layout: Map<string, LayoutNodeInfo>) {
-  const layerMap = new Map<number, { minY: number; maxHeight: number }>();
-
-  layout.forEach((layoutInfo) => {
-    if (layoutInfo.layer === undefined)
-      return;
-
-    const existing = layerMap.get(layoutInfo.layer);
-    layerMap.set(layoutInfo.layer, {
-      minY: existing ? Math.min(existing.minY, layoutInfo.y) : layoutInfo.y,
-      maxHeight: existing ? Math.max(existing.maxHeight, layoutInfo.height) : layoutInfo.height,
-    });
+function getConnectedComponents(nodes: Node[], edges: Edge[]) {
+  const adjacency = new Map<string, Set<string>>();
+  nodes.forEach((node) => adjacency.set(node.id, new Set()));
+  edges.forEach((edge) => {
+    adjacency.get(edge.source)?.add(edge.target);
+    adjacency.get(edge.target)?.add(edge.source);
   });
 
-  return layerMap;
+  const visited = new Set<string>();
+  const components: string[][] = [];
+
+  nodes.forEach((node) => {
+    if (visited.has(node.id))
+      return;
+
+    const queue = [node.id];
+    const component: string[] = [];
+    visited.add(node.id);
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      component.push(current);
+
+      adjacency.get(current)?.forEach((neighbor) => {
+        if (visited.has(neighbor))
+          return;
+        visited.add(neighbor);
+        queue.push(neighbor);
+      });
+    }
+
+    components.push(component);
+  });
+
+  return components;
 }
 
-function organizeNodes(nodes: Node[], layout: Map<string, LayoutNodeInfo>) {
-  const layerMap = buildLayerMap(layout);
+function wrapDenseLayers(layout: Map<string, LayoutNodeInfo>) {
+  const layers = new Map<number, Array<{ nodeId: string; info: LayoutNodeInfo }>>();
 
+  layout.forEach((info, nodeId) => {
+    const key = Math.round(info.layerX);
+    const layer = layers.get(key) ?? [];
+    layer.push({ nodeId, info });
+    layers.set(key, layer);
+  });
+
+  const orderedLayerKeys = Array.from(layers.keys()).sort((a, b) => a - b);
+  const positions = new Map<string, { x: number; y: number }>();
+  const maxRowsPerLayer = 12;
+  const columnGap = 72;
+  const rowGap = 32;
+  const rankGap = 180;
+  let currentX = 0;
+
+  orderedLayerKeys.forEach((layerKey) => {
+    const items = (layers.get(layerKey) ?? []).sort((a, b) => a.info.y - b.info.y);
+    if (items.length === 0)
+      return;
+
+    const maxWidth = Math.max(...items.map((item) => item.info.width));
+    const maxHeight = Math.max(...items.map((item) => item.info.height));
+    const columns = Math.max(1, Math.ceil(items.length / maxRowsPerLayer));
+    const rows = Math.ceil(items.length / columns);
+    const layerWidth = (columns * maxWidth) + ((columns - 1) * columnGap);
+
+    items.forEach((item, index) => {
+      const columnIndex = Math.floor(index / rows);
+      const rowIndex = index % rows;
+      positions.set(item.nodeId, {
+        x: currentX + (columnIndex * (maxWidth + columnGap)),
+        y: rowIndex * (maxHeight + rowGap),
+      });
+    });
+
+    currentX += layerWidth + rankGap;
+  });
+
+  return positions;
+}
+
+async function getOrganizedPositions(nodes: Node[], edges: Edge[]) {
+  const components = getConnectedComponents(nodes, edges);
+  const positions = new Map<string, { x: number; y: number }>();
+  const componentGapY = 140;
+  let currentOffsetY = 0;
+
+  for (const component of components) {
+    const componentNodes = nodes.filter((node) => component.includes(node.id));
+    const componentEdges = edges.filter((edge) => component.includes(edge.source) && component.includes(edge.target));
+    const layout = await getLayoutByDagre(componentNodes, componentEdges);
+    const wrapped = wrapDenseLayers(layout);
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    wrapped.forEach((position, nodeId) => {
+      const info = layout.get(nodeId);
+      if (!info)
+        return;
+      minY = Math.min(minY, position.y);
+      maxY = Math.max(maxY, position.y + info.height);
+    });
+
+    wrapped.forEach((position, nodeId) => {
+      positions.set(nodeId, {
+        x: position.x,
+        y: position.y - minY + currentOffsetY,
+      });
+    });
+
+    currentOffsetY += (maxY - minY) + componentGapY;
+  }
+
+  return positions;
+}
+
+function organizeNodes(nodes: Node[], positions: Map<string, { x: number; y: number }>) {
   return structuredClone(nodes).map((node) => {
-    const layoutInfo = layout.get(node.id);
-    if (!layoutInfo)
+    const position = positions.get(node.id);
+    if (!position)
       return node;
-
-    let yPosition = layoutInfo.y;
-    if (layoutInfo.layer !== undefined) {
-      const layerInfo = layerMap.get(layoutInfo.layer);
-      if (layerInfo) {
-        const layerCenterY = layerInfo.minY + layerInfo.maxHeight / 2;
-        yPosition = layerCenterY - layoutInfo.height / 2;
-      }
-    }
 
     return {
       ...node,
-      position: {
-        x: layoutInfo.x,
-        y: yPosition,
-      },
+      position,
     };
   });
 }
@@ -121,14 +210,15 @@ export const useWorkflowOrganize = ({
 
     const { getNodes, edges } = store.getState();
     const nodes = getNodes();
-    const layout = await getLayoutByDagre(nodes, edges);
-    const nextNodes = organizeNodes(nodes, layout);
+    const positions = await getOrganizedPositions(nodes, edges);
+    const nextNodes = organizeNodes(nodes, positions);
 
     setNodes(nextNodes);
-    reactflow.setViewport({
-      x: 0,
-      y: 0,
-      zoom: 0.7,
+    requestAnimationFrame(() => {
+      reactflow.fitView({
+        padding: 0.2,
+        duration: 250,
+      });
     });
 
     onAfterOrganize?.();

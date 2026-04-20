@@ -30,6 +30,18 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("triggerSchedule")}
+      >
+        Add Trigger Schedule Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("triggerWebhook")}
+      >
+        Add Trigger Webhook Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("agent")}
       >
         Add Agent Node
@@ -60,9 +72,21 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("documentExtractor")}
+      >
+        Add Document Extractor Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("http")}
       >
         Add HTTP Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("humanInput")}
+      >
+        Add Human Input Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
@@ -75,6 +99,12 @@ export default function PanelContextMenu({
         onClick={() => onAddNode("end")}
       >
         Add End Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("answer")}
+      >
+        Add Answer Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
@@ -144,6 +174,12 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("knowledgeIndex")}
+      >
+        Add Knowledge Index Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("knowledgeBase")}
       >
         Add Knowledge Base Node
@@ -159,6 +195,12 @@ export default function PanelContextMenu({
         onClick={() => onAddNode("tool")}
       >
         Add Tool Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("variableAggregator")}
+      >
+        Add Variable Aggregator Node
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"

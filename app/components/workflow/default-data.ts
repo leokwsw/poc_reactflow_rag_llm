@@ -10,6 +10,30 @@ type DifyGraphNode = {
     title?: string;
     answer?: string;
     template?: string;
+    output_type?: string;
+    variable_selector?: string[];
+    is_array_file?: boolean;
+    mode?: string;
+    frequency?: string;
+    timezone?: string;
+    cron_expression?: string;
+    visual_config?: {
+      time?: string;
+      on_minute?: number;
+      weekdays?: string[];
+      monthly_days?: Array<number | "last">;
+    };
+    webhook_url?: string;
+    method?: string;
+    content_type?: string;
+    headers?: Array<{ name?: string; value?: string }>;
+    params?: Array<{ name?: string; type?: string }>;
+    body?: Array<{ name?: string; type?: string }>;
+    async_mode?: boolean;
+    status_code?: number;
+    response_body?: string;
+    required_variables?: string[];
+    default_value_dict?: Record<string, unknown>;
     variables?: Array<{ name?: string; required?: boolean; type?: string } | string[]>;
     items?: Array<{
       variable_selector?: string[];
@@ -17,9 +41,36 @@ type DifyGraphNode = {
     }>;
     classes?: Array<{ id: string; name: string }>;
     instructions?: string;
-    model?: {
-      name?: string;
-      model?: string;
+    apiBaseUrl?: string;
+    apiKey?: string;
+    provider?: string;
+    model?: string;
+    prompt_template?: Array<{
+      role?: string;
+      text?: string;
+      id?: string;
+      edition_type?: string;
+    }>;
+    context?: {
+      enabled?: boolean;
+      variable_selector?: string[];
+    };
+    vision?: {
+      enabled?: boolean;
+    };
+    memory?: {
+      window?: {
+        enabled?: boolean;
+        size?: number;
+      };
+      query_prompt_template?: string;
+      role_prefix?: {
+        user?: string;
+        assistant?: string;
+      };
+    };
+    prompt_config?: {
+      jinja2_variables?: string[];
     };
     query_variable_selector?: string[];
     cases?: Array<{
@@ -36,6 +87,7 @@ type DifyGraphNode = {
       query?: { value?: string };
       model?: { value?: { model?: string } };
       tools?: { value?: Array<{ tool_name?: string }> };
+      maximum_iterations?: { value?: number };
     };
   };
 };
@@ -46,6 +98,12 @@ type DifyGraphEdge = {
   target: string;
   sourceHandle?: string;
   targetHandle?: string;
+  style?: {
+    strokeDasharray?: string;
+    opacity?: number;
+    strokeWidth?: number;
+  };
+  [key: string]: unknown;
 };
 
 type DifyIfElseCondition = {
@@ -58,6 +116,7 @@ type DifyGraphPayload = {
   graph?: {
     nodes?: DifyGraphNode[];
     edges?: DifyGraphEdge[];
+    readOnly?: boolean;
     viewport?: {
       x?: number;
       y?: number;
@@ -71,15 +130,27 @@ const rawGraph = sampleGraph as DifyGraphPayload;
 function mapNodeType(type?: string) {
   switch (type) {
     case "answer":
-      return "end";
+      return "answer";
     case "if-else":
       return "ifElse";
     case "question-classifier":
       return "questionClassifier";
     case "template-transform":
       return "templateTransform";
+    case "document-extractor":
+      return "documentExtractor";
+    case "human-input":
+      return "humanInput";
+    case "knowledge-index":
+      return "knowledgeIndex";
+    case "trigger-schedule":
+      return "triggerSchedule";
+    case "trigger-webhook":
+      return "triggerWebhook";
     case "variable-aggregator":
-      return "variableAssigner";
+      return "variableAggregator";
+    case "datasource":
+      return "dataSource";
     default:
       return type ?? "simple";
   }
@@ -153,10 +224,11 @@ function buildNodeData(node: DifyGraphNode) {
     };
   }
 
-  if (nodeType === "end") {
+  if (nodeType === "answer" || nodeType === "end") {
     return {
       type: nodeType,
       label,
+      answer: data.answer ?? "",
       outputs: extractOutputsFromAnswer(data.answer),
     };
   }
@@ -165,10 +237,55 @@ function buildNodeData(node: DifyGraphNode) {
     return {
       type: nodeType,
       label,
-      model: data.model?.name ?? data.model?.model ?? "",
+      model: data.model ?? "",
       instruction: data.instructions ?? "",
       classes: data.classes ?? [],
       queryVariableSelector: data.query_variable_selector ?? [],
+    };
+  }
+
+  if (nodeType === "llm") {
+    return {
+      type: nodeType,
+      label,
+      apiBaseUrl: data.apiBaseUrl ?? "https://api.openai.com/v1",
+      apiKey: data.apiKey ?? "",
+      provider: data.provider ?? "",
+      model: data.model ?? "",
+      prompt_template: Array.isArray((data as Record<string, unknown>).prompt_template)
+        ? (data as Record<string, unknown>).prompt_template
+        : [
+            {
+              role: "system",
+              text: "",
+              edition_type: "basic",
+            },
+          ],
+      context: (data as Record<string, unknown>).context ?? {
+        enabled: true,
+        variable_selector: ["sys", "query"],
+      },
+      vision: (data as Record<string, unknown>).vision ?? {
+        enabled: false,
+      },
+      memory: (data as Record<string, unknown>).memory ?? {
+        window: {
+          enabled: false,
+          size: 10,
+        },
+        query_prompt_template: "{{query}}\n\n{{files}}",
+        role_prefix: {
+          user: "",
+          assistant: "",
+        },
+      },
+      prompt_config: (data as Record<string, unknown>).prompt_config ?? {
+        jinja2_variables: [],
+      },
+      systemPrompt:
+        Array.isArray((data as Record<string, unknown>).prompt_template)
+          ? String((((data as Record<string, unknown>).prompt_template as Array<Record<string, unknown>>).find((item) => item.role === "system")?.text) ?? "")
+          : "",
     };
   }
 
@@ -192,6 +309,27 @@ function buildNodeData(node: DifyGraphNode) {
     };
   }
 
+  if (nodeType === "documentExtractor") {
+    return {
+      type: nodeType,
+      label,
+      variable_selector: data.variable_selector ?? ["start", "files"],
+      is_array_file: data.is_array_file ?? true,
+      mode: "text",
+    };
+  }
+
+  if (nodeType === "humanInput") {
+    return {
+      type: nodeType,
+      label,
+      variableName: "human_input",
+      prompt: "",
+      required_variables: data.required_variables ?? [],
+      default_value_dict: data.default_value_dict ?? {},
+    };
+  }
+
   if (nodeType === "assigner") {
     return {
       type: nodeType,
@@ -200,6 +338,20 @@ function buildNodeData(node: DifyGraphNode) {
         target: item.variable_selector?.join(".") ?? "",
         value: normalizeExpression(item.value),
       })),
+    };
+  }
+
+  if (nodeType === "variableAggregator") {
+    const variables = Array.isArray(data.variables) ? data.variables : [];
+    return {
+      type: nodeType,
+      label,
+      output_type: data.output_type ?? "string",
+      variables: variables,
+      advanced_settings: (data as Record<string, unknown>).advanced_settings ?? {
+        group_enabled: false,
+        groups: [],
+      },
     };
   }
 
@@ -223,10 +375,47 @@ function buildNodeData(node: DifyGraphNode) {
       type: nodeType,
       label,
       role: firstLine,
+      apiBaseUrl: data.apiBaseUrl ?? "",
+      apiKey: data.apiKey ?? "",
       instruction,
       query: data.agent_parameters?.query?.value ?? "",
-      model: data.agent_parameters?.model?.value?.model ?? "",
+      model: data.agent_parameters?.model?.value?.model ?? data.model ?? "",
+      maximumIterations: data.agent_parameters?.maximum_iterations?.value ?? 3,
       tools: data.agent_parameters?.tools?.value?.map((tool) => tool.tool_name ?? "").filter(Boolean) ?? [],
+    };
+  }
+
+  if (nodeType === "triggerSchedule") {
+    return {
+      type: nodeType,
+      label,
+      mode: data.mode ?? "visual",
+      frequency: data.frequency ?? "daily",
+      timezone: data.timezone ?? "UTC",
+      cron_expression: data.cron_expression ?? "",
+      visual_config: data.visual_config ?? {
+        time: "12:00 AM",
+        on_minute: 0,
+        weekdays: ["sun"],
+        monthly_days: [1],
+      },
+    };
+  }
+
+  if (nodeType === "triggerWebhook") {
+    return {
+      type: nodeType,
+      label,
+      webhook_url: data.webhook_url ?? "",
+      method: data.method ?? "POST",
+      content_type: data.content_type ?? "application/json",
+      headers: data.headers ?? [],
+      params: data.params ?? [],
+      body: data.body ?? [],
+      async_mode: data.async_mode ?? true,
+      status_code: data.status_code ?? 200,
+      response_body: data.response_body ?? "",
+      variables: data.variables ?? [],
     };
   }
 
@@ -240,6 +429,7 @@ function buildNodeData(node: DifyGraphNode) {
 function buildDefaultData(): WorkflowDataType {
   const graph = rawGraph.graph ?? {};
   const nodes = (graph.nodes ?? []).map((node) => ({
+    ...node,
     id: node.id,
     type: "custom",
     position: {
@@ -250,22 +440,23 @@ function buildDefaultData(): WorkflowDataType {
   }));
 
   const edges = (graph.edges ?? []).map((edge) => ({
+    ...edge,
     id: edge.id,
     source: edge.source,
     target: edge.target,
     sourceHandle: edge.sourceHandle === "false" ? "else" : edge.sourceHandle,
     targetHandle: edge.targetHandle,
     style: {
-      strokeDasharray: undefined,
-      opacity: 1,
-      strokeWidth: 2,
+      ...edge.style,
+      opacity: edge.style?.opacity ?? 1,
+      strokeWidth: edge.style?.strokeWidth ?? 2,
     },
   }));
 
   return {
     nodes,
     edges,
-    readOnly: false,
+    readOnly: graph.readOnly ?? false,
     viewport: {
       x: graph.viewport?.x ?? 0,
       y: graph.viewport?.y ?? 0,

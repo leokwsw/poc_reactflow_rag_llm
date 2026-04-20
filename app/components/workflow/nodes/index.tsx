@@ -23,12 +23,12 @@ const BaseNode: FC<BaseNodeProps> = (
 
   const nodeContent = cloneElement(children, { id, data })
 
-  const isStartNode = data.type === "start"
+  const isEntryNode = ["start", "triggerSchedule", "triggerWebhook"].includes(data.type)
 
-  return isStartNode
+  return isEntryNode
     ? (
       <EntryNodeContainer
-        nodeType={isStartNode ? StartNodeTypeEnum.Start : StartNodeTypeEnum.Trigger}
+        nodeType={data.type === "start" ? StartNodeTypeEnum.Start : StartNodeTypeEnum.Trigger}
       >
         {nodeContent}
       </EntryNodeContainer>

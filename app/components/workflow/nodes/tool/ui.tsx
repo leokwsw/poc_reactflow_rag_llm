@@ -19,14 +19,9 @@ export default function ToolNode({ data }: NodeProps<ToolNodeData>) {
       <NodeSection label="Tool">
         <NodeToken>{data.toolName || "web_search"}</NodeToken>
       </NodeSection>
-      <NodeSection label="Output Schema">
-        {outputSchema.length === 0 ? <NodeToken muted>No schema defined</NodeToken> : (
-          <div className="space-y-1.5">
-            {outputSchema.map((field) => <NodeToken key={field}>{field}</NodeToken>)}
-          </div>
-        )}
+      <NodeSection label="Schema">
+        <NodeToken>{outputSchema.length === 0 ? "No schema defined" : `${outputSchema.length} field${outputSchema.length === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

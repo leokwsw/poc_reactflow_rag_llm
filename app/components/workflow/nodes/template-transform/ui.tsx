@@ -3,6 +3,7 @@
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type TemplateTransformNodeData = {
   label?: string;
@@ -10,14 +11,17 @@ type TemplateTransformNodeData = {
 };
 
 export default function TemplateTransformNode({ data }: NodeProps<TemplateTransformNodeData>) {
+  const template = data.template || "Hello {{query}}";
+  const variableCount = (template.match(/\{\{\s*([^}]+?)\s*\}\}/g) ?? []).length;
+
   return (
     <BaseNode title={data.label || "Template Transform"} subtitle="Render a text template from variables" tone="zinc" hasTarget hasSource>
       <NodeSection label="Template">
-        <pre className="line-clamp-4 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-2 text-xs text-zinc-700">
-          {data.template || "Hello {{query}}"}
-        </pre>
+        <NodeToken>{`${template.length} chars`}</NodeToken>
+      </NodeSection>
+      <NodeSection label="Variables">
+        <NodeToken>{`${variableCount} reference${variableCount === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

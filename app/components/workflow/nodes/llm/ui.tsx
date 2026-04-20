@@ -11,28 +11,30 @@ type LlmNodeData = {
   apiBaseUrl?: string;
   model?: string;
   systemPrompt?: string;
+  tools?: string[];
+  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
   const hasModel = Boolean(data.model);
+  const tools = data.tools ?? [];
 
   return (
-    <BaseNode title={data.label || "LLM"} subtitle="Model call and prompt execution" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "LLM"} subtitle="Model call and prompt execution" tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
       {hasModel ? (
         <>
-          <NodeSection label="Endpoint">
-            <NodeToken>{data.apiBaseUrl || "https://api.openai.com/v1"}</NodeToken>
-          </NodeSection>
           <NodeSection label="Model">
             <NodeToken>{data.model}</NodeToken>
           </NodeSection>
-          {data.systemPrompt && (
-            <NodeSection label="System Prompt">
-              <p className="line-clamp-3 rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-700">
-                {data.systemPrompt}
-              </p>
-            </NodeSection>
-          )}
+          <NodeSection label="Tools">
+            {tools.length === 0 ? (
+              <NodeToken muted>No tools attached</NodeToken>
+            ) : (
+              <div className="space-y-1.5">
+                {tools.map((tool) => <NodeToken key={tool}>{tool}</NodeToken>)}
+              </div>
+            )}
+          </NodeSection>
         </>
       ) : (
         <NodeToken muted>No model selected</NodeToken>

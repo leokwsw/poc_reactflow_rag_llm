@@ -11,7 +11,7 @@ export type WorkflowFile = {
 export type WorkflowTraceItem = {
   nodeId: string;
   nodeType: string;
-  status: "pending" | "running" | "completed";
+  status: "pending" | "running" | "completed" | "error";
   detail?: string;
   node: Node;
 };

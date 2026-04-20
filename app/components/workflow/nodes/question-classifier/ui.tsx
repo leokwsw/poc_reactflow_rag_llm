@@ -3,6 +3,7 @@
 import { Handle, Position, type NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type QuestionClass = {
   id: string;
@@ -13,6 +14,7 @@ type QuestionClassifierNodeData = {
   label?: string;
   model?: string;
   classes?: QuestionClass[];
+  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function QuestionClassifierNode({ data }: NodeProps<QuestionClassifierNodeData>) {
@@ -22,11 +24,15 @@ export default function QuestionClassifierNode({ data }: NodeProps<QuestionClass
   return (
     <BaseNode
       title={data.label || "Question Classifier"}
-      subtitle={data.model ? `Model: ${data.model}` : "Classify user intent into categories"}
+      subtitle="Classify user intent into categories"
       tone="amber"
       hasTarget
       hasSource={false}
+      runStatus={data.runStatus}
     >
+      <NodeSection label="Model">
+        <NodeToken>{data.model || "No model selected"}</NodeToken>
+      </NodeSection>
       <NodeSection label="Classes">
         {classes.length === 0 ? (
           <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs text-zinc-500">

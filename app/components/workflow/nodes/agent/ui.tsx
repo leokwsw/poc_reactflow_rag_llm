@@ -6,18 +6,20 @@ import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type AgentNodeData = {
+  apiBaseUrl?: string;
+  model?: string;
   label?: string;
-  role?: string;
   tools?: string[];
+  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function AgentNode({ data }: NodeProps<AgentNodeData>) {
   const tools = data.tools ?? [];
 
   return (
-    <BaseNode title={data.label || "Agent"} subtitle="Autonomous task agent" tone="indigo" hasTarget hasSource>
-      <NodeSection label="Role">
-        <NodeToken>{data.role || "General-purpose assistant"}</NodeToken>
+    <BaseNode title={data.label || "Agent"} subtitle="Autonomous task agent" tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
+      <NodeSection label="Model">
+        <NodeToken>{data.model || "Use environment model"}</NodeToken>
       </NodeSection>
       <NodeSection label="Tools">
         {tools.length === 0 ? <NodeToken muted>No tools attached</NodeToken> : (
@@ -29,4 +31,3 @@ export default function AgentNode({ data }: NodeProps<AgentNodeData>) {
     </BaseNode>
   );
 }
-

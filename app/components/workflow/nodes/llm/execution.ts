@@ -1,5 +1,6 @@
-import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
-import { getIncomingEdges, summarizeFiles } from "@/app/components/workflow/nodes/execution-utils";
+import type {NodeExecutionContext, NodeExecutionResult} from "@/app/components/workflow/nodes/execution-types";
+import {getIncomingEdges, summarizeFiles} from "@/app/components/workflow/nodes/execution-utils";
+import {interpolateTemplate} from "@/app/components/workflow/nodes/_base/execution-helpers";
 
 type LlmNodeConfig = {
   apiBaseUrl?: string;
@@ -7,14 +8,24 @@ type LlmNodeConfig = {
   model?: string;
   systemPrompt?: string;
   temperature?: number;
+  prompt_template?: Array<{
+    role?: string;
+    text?: string;
+  }>;
+  memory?: {
+    query_prompt_template?: string;
+  };
 };
 
 export async function executeLlmNode({
-  node,
-  nodeOutputs,
-  input,
-  edges,
-}: NodeExecutionContext): Promise<NodeExecutionResult> {
+                                       node,
+                                       nodeId,
+                                       workflow,
+                                       nodeOutputs,
+                                       input,
+                                       edges,
+                                       aliasMap,
+                                     }: NodeExecutionContext): Promise<NodeExecutionResult> {
   const config = (node.data ?? {}) as LlmNodeConfig & { label?: string };
   const incomingEdges = getIncomingEdges(node.id, edges);
   const firstParent = incomingEdges[0]?.source;
@@ -29,6 +40,9 @@ export async function executeLlmNode({
   const apiBaseUrl = (config.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
   const model = config.model || process.env.OPENAI_MODEL;
+  const systemPrompt = Array.isArray(config.prompt_template)
+    ? config.prompt_template.find((item) => item.role === "system")?.text || config.systemPrompt || ""
+    : config.systemPrompt || "";
 
   if (!apiKey) {
     throw new Error(`LLM node "${node.id}" is missing apiKey, and OPENAI_API_KEY is not set.`);
@@ -38,16 +52,27 @@ export async function executeLlmNode({
   }
 
   const fileSummary = summarizeFiles(input.files);
-  const userContent = [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
-    .filter(Boolean)
-    .join("\n\n");
+  const queryPromptTemplate = config.memory?.query_prompt_template?.trim();
+  const userContent = queryPromptTemplate
+    ? interpolateTemplate(queryPromptTemplate, {
+      node,
+      nodeId,
+      workflow,
+      input,
+      edges,
+      nodeOutputs,
+      aliasMap,
+    })
+    : [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
+      .filter(Boolean)
+      .join("\n\n");
 
   const messages = [
-    config.systemPrompt
+    systemPrompt
       ? {
-          role: "system",
-          content: config.systemPrompt,
-        }
+        role: "system",
+        content: systemPrompt,
+      }
       : null,
     {
       role: "user",
@@ -87,8 +112,8 @@ export async function executeLlmNode({
     ? content
     : Array.isArray(content)
       ? content
-          .map((part) => (part?.type === "text" ? part.text || "" : ""))
-          .join("")
+        .map((part) => (part?.type === "text" ? part.text || "" : ""))
+        .join("")
       : "";
 
   return {
@@ -100,4 +125,3 @@ export async function executeLlmNode({
     detail: `model=${model}`,
   };
 }
-
