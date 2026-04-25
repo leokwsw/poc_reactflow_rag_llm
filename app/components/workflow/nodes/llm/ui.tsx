@@ -7,10 +7,8 @@ import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type LlmNodeData = {
   label?: string;
-  provider?: string;
   apiBaseUrl?: string;
   model?: string;
-  systemPrompt?: string;
   tools?: string[];
   runStatus?: "idle" | "running" | "completed" | "error";
 };

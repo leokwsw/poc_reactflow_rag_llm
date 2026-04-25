@@ -47,7 +47,6 @@
           "label": "llm",
           "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
           "apiKey": "octopusPass",
-          "provider": "",
           "model": "gpt-oss-120b-MXFP4-Q8",
           "messages": [
             {
@@ -114,7 +113,6 @@
           "label": "llm",
           "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
           "apiKey": "octopusPass",
-          "provider": "",
           "model": "gpt-oss-120b-MXFP4-Q8",
           "messages": [
             {

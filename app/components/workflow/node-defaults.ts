@@ -62,7 +62,6 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "LLM",
-      provider: "openai",
       apiBaseUrl: "https://api.openai.com/v1",
       apiKey: "",
       model: "gpt-4o-mini",

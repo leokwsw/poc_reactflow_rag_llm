@@ -11,7 +11,6 @@ type LlmMessage = {
 type LlmNodeData = {
   apiBaseUrl?: string;
   apiKey?: string;
-  provider?: string;
   model?: string;
   context?: {
     enabled?: boolean;
@@ -80,9 +79,6 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
         </PanelField>
         <PanelField label="API Key">
           <PanelInput type="password" value={data.apiKey ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
-        </PanelField>
-        <PanelField label="Provider">
-          <PanelInput value={data.provider ?? ""} onChange={(event) => patchNodeData({ provider: event.target.value })} />
         </PanelField>
 
         <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2">
@@ -189,14 +185,9 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
           ))}
         </div>
 
-        <div className="flex gap-2">
-          <PanelButton onClick={() => addMessage("user")}>
-            Add User Message
-          </PanelButton>
-          <PanelButton onClick={() => addMessage("assistant")} className="border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50">
-            Add Assistant Message
-          </PanelButton>
-        </div>
+        <PanelButton onClick={() => addMessage("user")}>
+          Add Message
+        </PanelButton>
       </PanelCard>
     </div>
   );

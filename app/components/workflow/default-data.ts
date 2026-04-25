@@ -43,7 +43,6 @@ type DifyGraphNode = {
     instructions?: string;
     apiBaseUrl?: string;
     apiKey?: string;
-    provider?: string;
     model?: string;
     prompt_template?: Array<{
       role?: string;
@@ -289,7 +288,6 @@ function buildNodeData(node: DifyGraphNode) {
       label,
       apiBaseUrl: data.apiBaseUrl ?? "https://api.openai.com/v1",
       apiKey: data.apiKey ?? "",
-      provider: data.provider ?? "",
       model: data.model ?? "",
       messages: normalizeLlmMessages(rawMessages.length > 0 ? rawMessages : fallbackMessages),
       context: (data as Record<string, unknown>).context ?? {
