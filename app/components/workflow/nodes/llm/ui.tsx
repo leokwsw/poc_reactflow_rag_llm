@@ -7,7 +7,6 @@ import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type LlmNodeData = {
   label?: string;
-  apiBaseUrl?: string;
   model?: string;
   tools?: string[];
   runStatus?: "idle" | "running" | "completed" | "error";
@@ -24,14 +23,13 @@ export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
           <NodeSection label="Model">
             <NodeToken>{data.model}</NodeToken>
           </NodeSection>
-          {tools.length > 0 ?? (
+          {tools.length > 0 ? (
             <NodeSection label="Tools">
               <div className="space-y-1.5">
                 {tools.map((tool) => <NodeToken key={tool}>{tool}</NodeToken>)}
               </div>
             </NodeSection>
-          )}
-
+          ) : null}
         </>
       ) : (
         <NodeToken muted>No model selected</NodeToken>

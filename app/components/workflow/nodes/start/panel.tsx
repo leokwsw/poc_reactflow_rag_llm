@@ -16,8 +16,6 @@ type StartNodeData = {
 
 export default function StartPanel({ node, patchNodeData }: NodePanelProps) {
   const data = (node.data ?? {}) as StartNodeData;
-  const queryVariable = data.variables?.[0]?.name ?? "query";
-  const filesVariable = data.variables?.[1]?.name ?? "files";
 
   return (
     <div className="space-y-4">
