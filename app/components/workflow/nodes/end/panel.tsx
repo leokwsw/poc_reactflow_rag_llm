@@ -175,10 +175,9 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
     );
   }, [allNodes]);
 
-  const outputsValue = (data.outputs ?? []).join("\n");
+  const templateValue = data.answer ?? (data.outputs ?? []).join("\n");
   const previewTokens = extractOutputTokens(data.answer, data.outputs);
-  const hasRawAnswer = Boolean(data.answer?.trim());
-  const hasSimpleExpressionPreview = !data.outputs?.length && previewTokens.length > 0;
+  const hasImportedOutputs = !data.answer?.trim() && (data.outputs?.length ?? 0) > 0;
   const variableOptions = useMemo(
     () => getVariableOptions(allNodes, node.id, labelMap),
     [allNodes, node.id, labelMap],
@@ -232,11 +231,12 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
       return;
     }
 
-    const currentValue = outputsValue;
+    const currentValue = templateValue;
     const nextValue = `${currentValue.slice(0, slashState.start)}${option.expression}${currentValue.slice(slashState.end)}`;
 
     patchNodeData({
-      outputs: nextValue.split("\n").map((item) => item.trim()).filter(Boolean),
+      answer: nextValue,
+      outputs: extractOutputTokens(nextValue).map((token) => token.raw),
     });
     setSlashState(null);
 
@@ -269,16 +269,18 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
           <p className="text-sm font-semibold text-zinc-800">Answer Variables</p>
         </div>
 
-        <PanelField label="Variables">
+        <PanelField label="">
           <div className="relative">
             <PanelTextArea
               ref={variablesTextAreaRef}
               rows={6}
-              value={outputsValue}
-              placeholder={"輸入 / 搜尋可用變數\n\n{{#corrector.text#}}\n{{#llm_1.text#}}"}
+              value={templateValue}
+              placeholder={"Write answer template here, use / to insert variables\n\nDeepSeek:\n{{#llm.text#}}\n\nQwen:\n{{#llm_2.text#}}"}
               onChange={(event) => {
+                const nextValue = event.target.value;
                 patchNodeData({
-                  outputs: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean),
+                  answer: nextValue,
+                  outputs: extractOutputTokens(nextValue).map((token) => token.raw),
                 });
                 updateSlashState(event.target.value, event.target.selectionStart);
               }}
@@ -327,11 +329,11 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
           </div>
         </PanelField>
 
-        {hasSimpleExpressionPreview && (
+        {hasImportedOutputs && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-700">Imported Template</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-700">Imported Outputs</p>
             <p className="mt-1 text-xs leading-5 text-amber-800">
-              呢個 answer node 目前係由舊式 raw template 匯入。下面已經幫你解析成可讀變數清單。
+              呢個 answer node 目前由 outputs list 匯入。你而家可以直接喺上面 Raw Template 編輯最終內容。
             </p>
             <div className="mt-2 space-y-1.5">
               {previewTokens.map((token, index) => (
@@ -352,64 +354,15 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
               <PanelButton
                 onClick={() =>
                   patchNodeData({
+                    answer: (data.outputs ?? []).map((item) => item).join("\n"),
                     outputs: previewTokens.map((token) => token.raw),
-                    answer: "",
                   })}
               >
-                Convert To Outputs List
+                Convert To Raw Template
               </PanelButton>
             </div>
           </div>
         )}
-
-        {hasRawAnswer && (
-          <details className="rounded-xl border border-zinc-200 bg-white">
-            <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-zinc-700">
-              Show Raw Template
-            </summary>
-            <div className="border-t border-zinc-200 px-3 py-3">
-              <PanelField label="Template">
-                <PanelTextArea
-                  rows={5}
-                  value={data.answer ?? ""}
-                  placeholder={"{{#corrector.text#}}\n\n{{#llm_1.text#}}"}
-                  onChange={(event) => patchNodeData({ answer: event.target.value })}
-                />
-              </PanelField>
-            </div>
-          </details>
-        )}
-      </PanelCard>
-
-      <PanelCard>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">Preview</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            根據目前設定，最終 answer node 會展示以下輸出來源。
-          </p>
-        </div>
-
-        <div className="space-y-1.5 rounded-xl border border-zinc-200 bg-white p-2">
-          {previewTokens.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-2.5 py-2 text-xs text-zinc-400">
-              尚未配置任何輸出變數
-            </div>
-          ) : (
-            previewTokens.map((token, index) => (
-              <div
-                key={`${token.raw}-${index}`}
-                className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-[11px]"
-              >
-                <span className="min-w-0 truncate font-medium text-zinc-700">
-                  {getNodeDisplayLabel(token.source, labelMap)}
-                </span>
-                <span className="shrink-0 rounded-md bg-indigo-50 px-1.5 py-0.5 font-mono text-[10px] text-indigo-600">
-                  {"{"}{token.field}{"}"}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
       </PanelCard>
     </div>
   );
