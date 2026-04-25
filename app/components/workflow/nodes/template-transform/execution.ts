@@ -7,7 +7,7 @@ type TemplateTransformNodeData = {
 
 export async function executeTemplateTransformNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const data = (context.node.data ?? {}) as TemplateTransformNodeData;
-  const rendered = interpolateTemplate(data.template || "{{query}}", context);
+  const rendered = interpolateTemplate(data.template || "{{#sys.query#}}", context);
 
   return {
     output: {
@@ -17,4 +17,3 @@ export async function executeTemplateTransformNode(context: NodeExecutionContext
     detail: `chars=${rendered.length}`,
   };
 }
-

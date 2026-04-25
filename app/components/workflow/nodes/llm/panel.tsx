@@ -103,7 +103,7 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
         <PanelField label="Prompt Template">
           <PanelTextArea
             rows={5}
-            value={data.prompt_template ?? "{{query}}\n\n{{files}}"}
+            value={data.prompt_template ?? "{{#sys.query#}}\n\n{{#sys.files#}}"}
             onChange={(event) => patchNodeData({ prompt_template: event.target.value })}
           />
         </PanelField>

@@ -39,7 +39,7 @@ export default function AgentPanel({ node, patchNodeData }: NodePanelProps) {
         <PanelTextArea rows={5} value={data.instruction ?? ""} onChange={(event) => patchNodeData({ instruction: event.target.value })} />
       </PanelField>
       <PanelField label="Query">
-        <PanelInput value={data.query ?? "{{query}}"} onChange={(event) => patchNodeData({ query: event.target.value })} />
+        <PanelInput value={data.query ?? "{{#sys.query#}}"} onChange={(event) => patchNodeData({ query: event.target.value })} />
       </PanelField>
       <PanelField label="Maximum Iterations">
         <PanelInput

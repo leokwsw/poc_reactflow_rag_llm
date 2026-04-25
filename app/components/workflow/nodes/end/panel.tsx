@@ -152,7 +152,7 @@ function getVariableOptions(allNodes: NodePanelProps["allNodes"], currentNodeId:
       nodeLabel,
       field: field.name,
       typeLabel: field.typeLabel,
-      expression: `${item.id}.${field.name}`,
+      expression: `{{#${item.id}.${field.name}#}}`,
     }));
   });
 }
@@ -283,7 +283,7 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
               ref={variablesTextAreaRef}
               rows={6}
               value={outputsValue}
-              placeholder={"輸入 / 搜尋可用變數\n\ncorrector.text\nllm_1.text"}
+              placeholder={"輸入 / 搜尋可用變數\n\n{{#corrector.text#}}\n{{#llm_1.text#}}"}
               onChange={(event) => {
                 patchNodeData({
                   outputs: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean),
@@ -380,7 +380,7 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
                 <PanelTextArea
                   rows={5}
                   value={data.answer ?? ""}
-                  placeholder={"{{corrector.text}}\n\n{{llm_1.text}}"}
+                  placeholder={"{{#corrector.text#}}\n\n{{#llm_1.text#}}"}
                   onChange={(event) => patchNodeData({ answer: event.target.value })}
                 />
               </PanelField>

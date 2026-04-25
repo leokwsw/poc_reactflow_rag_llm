@@ -148,15 +148,15 @@ function normalizeExpression(value: string[] | string | undefined) {
 
   if (Array.isArray(value)) {
     if (value[0] === "sys" && value[1] === "query")
-      return "{{query}}";
+      return "{{#sys.query#}}";
     if (value[0] === "sys" && value[1] === "files")
-      return "{{files}}";
+      return "{{#sys.files#}}";
     if (value.length >= 2)
-      return `{{${value[0]}.${value[1]}}}`;
+      return `{{#${value[0]}.${value[1]}#}}`;
     return value.join(".");
   }
 
-  return value.replace(/\{\{#([^#.]+)\.([^#]+)#\}\}/g, "{{$1.$2}}");
+  return value.replace(/\{\{\s*#?([^}#]+?)#?\s*\}\}/g, "{{#$1#}}");
 }
 
 function extractOutputsFromAnswer(answer?: string) {
@@ -251,7 +251,7 @@ function buildNodeData(node: DifyGraphNode) {
       apiKey: data.apiKey ?? "",
       provider: data.provider ?? "",
       model: data.model ?? "",
-      prompt_template: rawMemoryQueryPrompt || rawPromptTemplateText || "{{query}}\n\n{{files}}",
+      prompt_template: rawMemoryQueryPrompt || rawPromptTemplateText || "{{#sys.query#}}\n\n{{#sys.files#}}",
       context: (data as Record<string, unknown>).context ?? {
         enabled: true,
         variable_selector: ["sys", "query"],

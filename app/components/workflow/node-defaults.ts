@@ -7,7 +7,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
   if (type === "start") {
     data = { ...data, label: "Start", variables: [{ name: "query", required: true, type: "string" }] };
   } else if (type === "answer") {
-    data = { ...data, label: "Answer", answer: "{{llm.text}}" };
+    data = { ...data, label: "Answer", answer: "{{#llm.text#}}" };
   } else if (type === "agent") {
     data = {
       ...data,
@@ -17,12 +17,12 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       apiKey: "",
       model: "gpt-4o-mini",
       instruction: "You are a helpful AI agent. Think step by step and answer with the most useful result.",
-      query: "{{query}}",
+      query: "{{#sys.query#}}",
       maximumIterations: 3,
       tools: ["web_search", "calculator"],
     };
   } else if (type === "assigner") {
-    data = { ...data, label: "Assigner", assignments: [{ target: "summary", value: "{{query}}" }] };
+    data = { ...data, label: "Assigner", assignments: [{ target: "summary", value: "{{#sys.query#}}" }] };
   } else if (type === "code") {
     data = { ...data, label: "Code", language: "JavaScript", code: "return { result: input };" };
   } else if (type === "dataSource") {
@@ -59,7 +59,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       apiBaseUrl: "https://api.openai.com/v1",
       apiKey: "",
       model: "gpt-4o-mini",
-      prompt_template: "{{query}}\n\n{{files}}",
+      prompt_template: "{{#sys.query#}}\n\n{{#sys.files#}}",
       context: {
         enabled: true,
         variable_selector: ["sys", "query"],
@@ -101,7 +101,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
   } else if (type === "simple") {
     data = { ...data, label: "Simple Node", description: "Simple node content" };
   } else if (type === "templateTransform") {
-    data = { ...data, label: "Template Transform", template: "Hello {{query}}" };
+    data = { ...data, label: "Template Transform", template: "Hello {{#sys.query#}}" };
   } else if (type === "tool") {
     data = { ...data, label: "Tool", toolName: "web_search", outputSchema: ["title", "url", "snippet"] };
   } else if (type === "triggerSchedule") {
@@ -146,7 +146,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       },
     };
   } else if (type === "variableAssigner") {
-    data = { ...data, label: "Variable Assigner", variables: [{ name: "result", expression: "{{query}}" }] };
+    data = { ...data, label: "Variable Assigner", variables: [{ name: "result", expression: "{{#sys.query#}}" }] };
   } else if (type === "knowledgeBase") {
     data = { ...data, label: "Knowledge Base", indexingTechnique: "high_quality", retrievalSearchMethod: "semantic_search" };
   } else {

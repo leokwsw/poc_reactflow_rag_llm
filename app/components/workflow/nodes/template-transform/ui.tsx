@@ -11,7 +11,7 @@ type TemplateTransformNodeData = {
 };
 
 export default function TemplateTransformNode({ data }: NodeProps<TemplateTransformNodeData>) {
-  const template = data.template || "Hello {{query}}";
+  const template = data.template || "Hello {{#sys.query#}}";
   const variableCount = (template.match(/\{\{\s*([^}]+?)\s*\}\}/g) ?? []).length;
 
   return (
