@@ -5,8 +5,8 @@
         "id": "1775711823881",
         "type": "custom",
         "position": {
-          "x": -2.686090950614272,
-          "y": 28.651636806552077
+          "x": 0,
+          "y": 0
         },
         "data": {
           "variables": [
@@ -58,20 +58,14 @@
               "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
             }
           ],
-          "context": {
-            "enabled": true,
-            "variable_selector": [
-              "sys",
-              "query"
-            ]
-          },
+          "context_variable": "",
           "vision_enable": false
         },
         "width": 245,
         "height": 199,
         "positionAbsolute": {
           "x": 422,
-          "y": 0
+          "y": -2.391639593552256
         },
         "selected": false,
         "dragging": false
@@ -80,8 +74,8 @@
         "id": "answer",
         "type": "custom",
         "position": {
-          "x": 891.2453324807167,
-          "y": 111.21124110017982
+          "x": 847,
+          "y": 0
         },
         "data": {
           "type": "answer",
@@ -98,15 +92,15 @@
           "x": 891.2453324807167,
           "y": 111.21124110017982
         },
-        "selected": true,
+        "selected": false,
         "dragging": false
       },
       {
         "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "type": "custom",
         "position": {
-          "x": 419.78735114633565,
-          "y": 224.18287974089773
+          "x": 422,
+          "y": 231
         },
         "data": {
           "type": "llm",
@@ -124,18 +118,12 @@
               "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
             }
           ],
-          "context": {
-            "enabled": true,
-            "variable_selector": [
-              "sys",
-              "query"
-            ]
-          },
+          "context_variable": "",
           "vision_enable": false
         },
         "width": 245,
         "height": 199,
-        "selected": false,
+        "selected": true,
         "positionAbsolute": {
           "x": 419.78735114633565,
           "y": 224.18287974089773
@@ -191,9 +179,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": -11.027553098649719,
-      "y": 318.73788869960725,
-      "zoom": 0.8362463999140606
+      "x": -879.8284273636884,
+      "y": 270.57624170498923,
+      "zoom": 1.7171308728755075
     }
   }
 }
