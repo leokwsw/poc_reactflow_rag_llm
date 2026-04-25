@@ -13,11 +13,10 @@ type HttpNodeData = {
 
 export default function HttpNode({ data }: NodeProps<HttpNodeData>) {
   return (
-    <BaseNode title={data.label || "HTTP"} subtitle="Call an external HTTP endpoint" tone="amber" hasTarget hasSource>
+    <BaseNode title={data.label || "HTTP"} tone="amber" hasTarget hasSource>
       <NodeSection label="Request">
         <NodeToken>{`${data.method || "GET"} ${data.url || "https://api.example.com"}`}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

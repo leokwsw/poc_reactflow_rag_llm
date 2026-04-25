@@ -24,7 +24,6 @@ export default function NoteNode({ data }: NodeProps<NoteNodeData>) {
   return (
     <BaseNode
       title={data.author || "Note"}
-      subtitle={themeMeta.subtitle}
       tone="amber"
       hasTarget={false}
       hasSource={false}

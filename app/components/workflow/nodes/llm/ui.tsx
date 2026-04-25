@@ -17,7 +17,7 @@ export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
   const tools = data.tools ?? [];
 
   return (
-    <BaseNode title={data.label || "LLM"} subtitle="Model call and prompt execution" tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
+    <BaseNode title={data.label || "LLM"} tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
       {hasModel ? (
         <>
           <NodeSection label="Model">

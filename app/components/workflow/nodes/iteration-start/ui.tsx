@@ -12,11 +12,10 @@ type IterationStartNodeData = {
 
 export default function IterationStartNode({ data }: NodeProps<IterationStartNodeData>) {
   return (
-    <BaseNode title={data.label || "Iteration Start"} subtitle="Entry to iteration body" tone="zinc" hasTarget={false} hasSource>
+    <BaseNode title={data.label || "Iteration Start"} tone="zinc" hasTarget={false} hasSource>
       <NodeSection label="Scope">
         <NodeToken>{data.scopeName || "iteration_scope"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

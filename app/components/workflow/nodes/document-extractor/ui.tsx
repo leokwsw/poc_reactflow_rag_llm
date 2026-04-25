@@ -19,7 +19,7 @@ export default function DocumentExtractorNode({ data }: NodeProps<DocumentExtrac
     : data.sourceSelector || "files";
 
   return (
-    <BaseNode title={data.label || "Document Extractor"} subtitle="Extract text from uploaded files" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Document Extractor"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Source">
         <NodeToken>{selector}</NodeToken>
       </NodeSection>

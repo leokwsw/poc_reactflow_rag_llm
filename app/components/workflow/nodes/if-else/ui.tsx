@@ -21,7 +21,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
   const branchCount = cases.length + 1; // +1 for ELSE
 
   return (
-    <BaseNode title={data.label || "If / Else"} subtitle="Conditional branch routing" tone="amber" hasTarget hasSource={false} runStatus={data.runStatus}>
+    <BaseNode title={data.label || "If / Else"} tone="amber" hasTarget hasSource={false} runStatus={data.runStatus}>
       <NodeSection label="Branches">
       <div className="space-y-2">
         {cases.map((branch, index) => {

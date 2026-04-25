@@ -12,11 +12,10 @@ type LoopEndNodeData = {
 
 export default function LoopEndNode({ data }: NodeProps<LoopEndNodeData>) {
   return (
-    <BaseNode title={data.label || "Loop End"} subtitle="Exit and aggregate loop results" tone="emerald" hasTarget hasSource={false}>
+    <BaseNode title={data.label || "Loop End"} tone="emerald" hasTarget hasSource={false}>
       <NodeSection label="Aggregate">
         <NodeToken>{data.aggregate || "collect_results"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

@@ -19,7 +19,7 @@ export default function ParameterExtractorNode({ data }: NodeProps<ParameterExtr
   const parameters = data.parameters ?? [];
 
   return (
-    <BaseNode title={data.label || "Parameter Extractor"} subtitle="Extract structured fields from input" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Parameter Extractor"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Parameters">
         {parameters.length === 0 ? <NodeToken muted>No parameters configured</NodeToken> : (
           <div className="space-y-1.5">
@@ -32,4 +32,3 @@ export default function ParameterExtractorNode({ data }: NodeProps<ParameterExtr
     </BaseNode>
   );
 }
-

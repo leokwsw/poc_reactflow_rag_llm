@@ -17,7 +17,7 @@ export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetr
   const datasets = data.datasets ?? [];
 
   return (
-    <BaseNode title={data.label || "Knowledge Retrieval"} subtitle="Retrieve context from datasets" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Knowledge Retrieval"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Datasets">
         {datasets.length === 0 ? (
           <NodeToken muted>No datasets selected</NodeToken>

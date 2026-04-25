@@ -17,7 +17,7 @@ export default function AgentNode({ data }: NodeProps<AgentNodeData>) {
   const tools = data.tools ?? [];
 
   return (
-    <BaseNode title={data.label || "Agent"} subtitle="Autonomous task agent" tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
+    <BaseNode title={data.label || "Agent"} tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
       <NodeSection label="Model">
         <NodeToken>{data.model || "Use environment model"}</NodeToken>
       </NodeSection>

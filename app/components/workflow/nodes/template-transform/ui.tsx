@@ -15,7 +15,7 @@ export default function TemplateTransformNode({ data }: NodeProps<TemplateTransf
   const variableCount = (template.match(/\{\{\s*([^}]+?)\s*\}\}/g) ?? []).length;
 
   return (
-    <BaseNode title={data.label || "Template Transform"} subtitle="Render a text template from variables" tone="zinc" hasTarget hasSource>
+    <BaseNode title={data.label || "Template Transform"} tone="zinc" hasTarget hasSource>
       <NodeSection label="Template">
         <NodeToken>{`${template.length} chars`}</NodeToken>
       </NodeSection>

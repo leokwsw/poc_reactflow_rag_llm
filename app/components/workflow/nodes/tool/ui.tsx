@@ -15,7 +15,7 @@ export default function ToolNode({ data }: NodeProps<ToolNodeData>) {
   const outputSchema = data.outputSchema ?? [];
 
   return (
-    <BaseNode title={data.label || "Tool"} subtitle="Invoke an external tool capability" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Tool"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Tool">
         <NodeToken>{data.toolName || "web_search"}</NodeToken>
       </NodeSection>

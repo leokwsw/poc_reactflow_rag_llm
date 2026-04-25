@@ -13,7 +13,7 @@ type LoopNodeData = {
 
 export default function LoopNode({ data }: NodeProps<LoopNodeData>) {
   return (
-    <BaseNode title={data.label || "Loop"} subtitle="Repeat until condition is met" tone="amber" hasTarget hasSource>
+    <BaseNode title={data.label || "Loop"} tone="amber" hasTarget hasSource>
       <NodeSection label="Condition">
         <NodeToken>{data.condition || "count < 10"}</NodeToken>
       </NodeSection>
@@ -23,4 +23,3 @@ export default function LoopNode({ data }: NodeProps<LoopNodeData>) {
     </BaseNode>
   );
 }
-

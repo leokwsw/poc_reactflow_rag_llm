@@ -10,8 +10,6 @@ type StartNodeData = {
 
 export default function StartNode({ data }: NodeProps<StartNodeData>) {
   return (
-    <BaseNode title={data.label || "Start"} subtitle="Workflow entry point" tone="zinc" hasTarget={false} hasSource runStatus={data.runStatus}>
-      <div />
-    </BaseNode>
+    <BaseNode title={data.label || "Start"} tone="zinc" hasTarget={false} hasSource runStatus={data.runStatus}/>
   );
 }

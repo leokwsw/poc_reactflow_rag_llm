@@ -20,7 +20,7 @@ export default function VariableAssignerNode({ data }: NodeProps<VariableAssigne
   const firstName = variables[0]?.name;
 
   return (
-    <BaseNode title={data.label || "Variable Assigner"} subtitle="Create or overwrite variables" tone="zinc" hasTarget hasSource>
+    <BaseNode title={data.label || "Variable Assigner"} tone="zinc" hasTarget hasSource>
       <NodeSection label="Count">
         <NodeToken>{`${variables.length} variable${variables.length === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>

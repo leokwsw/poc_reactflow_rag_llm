@@ -29,7 +29,7 @@ export default function VariableAggregatorNode({ data }: NodeProps<VariableAggre
   const itemCount = groupEnabled ? groups.length : variables.length;
 
   return (
-    <BaseNode title={data.label || "Variable Aggregator"} subtitle={`Output: ${data.output_type || "string"}`} tone="emerald" hasTarget hasSource>
+    <BaseNode title={data.label || "Variable Aggregator"} tone="emerald" hasTarget hasSource>
       <NodeSection label={groupEnabled ? "Groups" : "Variables"}>
         <NodeToken>{itemCount === 0 ? `No ${groupEnabled ? "groups" : "variables"} configured` : `${itemCount} ${groupEnabled ? "group" : "variable"}${itemCount === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>

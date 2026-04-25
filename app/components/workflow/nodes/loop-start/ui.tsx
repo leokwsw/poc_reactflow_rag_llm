@@ -12,11 +12,10 @@ type LoopStartNodeData = {
 
 export default function LoopStartNode({ data }: NodeProps<LoopStartNodeData>) {
   return (
-    <BaseNode title={data.label || "Loop Start"} subtitle="Entry to loop body" tone="zinc" hasTarget={false} hasSource>
+    <BaseNode title={data.label || "Loop Start"} tone="zinc" hasTarget={false} hasSource>
       <NodeSection label="Scope">
         <NodeToken>{data.scopeName || "loop_scope"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

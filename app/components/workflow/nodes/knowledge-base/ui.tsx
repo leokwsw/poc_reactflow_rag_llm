@@ -13,7 +13,7 @@ type KnowledgeBaseNodeData = {
 
 export default function KnowledgeBaseNode({ data }: NodeProps<KnowledgeBaseNodeData>) {
   return (
-    <BaseNode title={data.label || "Knowledge Base"} subtitle="Dataset configuration" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Knowledge Base"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Index Mode">
         <NodeToken>{data.indexingTechnique || "high_quality"}</NodeToken>
       </NodeSection>

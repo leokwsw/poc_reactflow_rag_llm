@@ -13,7 +13,7 @@ type IterationNodeData = {
 
 export default function IterationNode({ data }: NodeProps<IterationNodeData>) {
   return (
-    <BaseNode title={data.label || "Iteration"} subtitle="Run child blocks for each item" tone="amber" hasTarget hasSource>
+    <BaseNode title={data.label || "Iteration"} tone="amber" hasTarget hasSource>
       <NodeSection label="Loop Source">
         <NodeToken>{data.iterator || "items"}</NodeToken>
       </NodeSection>
@@ -23,4 +23,3 @@ export default function IterationNode({ data }: NodeProps<IterationNodeData>) {
     </BaseNode>
   );
 }
-

@@ -13,7 +13,7 @@ type ListOperatorNodeData = {
 
 export default function ListOperatorNode({ data }: NodeProps<ListOperatorNodeData>) {
   return (
-    <BaseNode title={data.label || "List Operator"} subtitle="Transform or filter a list" tone="amber" hasTarget hasSource>
+    <BaseNode title={data.label || "List Operator"} tone="amber" hasTarget hasSource>
       <NodeSection label="Operation">
         <NodeToken>{data.operation || "map"}</NodeToken>
       </NodeSection>
@@ -23,4 +23,3 @@ export default function ListOperatorNode({ data }: NodeProps<ListOperatorNodeDat
     </BaseNode>
   );
 }
-

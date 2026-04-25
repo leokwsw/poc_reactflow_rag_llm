@@ -12,11 +12,10 @@ type DataSourceEmptyNodeData = {
 
 export default function DataSourceEmptyNode({ data }: NodeProps<DataSourceEmptyNodeData>) {
   return (
-    <BaseNode title={data.label || "Data Source Empty"} subtitle="Fallback when no source is provided" tone="zinc" hasTarget hasSource>
+    <BaseNode title={data.label || "Data Source Empty"} tone="zinc" hasTarget hasSource>
       <NodeSection label="State">
         <NodeToken>{data.message || "Waiting for data source selection"}</NodeToken>
       </NodeSection>
     </BaseNode>
   );
 }
-

@@ -24,7 +24,6 @@ export default function QuestionClassifierNode({ data }: NodeProps<QuestionClass
   return (
     <BaseNode
       title={data.label || "Question Classifier"}
-      subtitle="Classify user intent into categories"
       tone="amber"
       hasTarget
       hasSource={false}

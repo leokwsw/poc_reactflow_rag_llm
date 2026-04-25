@@ -27,7 +27,7 @@ export default function TriggerScheduleNode({ data }: NodeProps<TriggerScheduleN
     : `${data.frequency || "daily"}${visualConfig?.time ? ` at ${visualConfig.time}` : ""}`;
 
   return (
-    <BaseNode title={data.label || "Trigger Schedule"} subtitle="Scheduled workflow entry" tone="zinc" hasTarget={false} hasSource>
+    <BaseNode title={data.label || "Trigger Schedule"} tone="zinc" hasTarget={false} hasSource>
       <NodeSection label="Schedule">
         <NodeToken>{description}</NodeToken>
       </NodeSection>

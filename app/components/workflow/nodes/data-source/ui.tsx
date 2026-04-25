@@ -13,7 +13,7 @@ type DataSourceNodeData = {
 
 export default function DataSourceNode({ data }: NodeProps<DataSourceNodeData>) {
   return (
-    <BaseNode title={data.label || "Data Source"} subtitle="Provide external input data" tone="indigo" hasTarget hasSource>
+    <BaseNode title={data.label || "Data Source"} tone="indigo" hasTarget hasSource>
       <NodeSection label="Source">
         <NodeToken>{data.sourceType || "File Upload"}</NodeToken>
       </NodeSection>
@@ -23,4 +23,3 @@ export default function DataSourceNode({ data }: NodeProps<DataSourceNodeData>) 
     </BaseNode>
   );
 }
-

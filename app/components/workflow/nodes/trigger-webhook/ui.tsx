@@ -15,7 +15,7 @@ type TriggerWebhookNodeData = {
 
 export default function TriggerWebhookNode({ data }: NodeProps<TriggerWebhookNodeData>) {
   return (
-    <BaseNode title={data.label || "Trigger Webhook"} subtitle="Webhook workflow entry" tone="zinc" hasTarget={false} hasSource>
+    <BaseNode title={data.label || "Trigger Webhook"} tone="zinc" hasTarget={false} hasSource>
       <NodeSection label="Endpoint">
         <NodeToken>{`${(data.method || "POST").toUpperCase()} ${data.webhook_url || "/workflow/hook"}`}</NodeToken>
       </NodeSection>

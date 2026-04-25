@@ -17,7 +17,7 @@ export default function HumanInputNode({ data }: NodeProps<HumanInputNodeData>) 
   const requiredVariables = data.required_variables ?? [];
 
   return (
-    <BaseNode title={data.label || "Human Input"} subtitle="Pause point for human confirmation or follow-up" tone="amber" hasTarget hasSource={false}>
+    <BaseNode title={data.label || "Human Input"} tone="amber" hasTarget hasSource={false}>
       <NodeSection label="Variable">
         <NodeToken>{data.variableName || "human_input"}</NodeToken>
       </NodeSection>

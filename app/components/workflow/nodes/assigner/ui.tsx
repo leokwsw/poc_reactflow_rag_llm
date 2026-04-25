@@ -20,7 +20,7 @@ export default function AssignerNode({ data }: NodeProps<AssignerNodeData>) {
   const firstTarget = assignments[0]?.target;
 
   return (
-    <BaseNode title={data.label || "Assigner"} subtitle="Map values into variables" tone="zinc" hasTarget hasSource>
+    <BaseNode title={data.label || "Assigner"} tone="zinc" hasTarget hasSource>
       <NodeSection label="Count">
         <NodeToken>{`${assignments.length} assignment${assignments.length === 1 ? "" : "s"}`}</NodeToken>
       </NodeSection>

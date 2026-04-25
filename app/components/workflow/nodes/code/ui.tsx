@@ -16,7 +16,7 @@ export default function CodeNode({ data }: NodeProps<CodeNodeData>) {
   const lineCount = code.split("\n").filter((line) => line.trim()).length;
 
   return (
-    <BaseNode title={data.label || "Code"} subtitle="Execute custom logic" tone="amber" hasTarget hasSource>
+    <BaseNode title={data.label || "Code"} tone="amber" hasTarget hasSource>
       <NodeSection label="Runtime">
         <NodeToken>{data.language || "JavaScript"}</NodeToken>
       </NodeSection>
