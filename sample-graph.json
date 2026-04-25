@@ -67,7 +67,7 @@
           "x": 422,
           "y": 0
         },
-        "selected": true,
+        "selected": false,
         "dragging": false
       },
       {
@@ -79,7 +79,7 @@
         },
         "data": {
           "type": "answer",
-          "label": "answer",
+          "label": "Answer",
           "answer": "LLM 1 :\n{{#llm.text#}}\n-----\nLLM 2 : \n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
           "outputs": [
             "llm.text",
@@ -92,7 +92,7 @@
           "x": 842,
           "y": 0
         },
-        "selected": false,
+        "selected": true,
         "dragging": false
       },
       {
@@ -179,9 +179,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": 93.33333333333331,
-      "y": 366.3154869933454,
-      "zoom": 0.8469449485783425
+      "x": 342.66988810720534,
+      "y": 428.7418089633996,
+      "zoom": 0.6841289102561718
     }
   }
 }
