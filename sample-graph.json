@@ -49,14 +49,7 @@
           "apiKey": "octopusPass",
           "provider": "",
           "model": "gpt-oss-120b-MXFP4-Q8",
-          "prompt_template": [
-            {
-              "role": "system",
-              "text": "u are a helpful assistant.\n\n{{#sys.query#}}",
-              "id": "62622fa9-da43-4d86-8e5e-c309b82e881a",
-              "edition_type": "basic"
-            }
-          ],
+          "prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
           "context": {
             "enabled": true,
             "variable_selector": [
@@ -64,24 +57,8 @@
               "query"
             ]
           },
-          "vision": {
-            "enabled": false
-          },
-          "memory": {
-            "window": {
-              "enabled": false,
-              "size": 10
-            },
-            "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
-            "role_prefix": {
-              "user": "",
-              "assistant": ""
-            }
-          },
-          "prompt_config": {
-            "jinja2_variables": []
-          },
-          "systemPrompt": "{{#context#}}\n\nu are a helpful assestaint"
+          "vision_enable": false,
+          "systemPrompt": "u are a helpful assestaint"
         },
         "width": 245,
         "height": 199,
@@ -131,13 +108,7 @@
           "apiKey": "octopusPass",
           "provider": "",
           "model": "gpt-oss-120b-MXFP4-Q8",
-          "prompt_template": [
-            {
-              "role": "system",
-              "text": "You are a helpful assistant.",
-              "edition_type": "basic"
-            }
-          ],
+          "prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
           "context": {
             "enabled": true,
             "variable_selector": [
@@ -145,23 +116,7 @@
               "query"
             ]
           },
-          "vision": {
-            "enabled": false
-          },
-          "memory": {
-            "window": {
-              "enabled": false,
-              "size": 10
-            },
-            "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
-            "role_prefix": {
-              "user": "",
-              "assistant": ""
-            }
-          },
-          "prompt_config": {
-            "jinja2_variables": []
-          },
+          "vision_enable": false,
           "systemPrompt": "You are a helpful assistant."
         },
         "width": 245,
