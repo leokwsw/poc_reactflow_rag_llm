@@ -28,7 +28,7 @@ const EntryNodeContainer: FC<EntryNodeContainerProps> = ({
   return (
     <div className="w-fit min-w-60.5 rounded-2xl bg-[#e9ebf0] px-0 pb-0 pt-0.5">
       <div className="mb-0.5 flex items-center px-2.5 pt-0.5">
-        <span className="text-2xs font-semibold uppercase text-text-tertiary">
+        <span className="text-2xs font-semibold text-text-tertiary">
           {label}
         </span>
       </div>

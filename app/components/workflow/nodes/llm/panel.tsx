@@ -100,9 +100,20 @@ function getContextOptions(allNodes: NodePanelProps["allNodes"], allEdges: NodeP
 
     return fields.map((field) => ({
       value: `${item.id}.${field}`,
-      label: `${nodeLabel} · ${field}`,
+      label: `(${nodeLabel}/${field})`,
     }));
   });
+}
+
+function getNodeLabelMap(allNodes: NodePanelProps["allNodes"]) {
+  return new Map(
+    (allNodes ?? []).map((item) => {
+      const label = typeof item.data?.label === "string" && item.data.label.trim()
+        ? item.data.label.trim()
+        : item.id;
+      return [item.id, label] as const;
+    }),
+  );
 }
 
 export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: NodePanelProps) {
@@ -111,6 +122,23 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
   const availableContextOptions = getContextOptions(allNodes, allEdges, node.id);
   const requiresContextPlaceholder = Boolean(data.context_variable);
   const messageRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
+  const nodeLabelMap = getNodeLabelMap(allNodes);
+
+  function renderTokenChip(expression: string) {
+    if (expression === "context") {
+      return "context";
+    }
+
+    const parts = expression.split(".").filter(Boolean);
+    if (parts.length === 0) {
+      return expression;
+    }
+
+    const source = parts[0];
+    const field = parts.slice(1).join(".") || "value";
+    const sourceLabel = nodeLabelMap.get(source) || source;
+    return `${sourceLabel}/${field}`;
+  }
 
   function resizeTextArea(textarea: HTMLTextAreaElement | null) {
     if (!textarea) {
@@ -256,6 +284,7 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
                     ref={(element) => {
                       messageRefs.current[index] = element;
                     }}
+                    tokenChipRenderer={renderTokenChip}
                     rows={1}
                     className="min-h-[56px] resize-none overflow-hidden pt-8"
                     style={{ height: 56 }}

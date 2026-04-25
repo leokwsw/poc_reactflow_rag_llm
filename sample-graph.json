@@ -27,7 +27,7 @@
           "runStatus": "idle"
         },
         "width": 242,
-        "height": 201,
+        "height": 73,
         "positionAbsolute": {
           "x": 0,
           "y": 0
@@ -44,14 +44,14 @@
         },
         "data": {
           "type": "llm",
-          "label": "llm",
+          "label": "llm 1",
           "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
           "apiKey": "octopusPass",
           "model": "gpt-oss-120b-MXFP4-Q8",
           "messages": [
             {
               "role": "system",
-              "content": "u are a helpful assestaint"
+              "content": "u are a helpful assistant"
             },
             {
               "role": "user",
@@ -61,35 +61,35 @@
           "context_variable": "",
           "vision_enable": false
         },
-        "width": 245,
-        "height": 199,
+        "width": 240,
+        "height": 120,
         "positionAbsolute": {
           "x": 422,
           "y": 0
         },
-        "selected": false,
+        "selected": true,
         "dragging": false
       },
       {
         "id": "answer",
         "type": "custom",
         "position": {
-          "x": 847,
+          "x": 842,
           "y": 0
         },
         "data": {
           "type": "answer",
           "label": "answer",
-          "answer": "LLM 1\n{{#llm.text#}}\nLLM 2\n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
+          "answer": "LLM 1 :\n{{#llm.text#}}\n-----\nLLM 2 : \n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
           "outputs": [
             "llm.text",
             "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
           ]
         },
         "width": 260,
-        "height": 191,
+        "height": 180,
         "positionAbsolute": {
-          "x": 847,
+          "x": 842,
           "y": 0
         },
         "selected": false,
@@ -99,12 +99,12 @@
         "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "type": "custom",
         "position": {
-          "x": 411.60156555772994,
-          "y": 234.89941291585126
+          "x": 422,
+          "y": 146.0964285714286
         },
         "data": {
           "type": "llm",
-          "label": "llm",
+          "label": "llm 2",
           "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
           "apiKey": "octopusPass",
           "model": "gpt-oss-120b-MXFP4-Q8",
@@ -121,12 +121,12 @@
           "context_variable": "",
           "vision_enable": false
         },
-        "width": 245,
-        "height": 199,
-        "selected": true,
+        "width": 240,
+        "height": 120,
+        "selected": false,
         "positionAbsolute": {
-          "x": 411.60156555772994,
-          "y": 234.89941291585126
+          "x": 422,
+          "y": 146.0964285714286
         },
         "dragging": false
       }
@@ -179,9 +179,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": 112.16666666666663,
-      "y": 481.5904847937368,
-      "zoom": 0.7693465823547125
+      "x": 93.33333333333331,
+      "y": 366.3154869933454,
+      "zoom": 0.8469449485783425
     }
   }
 }

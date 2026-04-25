@@ -75,6 +75,19 @@ function getNodeDisplayLabel(nodeId: string, labelMap: Map<string, string>) {
   return labelMap.get(nodeId) || nodeId;
 }
 
+function getTokenChipLabel(expression: string, labelMap: Map<string, string>) {
+  if (expression === "context") {
+    return "context";
+  }
+
+  const token = parseOutputToken(expression);
+  if (!token) {
+    return expression;
+  }
+
+  return `${getNodeDisplayLabel(token.source, labelMap)}/${token.field}`;
+}
+
 function getVariableOptions(allNodes: NodePanelProps["allNodes"], currentNodeId: string, labelMap: Map<string, string>) {
   const nodes = allNodes ?? [];
 
@@ -266,13 +279,14 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
 
       <PanelCard>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">Answer Variables</p>
+          <p className="text-sm font-semibold text-zinc-800">Output Template</p>
         </div>
 
         <PanelField label="">
           <div className="relative">
             <PanelTextArea
               ref={variablesTextAreaRef}
+              tokenChipRenderer={(expression) => getTokenChipLabel(expression, labelMap)}
               rows={6}
               value={templateValue}
               placeholder={"Write answer template here, use / to insert variables\n\nDeepSeek:\n{{#llm.text#}}\n\nQwen:\n{{#llm_2.text#}}"}
