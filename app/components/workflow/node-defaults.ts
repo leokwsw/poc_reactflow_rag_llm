@@ -5,7 +5,14 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
   let data: Record<string, unknown> = { type };
 
   if (type === "start") {
-    data = { ...data, label: "Start", variables: [{ name: "query", required: true, type: "string" }] };
+    data = {
+      ...data,
+      label: "Start",
+      variables: [
+        { name: "query", required: true, type: "string" },
+        { name: "files", type: "file[]" },
+      ],
+    };
   } else if (type === "answer") {
     data = { ...data, label: "Answer", answer: "{{#llm.text#}}" };
   } else if (type === "agent") {

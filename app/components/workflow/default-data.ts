@@ -195,18 +195,14 @@ function buildNodeData(node: DifyGraphNode) {
   const label = data.title ?? nodeType;
 
   if (nodeType === "start") {
-    const variables = Array.isArray(data.variables) && data.variables.length > 0
-      ? data.variables
-      : [
-          { name: "query", required: true, type: "string" },
-          { name: "files", type: "file[]" },
-        ];
-
     return {
       ...data,
       type: nodeType,
       label,
-      variables,
+      variables: [
+        { name: "query", required: true, type: "string" },
+        { name: "files", type: "file[]" },
+      ],
     };
   }
 

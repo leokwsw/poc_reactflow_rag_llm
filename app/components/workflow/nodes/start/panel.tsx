@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 
 type StartVariable = {
@@ -16,42 +16,40 @@ type StartNodeData = {
 
 export default function StartPanel({ node, patchNodeData }: NodePanelProps) {
   const data = (node.data ?? {}) as StartNodeData;
-  const variables = data.variables ?? [];
+  const queryVariable = data.variables?.[0]?.name ?? "query";
+  const filesVariable = data.variables?.[1]?.name ?? "files";
 
   return (
-    <div className="space-y-3">
-      <PanelField label="Label">
-        <PanelInput value={data.label ?? "Start"} onChange={(event) => patchNodeData({ label: event.target.value })} />
-      </PanelField>
-      <PanelField label="Query Variable">
-        <PanelInput
-          value={variables[0]?.name ?? "query"}
-          onChange={(event) => {
-            const nextVariables = [...variables];
-            nextVariables[0] = {
-              ...(nextVariables[0] ?? {}),
-              name: event.target.value,
-              required: true,
-              type: nextVariables[0]?.type ?? "string",
-            };
-            patchNodeData({ variables: nextVariables });
-          }}
-        />
-      </PanelField>
-      <PanelField label="Files Variable">
-        <PanelInput
-          value={variables[1]?.name ?? "files"}
-          onChange={(event) => {
-            const nextVariables = [...variables];
-            nextVariables[1] = {
-              ...(nextVariables[1] ?? {}),
-              name: event.target.value,
-              type: nextVariables[1]?.type ?? "file[]",
-            };
-            patchNodeData({ variables: nextVariables });
-          }}
-        />
-      </PanelField>
+    <div className="space-y-4">
+      <PanelCard>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-zinc-800">Start Node</p>
+          <p className="text-xs leading-5 text-zinc-500">
+            Start 係固定入口節點。每個 graph 只允許一個，而且輸入變數名稱固定為 `query` 同 `files`。
+          </p>
+        </div>
+
+        <PanelField label="Label">
+          <PanelInput value={data.label ?? "Start"} onChange={(event) => patchNodeData({ label: event.target.value })} />
+        </PanelField>
+      </PanelCard>
+
+      <PanelCard>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-zinc-800">Fixed Variables</p>
+          <p className="text-xs leading-5 text-zinc-500">
+            呢兩個變數係系統保留欄位，只讀，不可新增、刪除或改名。
+          </p>
+        </div>
+
+        <PanelField label="Query Variable">
+          <PanelInput value={queryVariable} readOnly disabled />
+        </PanelField>
+
+        <PanelField label="Files Variable">
+          <PanelInput value={filesVariable} readOnly disabled />
+        </PanelField>
+      </PanelCard>
     </div>
   );
 }
