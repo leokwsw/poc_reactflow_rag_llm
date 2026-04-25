@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import type { Node, NodeProps } from "reactflow";
-import { Handle, Position, useNodes } from "reactflow";
+import { useNodes } from "reactflow";
+import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 
 type EndNodeData = {
   label?: string;
@@ -87,37 +89,16 @@ export default function EndNode({ data }: NodeProps<EndNodeData>) {
   const visibleTokens = outputTokens.slice(0, 18);
   const hiddenCount = Math.max(0, outputTokens.length - visibleTokens.length);
 
-  const runStatusClassName = data.runStatus === "running"
-    ? "ring-2 ring-sky-400 ring-offset-2 ring-offset-sky-50 shadow-[0_12px_30px_rgba(56,189,248,0.2)]"
-    : data.runStatus === "error"
-      ? "ring-2 ring-red-400 ring-offset-2 ring-offset-red-50 shadow-[0_12px_30px_rgba(248,113,113,0.16)]"
-      : data.runStatus === "completed"
-        ? "ring-1 ring-emerald-300 ring-offset-1 ring-offset-emerald-50"
-        : "";
-
   return (
-    <div className={`relative w-[260px] overflow-hidden rounded-2xl border border-amber-300 bg-white shadow-[0_10px_30px_rgba(245,158,11,0.12)] ${runStatusClassName}`.trim()}>
-      <div className="border-b border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-white px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500 text-[10px] font-bold text-white">
-              O
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-700">Answer</p>
-              <p className="truncate text-xs font-medium text-zinc-700">{label}</p>
-            </div>
-          </div>
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
-        </div>
-      </div>
-
-      <div className="space-y-2 p-3">
-        <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
-          <span>變量</span>
-          <span>{outputTokens.length}</span>
-        </div>
-
+    <BaseNode
+      title={label}
+      tone="amber"
+      hasTarget
+      hasSource={false}
+      minWidthClassName="w-[260px]"
+      runStatus={data.runStatus}
+    >
+      <NodeSection label="Variables">
         <div className="max-h-[360px] space-y-1.5 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50/80 p-2">
           {visibleTokens.length === 0 ? (
             <div className="rounded-lg border border-dashed border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-400">
@@ -145,13 +126,7 @@ export default function EndNode({ data }: NodeProps<EndNodeData>) {
             </div>
           )}
         </div>
-      </div>
-
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="h-3 w-3 border-2! border-black! bg-amber-500!"
-      />
-    </div>
+      </NodeSection>
+    </BaseNode>
   );
 }

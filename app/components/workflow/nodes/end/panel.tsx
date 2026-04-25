@@ -257,9 +257,6 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Answer Node</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            定義 workflow 最終輸出。可以直接寫一段 answer expression，或者列出要返回嘅變數。
-          </p>
         </div>
 
         <PanelField label="Label">
@@ -270,9 +267,6 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Answer Variables</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            以較易讀方式管理最終答案輸出。大多數情況只需要配置變數清單，唔需要直接改 raw template。
-          </p>
         </div>
 
         <PanelField label="Variables">
