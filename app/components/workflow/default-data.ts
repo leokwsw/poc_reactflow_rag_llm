@@ -7,6 +7,7 @@ type DifyGraphNode = {
   position?: { x?: number; y?: number };
   data?: {
     type?: string;
+    label?: string;
     title?: string;
     answer?: string;
     template?: string;
@@ -217,7 +218,7 @@ function normalizeLlmMessages(messages: Array<{ role?: string; content?: string 
 function buildNodeData(node: DifyGraphNode) {
   const data = node.data ?? {};
   const nodeType = mapNodeType(data.type);
-  const label = data.title ?? nodeType;
+  const label = data.label ?? data.title ?? nodeType;
 
   if (nodeType === "start") {
     return {
