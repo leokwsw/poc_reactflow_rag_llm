@@ -66,13 +66,21 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       apiBaseUrl: "https://api.openai.com/v1",
       apiKey: "",
       model: "gpt-4o-mini",
-      prompt_template: "{{#sys.query#}}\n\n{{#sys.files#}}",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant.",
+        },
+        {
+          role: "user",
+          content: "{{#sys.query#}}\n\n{{#sys.files#}}",
+        },
+      ],
       context: {
         enabled: true,
         variable_selector: ["sys", "query"],
       },
       vision_enable: false,
-      systemPrompt: "You are a helpful assistant.",
     };
   } else if (type === "end") {
     data = { ...data, label: "End", outputs: ["2.text"] };

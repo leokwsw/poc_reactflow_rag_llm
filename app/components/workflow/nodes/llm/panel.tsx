@@ -1,32 +1,75 @@
 "use client";
 
-import { PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelButton, PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+
+type LlmMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
 
 type LlmNodeData = {
   apiBaseUrl?: string;
   apiKey?: string;
   provider?: string;
   model?: string;
-  systemPrompt?: string;
-  prompt_template?: string;
   context?: {
     enabled?: boolean;
     variable_selector?: string[];
   };
   vision_enable?: boolean;
+  messages?: LlmMessage[];
 };
+
+function normalizeMessages(messages?: LlmMessage[]) {
+  const safeMessages = Array.isArray(messages) ? messages : [];
+  const systemMessage = safeMessages.find((item) => item.role === "system") ?? {
+    role: "system" as const,
+    content: "You are a helpful assistant.",
+  };
+  const otherMessages = safeMessages.filter((item) => item.role !== "system");
+  return [systemMessage, ...otherMessages];
+}
 
 export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
   const data = (node.data ?? {}) as LlmNodeData;
   const contextSelector = (data.context?.variable_selector ?? ["sys", "query"]).join(".");
+  const messages = normalizeMessages(data.messages);
+
+  function updateMessage(index: number, nextMessage: LlmMessage) {
+    const nextMessages = [...messages];
+    nextMessages[index] = nextMessage;
+    patchNodeData({ messages: normalizeMessages(nextMessages) });
+  }
+
+  function removeMessage(index: number) {
+    if (index === 0) {
+      return;
+    }
+
+    patchNodeData({
+      messages: normalizeMessages(messages.filter((_, messageIndex) => messageIndex !== index)),
+    });
+  }
+
+  function addMessage(role: "user" | "assistant") {
+    patchNodeData({
+      messages: normalizeMessages([
+        ...messages,
+        {
+          role,
+          content: role === "user" ? "{{#sys.query#}}" : "",
+        },
+      ]),
+    });
+  }
 
   return (
     <div className="space-y-4">
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Model</p>
-          <p className="text-xs leading-5 text-zinc-500">配置 LLM 模型同 API 連線資訊。</p>
+          <p className="text-xs leading-5 text-zinc-500">配置 LLM 模型、API 連線，同埋 vision 開關。</p>
         </div>
 
         <PanelField label="Model">
@@ -41,6 +84,15 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
         <PanelField label="Provider">
           <PanelInput value={data.provider ?? ""} onChange={(event) => patchNodeData({ provider: event.target.value })} />
         </PanelField>
+
+        <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2">
+          <span className="text-sm font-medium text-zinc-700">Enable Vision</span>
+          <input
+            type="checkbox"
+            checked={data.vision_enable ?? false}
+            onChange={(event) => patchNodeData({ vision_enable: event.target.checked })}
+          />
+        </label>
       </PanelCard>
 
       <PanelCard>
@@ -81,48 +133,70 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
 
       <PanelCard>
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">SYSTEM</p>
-          <p className="text-xs leading-5 text-zinc-500">system prompt 只保留單一字串欄位。</p>
+          <p className="text-sm font-semibold text-zinc-800">Messages</p>
+          <p className="text-xs leading-5 text-zinc-500">
+            `system` message 固定保留而且永遠排第一。你可以新增更多 `user` 或 `assistant` message。
+          </p>
         </div>
 
-        <PanelField label="System Prompt">
-          <PanelTextArea
-            className="min-h-28"
-            value={data.systemPrompt ?? ""}
-            onChange={(event) => patchNodeData({ systemPrompt: event.target.value })}
-          />
-        </PanelField>
-      </PanelCard>
+        <div className="space-y-3">
+          {messages.map((message, index) => (
+            <div key={`${message.role}-${index}`} className="rounded-2xl border border-zinc-200 bg-white p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-600">
+                  {message.role}
+                </div>
+                {index !== 0 && (
+                  <button
+                    className="rounded-lg border border-zinc-200 px-2 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-50"
+                    type="button"
+                    onClick={() => removeMessage(index)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
 
-      <PanelCard>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">Prompt</p>
-          <p className="text-xs leading-5 text-zinc-500">`prompt_template` 直接保存 user prompt 模板。</p>
+              {index !== 0 && (
+                <PanelField label="Role">
+                  <select
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    value={message.role}
+                    onChange={(event) =>
+                      updateMessage(index, {
+                        ...message,
+                        role: event.target.value as "user" | "assistant",
+                      })}
+                  >
+                    <option value="user">user</option>
+                    <option value="assistant">assistant</option>
+                  </select>
+                </PanelField>
+              )}
+
+              <PanelField label="Content">
+                <PanelTextArea
+                  rows={index === 0 ? 4 : 5}
+                  value={message.content}
+                  onChange={(event) =>
+                    updateMessage(index, {
+                      ...message,
+                      content: event.target.value,
+                    })}
+                />
+              </PanelField>
+            </div>
+          ))}
         </div>
 
-        <PanelField label="Prompt Template">
-          <PanelTextArea
-            rows={5}
-            value={data.prompt_template ?? "{{#sys.query#}}\n\n{{#sys.files#}}"}
-            onChange={(event) => patchNodeData({ prompt_template: event.target.value })}
-          />
-        </PanelField>
-      </PanelCard>
-
-      <PanelCard>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">Vision</p>
-          <p className="text-xs leading-5 text-zinc-500">`vision.enabled` 已收斂成 `vision_enable`。</p>
+        <div className="flex gap-2">
+          <PanelButton onClick={() => addMessage("user")}>
+            Add User Message
+          </PanelButton>
+          <PanelButton onClick={() => addMessage("assistant")} className="border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50">
+            Add Assistant Message
+          </PanelButton>
         </div>
-
-        <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2">
-          <span className="text-sm font-medium text-zinc-700">Enable Vision</span>
-          <input
-            type="checkbox"
-            checked={data.vision_enable ?? false}
-            onChange={(event) => patchNodeData({ vision_enable: event.target.checked })}
-          />
-        </label>
       </PanelCard>
     </div>
   );

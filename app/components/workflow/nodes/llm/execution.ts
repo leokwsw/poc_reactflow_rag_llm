@@ -6,22 +6,36 @@ type LlmNodeConfig = {
   apiBaseUrl?: string;
   apiKey?: string;
   model?: string;
-  systemPrompt?: string;
   temperature?: number;
-  prompt_template?: string;
+  messages?: Array<{
+    role?: "system" | "user" | "assistant";
+    content?: string;
+  }>;
   vision_enable?: boolean;
 };
 
-function getRenderedUserPrompt(config: LlmNodeConfig, context: NodeExecutionContext, upstreamText: string) {
-  const promptTemplate = config.prompt_template?.trim();
-  if (promptTemplate) {
-    return interpolateTemplate(promptTemplate, context);
+function getRenderedMessages(config: LlmNodeConfig, context: NodeExecutionContext, upstreamText: string) {
+  const configuredMessages = Array.isArray(config.messages) ? config.messages : [];
+  if (configuredMessages.length > 0) {
+    return configuredMessages.map((message, index) => ({
+      role: index === 0 ? "system" : (message.role === "assistant" || message.role === "system" ? message.role : "user"),
+      content: interpolateTemplate(message.content || "", context),
+    }));
   }
 
   const fileSummary = summarizeFiles(context.input.files);
-  return [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
-    .filter(Boolean)
-    .join("\n\n");
+  return [
+    {
+      role: "system" as const,
+      content: "You are a helpful assistant.",
+    },
+    {
+      role: "user" as const,
+      content: [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
+  ];
 }
 
 export async function executeLlmNode({
@@ -47,7 +61,6 @@ export async function executeLlmNode({
   const apiBaseUrl = (config.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
   const model = config.model || process.env.OPENAI_MODEL;
-  const systemPrompt = config.systemPrompt || "";
 
   if (!apiKey) {
     throw new Error(`LLM node "${node.id}" is missing apiKey, and OPENAI_API_KEY is not set.`);
@@ -65,20 +78,8 @@ export async function executeLlmNode({
     nodeOutputs,
     aliasMap,
   };
-  const userContent = getRenderedUserPrompt(config, contextObject, upstreamText);
-
-  const messages = [
-    systemPrompt
-      ? {
-        role: "system",
-        content: systemPrompt,
-      }
-      : null,
-    {
-      role: "user",
-      content: userContent,
-    },
-  ].filter(Boolean);
+  const messages = getRenderedMessages(config, contextObject, upstreamText)
+    .filter((message) => message.content.trim().length > 0 || message.role === "system");
 
   const response = await fetch(`${apiBaseUrl}/chat/completions`, {
     method: "POST",
@@ -134,17 +135,14 @@ export async function executeLlmNode({
     traceInput: {},
     traceProcessData: {
       model_mode: "chat",
-      prompts: [
-        {
-          files: input.files,
-          role: "user",
-          text: userContent,
-        },
-      ],
+      prompts: messages.map((message) => ({
+        files: message.role === "user" ? input.files : [],
+        role: message.role,
+        text: message.content,
+      })),
       usage: payload.usage ?? {},
       finish_reason: finishReason,
       model_name: model,
-      ...(systemPrompt ? { system_prompt: systemPrompt } : {}),
     },
     traceOutput: {
       text,

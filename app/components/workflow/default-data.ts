@@ -51,6 +51,10 @@ type DifyGraphNode = {
       id?: string;
       edition_type?: string;
     }> | string;
+    messages?: Array<{
+      role?: string;
+      content?: string;
+    }>;
     context?: {
       enabled?: boolean;
       variable_selector?: string[];
@@ -189,6 +193,28 @@ function normalizeIfElseCondition(condition: DifyIfElseCondition) {
   }
 }
 
+function normalizeLlmMessages(messages: Array<{ role?: string; content?: string }>) {
+  const safeMessages = messages.filter((item) => typeof item.content === "string");
+  const systemMessage = safeMessages.find((item) => item.role === "system") ?? {
+    role: "system",
+    content: "You are a helpful assistant.",
+  };
+  const otherMessages = safeMessages
+    .filter((item) => item !== systemMessage)
+    .map((item) => ({
+      role: item.role === "assistant" ? "assistant" : "user",
+      content: item.content ?? "",
+    }));
+
+  return [
+    {
+      role: "system",
+      content: systemMessage.content ?? "You are a helpful assistant.",
+    },
+    ...otherMessages,
+  ];
+}
+
 function buildNodeData(node: DifyGraphNode) {
   const data = node.data ?? {};
   const nodeType = mapNodeType(data.type);
@@ -239,6 +265,24 @@ function buildNodeData(node: DifyGraphNode) {
     const rawSystemPrompt = Array.isArray(rawPromptTemplate)
       ? String((rawPromptTemplate.find((item) => item.role === "system")?.text) ?? "")
       : "";
+    const rawMessages = Array.isArray(data.messages)
+      ? data.messages
+          .map((item) => ({
+            role: item.role === "assistant" || item.role === "user" || item.role === "system" ? item.role : "user",
+            content: String(item.content ?? ""),
+          }))
+          .filter((item) => item.content.trim() || item.role === "system")
+      : [];
+    const fallbackMessages = [
+      {
+        role: "system",
+        content: rawSystemPrompt || String((data as Record<string, unknown>).systemPrompt ?? "") || "You are a helpful assistant.",
+      },
+      {
+        role: "user",
+        content: rawMemoryQueryPrompt || rawPromptTemplateText || "{{#sys.query#}}\n\n{{#sys.files#}}",
+      },
+    ];
 
     return {
       type: nodeType,
@@ -247,13 +291,12 @@ function buildNodeData(node: DifyGraphNode) {
       apiKey: data.apiKey ?? "",
       provider: data.provider ?? "",
       model: data.model ?? "",
-      prompt_template: rawMemoryQueryPrompt || rawPromptTemplateText || "{{#sys.query#}}\n\n{{#sys.files#}}",
+      messages: normalizeLlmMessages(rawMessages.length > 0 ? rawMessages : fallbackMessages),
       context: (data as Record<string, unknown>).context ?? {
         enabled: true,
         variable_selector: ["sys", "query"],
       },
       vision_enable: Boolean(data.vision?.enabled ?? (data as Record<string, unknown>).vision_enable ?? false),
-      systemPrompt: rawSystemPrompt || String((data as Record<string, unknown>).systemPrompt ?? ""),
     };
   }
 
