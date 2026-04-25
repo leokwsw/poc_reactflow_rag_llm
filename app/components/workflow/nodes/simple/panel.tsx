@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type SimpleNodeData = {
   label?: string;
@@ -17,7 +18,11 @@ export default function SimplePanel({ node, patchNodeData }: NodePanelProps) {
         <PanelInput value={data.label ?? "Simple Node"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
       <PanelField label="Description">
-        <PanelTextArea className="min-h-24" value={data.description ?? ""} onChange={(event) => patchNodeData({ description: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.description ?? ""}
+          minHeightClassName="min-h-24"
+          onChange={(value) => patchNodeData({ description: value })}
+        />
       </PanelField>
     </div>
   );

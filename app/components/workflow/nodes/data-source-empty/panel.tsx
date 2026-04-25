@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type DataSourceEmptyNodeData = {
   label?: string;
@@ -17,7 +18,11 @@ export default function DataSourceEmptyPanel({ node, patchNodeData }: NodePanelP
         <PanelInput value={data.label ?? "Data Source Empty"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
       <PanelField label="Message">
-        <PanelTextArea className="min-h-24" value={data.message ?? ""} onChange={(event) => patchNodeData({ message: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.message ?? ""}
+          minHeightClassName="min-h-24"
+          onChange={(value) => patchNodeData({ message: value })}
+        />
       </PanelField>
     </div>
   );

@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelButton, PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type QuestionClass = {
   id: string;
@@ -36,7 +37,11 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
         <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
       </PanelField>
       <PanelField label="Instruction">
-        <PanelTextArea className="min-h-24" value={data.instruction ?? ""} onChange={(event) => patchNodeData({ instruction: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.instruction ?? ""}
+          minHeightClassName="min-h-24"
+          onChange={(value) => patchNodeData({ instruction: value })}
+        />
       </PanelField>
 
       <div className="space-y-3">

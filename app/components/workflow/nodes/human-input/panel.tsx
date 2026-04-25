@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type HumanInputNodeData = {
   label?: string;
@@ -35,7 +36,11 @@ export default function HumanInputPanel({ node, patchNodeData }: NodePanelProps)
         <PanelInput value={data.selectedBranch ?? "source"} onChange={(event) => patchNodeData({ selectedBranch: event.target.value })} />
       </PanelField>
       <PanelField label="Prompt">
-        <PanelTextArea className="min-h-24" value={data.prompt ?? ""} onChange={(event) => patchNodeData({ prompt: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.prompt ?? ""}
+          minHeightClassName="min-h-24"
+          onChange={(value) => patchNodeData({ prompt: value })}
+        />
       </PanelField>
     </div>
   );

@@ -2,7 +2,7 @@
   "graph": {
     "nodes": [
       {
-        "id": "1775711823881",
+        "id": "sys",
         "type": "custom",
         "position": {
           "x": 0,
@@ -139,7 +139,7 @@
         }
       },
       {
-        "source": "1775711823881",
+        "source": "sys",
         "sourceHandle": null,
         "target": "llm",
         "targetHandle": null,
@@ -147,10 +147,10 @@
           "opacity": 1,
           "strokeWidth": 2
         },
-        "id": "reactflow__edge-1775711823881-llm"
+        "id": "reactflow__edge-sys-llm"
       },
       {
-        "source": "1775711823881",
+        "source": "sys",
         "sourceHandle": null,
         "target": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "targetHandle": null,
@@ -158,7 +158,7 @@
           "opacity": 1,
           "strokeWidth": 2
         },
-        "id": "reactflow__edge-1775711823881-45bbb912-6003-4bac-a45e-e8bffac4efd1"
+        "id": "reactflow__edge-sys-45bbb912-6003-4bac-a45e-e8bffac4efd1"
       },
       {
         "source": "45bbb912-6003-4bac-a45e-e8bffac4efd1",

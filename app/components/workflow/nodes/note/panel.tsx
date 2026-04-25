@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type NoteNodeData = {
   text?: string;
@@ -15,7 +16,11 @@ export default function NotePanel({ node, patchNodeData }: NodePanelProps) {
   return (
     <div className="space-y-3">
       <PanelField label="Text">
-        <PanelTextArea className="min-h-28" value={data.text ?? ""} onChange={(event) => patchNodeData({ text: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.text ?? ""}
+          minHeightClassName="min-h-28"
+          onChange={(value) => patchNodeData({ text: value })}
+        />
       </PanelField>
       <PanelField label="Author">
         <PanelInput value={data.author ?? ""} onChange={(event) => patchNodeData({ author: event.target.value })} />

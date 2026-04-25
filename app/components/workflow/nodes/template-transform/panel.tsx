@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type TemplateTransformNodeData = {
   label?: string;
@@ -17,7 +18,12 @@ export default function TemplateTransformPanel({ node, patchNodeData }: NodePane
         <PanelInput value={data.label ?? "Template Transform"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
       <PanelField label="Template">
-        <PanelTextArea className="min-h-28 font-mono" value={data.template ?? ""} onChange={(event) => patchNodeData({ template: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.template ?? ""}
+          className="font-mono"
+          minHeightClassName="min-h-28"
+          onChange={(value) => patchNodeData({ template: value })}
+        />
       </PanelField>
     </div>
   );

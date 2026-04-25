@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
 
 type AgentNodeData = {
   label?: string;
@@ -36,7 +37,11 @@ export default function AgentPanel({ node, patchNodeData }: NodePanelProps) {
         <PanelInput value={data.role ?? ""} onChange={(event) => patchNodeData({ role: event.target.value })} />
       </PanelField>
       <PanelField label="Instruction">
-        <PanelTextArea rows={5} value={data.instruction ?? ""} onChange={(event) => patchNodeData({ instruction: event.target.value })} />
+        <WorkflowPromptEditor
+          value={data.instruction ?? ""}
+          minHeightClassName="min-h-[120px]"
+          onChange={(value) => patchNodeData({ instruction: value })}
+        />
       </PanelField>
       <PanelField label="Query">
         <PanelInput value={data.query ?? "{{#sys.query#}}"} onChange={(event) => patchNodeData({ query: event.target.value })} />
