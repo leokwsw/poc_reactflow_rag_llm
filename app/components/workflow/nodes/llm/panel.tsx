@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { PanelButton, PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import type { Edge } from "reactflow";
@@ -10,6 +11,7 @@ type LlmMessage = {
 };
 
 type LlmNodeData = {
+  label?: string;
   apiBaseUrl?: string;
   apiKey?: string;
   model?: string;
@@ -108,6 +110,20 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
   const messages = normalizeMessages(data.messages);
   const availableContextOptions = getContextOptions(allNodes, allEdges, node.id);
   const requiresContextPlaceholder = Boolean(data.context_variable);
+  const messageRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
+
+  function resizeTextArea(textarea: HTMLTextAreaElement | null) {
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "56px";
+    textarea.style.height = `${Math.max(56, textarea.scrollHeight)}px`;
+  }
+
+  useEffect(() => {
+    messageRefs.current.forEach((textarea) => resizeTextArea(textarea));
+  }, [messages]);
 
   function updateMessage(index: number, nextMessage: LlmMessage) {
     const nextMessages = [...messages];
@@ -142,9 +158,11 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Model</p>
-          <p className="text-xs leading-5 text-zinc-500">配置 LLM 模型、API 連線，同埋 vision 開關。</p>
         </div>
 
+        <PanelField label="Label">
+          <PanelInput value={data.label ?? "LLM"} onChange={(event) => patchNodeData({ label: event.target.value })} />
+        </PanelField>
         <PanelField label="Model">
           <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
         </PanelField>
@@ -168,7 +186,6 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Context</p>
-          <p className="text-xs leading-5 text-zinc-500">選擇一個前置節點輸出作為 context variable，亦可以留空。</p>
         </div>
 
         <PanelField label="Context Variable">
@@ -236,15 +253,21 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
               <PanelField label="Content">
                 <div className="relative">
                   <PanelTextArea
-                    rows={index === 0 ? 4 : 5}
-                    className="pt-8"
+                    ref={(element) => {
+                      messageRefs.current[index] = element;
+                    }}
+                    rows={1}
+                    className="min-h-[56px] resize-none overflow-hidden pt-8"
+                    style={{ height: 56 }}
                     value={message.content}
                     placeholder="Write your prompt word here, enter '{' to insert a variable, enter '/' to insert a prompt content block"
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      resizeTextArea(event.currentTarget);
                       updateMessage(index, {
                         ...message,
                         content: event.target.value,
-                      })}
+                      });
+                    }}
                   />
                   <div className="pointer-events-none absolute right-3 top-2 text-[11px] font-medium text-zinc-400">
                     {getWordCount(message.content)} words

@@ -24,9 +24,6 @@ export default function StartPanel({ node, patchNodeData }: NodePanelProps) {
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Start Node</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            Start 係固定入口節點。每個 graph 只允許一個，而且輸入變數名稱固定為 `query` 同 `files`。
-          </p>
         </div>
 
         <PanelField label="Label">
@@ -34,22 +31,19 @@ export default function StartPanel({ node, patchNodeData }: NodePanelProps) {
         </PanelField>
       </PanelCard>
 
-      <PanelCard>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-800">Fixed Variables</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            呢兩個變數係系統保留欄位，只讀，不可新增、刪除或改名。
-          </p>
-        </div>
+      {/*<PanelCard>*/}
+      {/*  <div className="space-y-1">*/}
+      {/*    <p className="text-sm font-semibold text-zinc-800">Fixed Variables</p>*/}
+      {/*  </div>*/}
 
-        <PanelField label="Query Variable">
-          <PanelInput value={queryVariable} readOnly disabled />
-        </PanelField>
+      {/*  /!*<PanelField label="Query Variable">*!/*/}
+      {/*  /!*  <PanelInput value={queryVariable} readOnly disabled />*!/*/}
+      {/*  /!*</PanelField>*!/*/}
 
-        <PanelField label="Files Variable">
-          <PanelInput value={filesVariable} readOnly disabled />
-        </PanelField>
-      </PanelCard>
+      {/*  /!*<PanelField label="Files Variable">*!/*/}
+      {/*  /!*  <PanelInput value={filesVariable} readOnly disabled />*!/*/}
+      {/*  /!*</PanelField>*!/*/}
+      {/*</PanelCard>*/}
     </div>
   );
 }

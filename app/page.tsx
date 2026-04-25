@@ -261,10 +261,6 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Workflow Studio</p>
-              <h1 className="mt-1 text-lg font-semibold text-zinc-900">Node Setting</h1>
-            </div>
-            <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-              {selectedNodeType || "Inspector"}
             </div>
           </div>
         </div>
@@ -273,7 +269,6 @@ export default function Home() {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-zinc-900">Run Workflow</h2>
-              <p className="text-xs text-zinc-500">Send current `data` JSON to the backend runner.</p>
             </div>
             <button
               className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"

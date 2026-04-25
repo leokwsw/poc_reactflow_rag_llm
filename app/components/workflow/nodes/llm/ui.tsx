@@ -24,15 +24,14 @@ export default function LlmNode({ data }: NodeProps<LlmNodeData>) {
           <NodeSection label="Model">
             <NodeToken>{data.model}</NodeToken>
           </NodeSection>
-          <NodeSection label="Tools">
-            {tools.length === 0 ? (
-              <NodeToken muted>No tools attached</NodeToken>
-            ) : (
+          {tools.length > 0 ?? (
+            <NodeSection label="Tools">
               <div className="space-y-1.5">
                 {tools.map((tool) => <NodeToken key={tool}>{tool}</NodeToken>)}
               </div>
-            )}
-          </NodeSection>
+            </NodeSection>
+          )}
+
         </>
       ) : (
         <NodeToken muted>No model selected</NodeToken>
