@@ -290,10 +290,9 @@ function buildNodeData(node: DifyGraphNode) {
       apiKey: data.apiKey ?? "",
       model: data.model ?? "",
       messages: normalizeLlmMessages(rawMessages.length > 0 ? rawMessages : fallbackMessages),
-      context: (data as Record<string, unknown>).context ?? {
-        enabled: true,
-        variable_selector: ["sys", "query"],
-      },
+      context_variable: Array.isArray(data.context?.variable_selector)
+        ? data.context?.variable_selector.join(".")
+        : String((data as Record<string, unknown>).context_variable ?? ""),
       vision_enable: Boolean(data.vision?.enabled ?? (data as Record<string, unknown>).vision_enable ?? false),
     };
   }

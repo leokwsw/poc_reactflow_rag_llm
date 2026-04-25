@@ -1,12 +1,13 @@
 import type {NodeExecutionContext, NodeExecutionResult} from "@/app/components/workflow/nodes/execution-types";
 import {getIncomingEdges, summarizeFiles} from "@/app/components/workflow/nodes/execution-utils";
-import {interpolateTemplate} from "@/app/components/workflow/nodes/_base/execution-helpers";
+import {getInputValue, interpolateTemplate} from "@/app/components/workflow/nodes/_base/execution-helpers";
 
 type LlmNodeConfig = {
   apiBaseUrl?: string;
   apiKey?: string;
   model?: string;
   temperature?: number;
+  context_variable?: string;
   messages?: Array<{
     role?: "system" | "user" | "assistant";
     content?: string;
@@ -14,12 +15,36 @@ type LlmNodeConfig = {
   vision_enable?: boolean;
 };
 
+function hasContextPlaceholder(messages: Array<{ content?: string }>) {
+  return messages.some((message) => (message.content ?? "").includes("{{#context#}}"));
+}
+
+function renderMessageContent(content: string, context: NodeExecutionContext, contextValue: unknown) {
+  const withContext = content.replace(/\{\{#\s*context\s*#\}\}/g, () => {
+    if (contextValue === null || contextValue === undefined) {
+      return "";
+    }
+    if (typeof contextValue === "string") {
+      return contextValue;
+    }
+    return JSON.stringify(contextValue);
+  });
+
+  return interpolateTemplate(withContext, context);
+}
+
 function getRenderedMessages(config: LlmNodeConfig, context: NodeExecutionContext, upstreamText: string) {
   const configuredMessages = Array.isArray(config.messages) ? config.messages : [];
+  const contextValue = config.context_variable ? getInputValue(context, config.context_variable) : undefined;
+
+  if (config.context_variable && !hasContextPlaceholder(configuredMessages)) {
+    throw new Error(`LLM node "${context.node.id}" requires {{#context#}} in one of its own messages when Context Variable is selected.`);
+  }
+
   if (configuredMessages.length > 0) {
     return configuredMessages.map((message, index) => ({
       role: index === 0 ? "system" : (message.role === "assistant" || message.role === "system" ? message.role : "user"),
-      content: interpolateTemplate(message.content || "", context),
+      content: renderMessageContent(message.content || "", context, contextValue),
     }));
   }
 

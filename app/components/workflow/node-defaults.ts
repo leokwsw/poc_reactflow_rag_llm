@@ -75,10 +75,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
           content: "{{#sys.query#}}\n\n{{#sys.files#}}",
         },
       ],
-      context: {
-        enabled: true,
-        variable_selector: ["sys", "query"],
-      },
+      context_variable: "",
       vision_enable: false,
     };
   } else if (type === "end") {

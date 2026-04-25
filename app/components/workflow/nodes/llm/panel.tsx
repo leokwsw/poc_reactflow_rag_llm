@@ -12,10 +12,7 @@ type LlmNodeData = {
   apiBaseUrl?: string;
   apiKey?: string;
   model?: string;
-  context?: {
-    enabled?: boolean;
-    variable_selector?: string[];
-  };
+  context_variable?: string;
   vision_enable?: boolean;
   messages?: LlmMessage[];
 };
@@ -30,10 +27,49 @@ function normalizeMessages(messages?: LlmMessage[]) {
   return [systemMessage, ...otherMessages];
 }
 
-export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
+function getContextOptions(allNodes: NodePanelProps["allNodes"], currentNodeId: string) {
+  const nodes = allNodes ?? [];
+
+  return nodes.flatMap((item) => {
+    if (item.id === currentNodeId) {
+      return [];
+    }
+
+    const nodeType = String(item.data?.type ?? "");
+    const nodeLabel = typeof item.data?.label === "string" && item.data.label.trim()
+      ? item.data.label.trim()
+      : item.id;
+
+    const fields: string[] = (() => {
+      switch (nodeType) {
+        case "start":
+          return ["query", "files"];
+        case "llm":
+        case "agent":
+          return ["text", "usage", "model"];
+        case "questionClassifier":
+          return ["class_id", "class_name", "keywords"];
+        case "documentExtractor":
+          return ["documents", "text"];
+        case "http":
+          return ["status_code", "body", "headers"];
+        default:
+          return ["output"];
+      }
+    })();
+
+    return fields.map((field) => ({
+      value: `${item.id}.${field}`,
+      label: `${nodeLabel} · ${field}`,
+    }));
+  });
+}
+
+export default function LlmPanel({ node, patchNodeData, allNodes }: NodePanelProps) {
   const data = (node.data ?? {}) as LlmNodeData;
-  const contextSelector = (data.context?.variable_selector ?? ["sys", "query"]).join(".");
   const messages = normalizeMessages(data.messages);
+  const availableContextOptions = getContextOptions(allNodes, node.id);
+  const requiresContextPlaceholder = Boolean(data.context_variable);
 
   function updateMessage(index: number, nextMessage: LlmMessage) {
     const nextMessages = [...messages];
@@ -51,13 +87,13 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
     });
   }
 
-  function addMessage(role: "user" | "assistant") {
+  function addMessage() {
     patchNodeData({
       messages: normalizeMessages([
         ...messages,
         {
-          role,
-          content: role === "user" ? "{{#sys.query#}}" : "",
+          role: "user",
+          content: "{{#sys.query#}}",
         },
       ]),
     });
@@ -94,45 +130,34 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Context</p>
-          <p className="text-xs leading-5 text-zinc-500">控制是否將上文或指定變數作為 prompt context。</p>
+          <p className="text-xs leading-5 text-zinc-500">選擇一個前置節點輸出作為 context variable，亦可以留空。</p>
         </div>
 
-        <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2">
-          <span className="text-sm font-medium text-zinc-700">Enable Context</span>
-          <input
-            type="checkbox"
-            checked={data.context?.enabled ?? true}
-            onChange={(event) =>
-              patchNodeData({
-                context: {
-                  ...(data.context ?? {}),
-                  enabled: event.target.checked,
-                },
-              })}
-          />
-        </label>
-
-        <PanelField label="Variable Selector">
-          <PanelInput
-            value={contextSelector}
-            placeholder="sys.query"
-            onChange={(event) =>
-              patchNodeData({
-                context: {
-                  ...(data.context ?? {}),
-                  variable_selector: event.target.value.split(".").map((item) => item.trim()).filter(Boolean),
-                },
-              })}
-          />
+        <PanelField label="Context Variable">
+          <select
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            value={data.context_variable ?? ""}
+            onChange={(event) => patchNodeData({ context_variable: event.target.value })}
+          >
+            <option value="">None</option>
+            {availableContextOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </PanelField>
+
+        {requiresContextPlaceholder && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+            已選擇 <code>Context Variable</code>。你必須喺呢個 LLM node 自己嘅任一 message 內加入 <code>{"{{#context#}}"}</code>。
+          </div>
+        )}
       </PanelCard>
 
       <PanelCard>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-800">Messages</p>
-          <p className="text-xs leading-5 text-zinc-500">
-            `system` message 固定保留而且永遠排第一。你可以新增更多 `user` 或 `assistant` message。
-          </p>
         </div>
 
         <div className="space-y-3">
@@ -174,6 +199,7 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
                 <PanelTextArea
                   rows={index === 0 ? 4 : 5}
                   value={message.content}
+                  placeholder="Write your prompt word here, enter '{' to insert a variable, enter '/' to insert a prompt content block"
                   onChange={(event) =>
                     updateMessage(index, {
                       ...message,
@@ -185,7 +211,7 @@ export default function LlmPanel({ node, patchNodeData }: NodePanelProps) {
           ))}
         </div>
 
-        <PanelButton onClick={() => addMessage("user")}>
+        <PanelButton onClick={addMessage}>
           Add Message
         </PanelButton>
       </PanelCard>
