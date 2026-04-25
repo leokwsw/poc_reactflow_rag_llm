@@ -30,6 +30,31 @@ export default function PanelContextMenu({
       </button>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("answer")}
+      >
+        Add Answer Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("llm")}
+      >
+        Add LLM Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("questionClassifier")}
+      >
+        Add Question Classifier Node
+      </button>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
+        onClick={() => onAddNode("note")}
+      >
+        Add Note Node
+      </button>
+      <hr/>
+      <button
+        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("triggerSchedule")}
       >
         Add Trigger Schedule Node
@@ -88,24 +113,14 @@ export default function PanelContextMenu({
       >
         Add Human Input Node
       </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("llm")}
-      >
-        Add LLM Node
-      </button>
+
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onAddNode("end")}
       >
         Add End Node
       </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("answer")}
-      >
-        Add Answer Node
-      </button>
+
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("iteration")}
@@ -148,24 +163,14 @@ export default function PanelContextMenu({
       >
         Add Loop Start Node
       </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("note")}
-      >
-        Add Note Node
-      </button>
+
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("parameterExtractor")}
       >
         Add Parameter Extractor Node
       </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("questionClassifier")}
-      >
-        Add Question Classifier Node
-      </button>
+
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
         onClick={() => onAddNode("simple")}
