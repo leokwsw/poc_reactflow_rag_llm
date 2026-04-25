@@ -53,7 +53,7 @@ export default function QuestionClassifierNode({ data }: NodeProps<QuestionClass
                   id={item.id}
                   position={Position.Right}
                   style={{ top: `${((index + 1) / (branchCount + 1)) * 100}%` }}
-                  className="h-3 w-3 border-2! border-white! bg-amber-500!"
+                  className="h-3 w-3 border-2! border-black! bg-amber-500!"
                 />
               </div>
             ))}

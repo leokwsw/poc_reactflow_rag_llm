@@ -28,7 +28,7 @@ export default function HumanInputNode({ data }: NodeProps<HumanInputNodeData>) 
         type="source"
         id={data.selectedBranch || "source"}
         position={Position.Right}
-        className="h-3 w-3 border-2! border-white! bg-amber-500!"
+        className="h-3 w-3 border-2! border-black! bg-amber-500!"
       />
     </BaseNode>
   );

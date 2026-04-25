@@ -50,7 +50,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
                 id={branch.id}
                 position={Position.Right}
                 style={{ top: `${top}%` }}
-                className="h-3 w-3 border-2! border-white! bg-zinc-600!"
+                className="h-3 w-3 border-2! border-black! bg-zinc-600!"
               />
             </div>
           );
@@ -63,7 +63,7 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
             id="else"
             position={Position.Right}
             style={{ top: `${(branchCount / (branchCount + 1)) * 100}%` }}
-            className="h-3 w-3 border-2! border-white! bg-zinc-600!"
+            className="h-3 w-3 border-2! border-black! bg-zinc-600!"
           />
         </div>
       </div>

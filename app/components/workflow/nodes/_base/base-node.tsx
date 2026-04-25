@@ -1,7 +1,7 @@
 "use client";
 
-import { Handle, Position } from "reactflow";
-import type { ReactNode } from "react";
+import {Handle, Position} from "reactflow";
+import type {ReactNode} from "react";
 
 type NodeTone = "zinc" | "indigo" | "emerald" | "amber";
 
@@ -16,7 +16,13 @@ type BaseNodeProps = {
   runStatus?: "idle" | "running" | "completed" | "error";
 };
 
-const toneClassMap: Record<NodeTone, { border: string; headerBg: string; title: string; handle: string; chip: string }> = {
+const toneClassMap: Record<NodeTone, {
+  border: string;
+  headerBg: string;
+  title: string;
+  handle: string;
+  chip: string
+}> = {
   zinc: {
     border: "border-zinc-200",
     headerBg: "bg-zinc-50",
@@ -48,15 +54,15 @@ const toneClassMap: Record<NodeTone, { border: string; headerBg: string; title: 
 };
 
 export default function BaseNode({
-  title,
-  subtitle,
-  tone = "zinc",
-  children,
-  hasTarget = true,
-  hasSource = true,
-  minWidthClassName = "min-w-[240px]",
-  runStatus = "idle",
-}: BaseNodeProps) {
+                                   title,
+                                   subtitle,
+                                   tone = "zinc",
+                                   children,
+                                   hasTarget = true,
+                                   hasSource = true,
+                                   minWidthClassName = "min-w-[240px]",
+                                   runStatus = "idle",
+                                 }: BaseNodeProps) {
   const toneClass = toneClassMap[tone];
   const runStatusClassName = runStatus === "running"
     ? "ring-2 ring-sky-400 ring-offset-2 ring-offset-sky-50 shadow-[0_0_0_1px_rgba(56,189,248,0.25),0_12px_28px_rgba(56,189,248,0.2)]"
@@ -67,14 +73,16 @@ export default function BaseNode({
         : "";
 
   return (
-    <div className={`relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}>
+    <div
+      className={`relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}>
       <div className={`border-b px-3 py-2.5 ${toneClass.border} ${toneClass.headerBg}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className={`truncate text-sm font-semibold ${toneClass.title}`}>{title}</p>
             {subtitle && <p className="mt-0.5 text-[11px] text-zinc-500">{subtitle}</p>}
           </div>
-          <div className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${toneClass.chip}`}>
+          <div
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${toneClass.chip}`}>
             {tone}
           </div>
         </div>
@@ -100,14 +108,14 @@ export default function BaseNode({
         <Handle
           type="target"
           position={Position.Left}
-          className={`h-3 w-3 border-2! border-white! ${toneClass.handle}`}
+          className={`h-3 w-3 border-2! border-black! ${toneClass.handle}`}
         />
       )}
       {hasSource && (
         <Handle
           type="source"
           position={Position.Right}
-          className={`h-3 w-3 border-2! border-white! ${toneClass.handle}`}
+          className={`h-5 w-5 border-3! border-red-800! ${toneClass.handle}`}
         />
       )}
     </div>

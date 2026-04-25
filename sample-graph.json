@@ -96,43 +96,80 @@
         "id": "answer",
         "type": "custom",
         "position": {
-          "x": 847,
-          "y": 0
+          "x": 891.2453324807167,
+          "y": 111.21124110017982
         },
         "data": {
           "type": "answer",
           "label": "answer",
-          "answer": "{{#llm.text#}}",
+          "answer": "LLM 1\n{{#llm.text#}}\nLLM 2\n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
           "outputs": [
-            "llm.text"
+            "llm.text",
+            "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
           ]
         },
         "width": 260,
-        "height": 152,
+        "height": 191,
         "positionAbsolute": {
-          "x": 847,
-          "y": 0
-        }
+          "x": 891.2453324807167,
+          "y": 111.21124110017982
+        },
+        "selected": true,
+        "dragging": false
       },
       {
-        "id": "f05b1e55-f682-4372-a316-f6ac4aaa9c5f",
+        "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "type": "custom",
         "position": {
-          "x": 419.3725274725275,
-          "y": 213.63296703296712
+          "x": 419.78735114633565,
+          "y": 224.18287974089773
         },
         "data": {
-          "type": "code",
-          "label": "code",
-          "language": "JavaScript",
-          "code": "return { result: input };"
+          "type": "llm",
+          "label": "llm",
+          "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+          "apiKey": "octopusPass",
+          "provider": "",
+          "model": "gpt-oss-120b-MXFP4-Q8",
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "You are a helpful assistant.",
+              "edition_type": "basic"
+            }
+          ],
+          "context": {
+            "enabled": true,
+            "variable_selector": [
+              "sys",
+              "query"
+            ]
+          },
+          "vision": {
+            "enabled": false
+          },
+          "memory": {
+            "window": {
+              "enabled": false,
+              "size": 10
+            },
+            "query_prompt_template": "{{query}}\n\n{{files}}",
+            "role_prefix": {
+              "user": "",
+              "assistant": ""
+            }
+          },
+          "prompt_config": {
+            "jinja2_variables": []
+          },
+          "systemPrompt": "You are a helpful assistant."
         },
-        "width": 240,
+        "width": 245,
         "height": 199,
         "selected": false,
         "positionAbsolute": {
-          "x": 419.3725274725275,
-          "y": 213.63296703296712
+          "x": 419.78735114633565,
+          "y": 224.18287974089773
         },
         "dragging": false
       }
@@ -152,17 +189,6 @@
       {
         "source": "1775711823881",
         "sourceHandle": null,
-        "target": "f05b1e55-f682-4372-a316-f6ac4aaa9c5f",
-        "targetHandle": null,
-        "style": {
-          "opacity": 1,
-          "strokeWidth": 2
-        },
-        "id": "reactflow__edge-1775711823881-f05b1e55-f682-4372-a316-f6ac4aaa9c5f"
-      },
-      {
-        "source": "1775711823881",
-        "sourceHandle": null,
         "target": "llm",
         "targetHandle": null,
         "style": {
@@ -170,13 +196,35 @@
           "strokeWidth": 2
         },
         "id": "reactflow__edge-1775711823881-llm"
+      },
+      {
+        "source": "1775711823881",
+        "sourceHandle": null,
+        "target": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
+        "targetHandle": null,
+        "style": {
+          "opacity": 1,
+          "strokeWidth": 2
+        },
+        "id": "reactflow__edge-1775711823881-45bbb912-6003-4bac-a45e-e8bffac4efd1"
+      },
+      {
+        "source": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
+        "sourceHandle": null,
+        "target": "answer",
+        "targetHandle": null,
+        "style": {
+          "opacity": 1,
+          "strokeWidth": 2
+        },
+        "id": "reactflow__edge-45bbb912-6003-4bac-a45e-e8bffac4efd1-answer"
       }
     ],
     "readOnly": false,
     "viewport": {
-      "x": -185.21410477136658,
-      "y": 251.40012435032574,
-      "zoom": 1.1892071150027181
+      "x": -11.027553098649719,
+      "y": 318.73788869960725,
+      "zoom": 0.8362463999140606
     }
   }
 }
