@@ -19,7 +19,6 @@ import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
 import { executeLoopEndNode } from "@/app/components/workflow/nodes/loop-end/execution";
 import { executeLoopStartNode } from "@/app/components/workflow/nodes/loop-start/execution";
 import { executeLoopNode } from "@/app/components/workflow/nodes/loop/execution";
-import { executeNoteNode } from "@/app/components/workflow/nodes/note/execution";
 import { executeParameterExtractorNode } from "@/app/components/workflow/nodes/parameter-extractor/execution";
 import { executeQuestionClassifierNode } from "@/app/components/workflow/nodes/question-classifier/execution";
 import { executeSimpleNode } from "@/app/components/workflow/nodes/simple/execution";
@@ -57,7 +56,6 @@ export const nodeExecutors: Record<string, NodeExecutor> = {
   loop: executeLoopNode,
   loopEnd: executeLoopEndNode,
   loopStart: executeLoopStartNode,
-  note: executeNoteNode,
   parameterExtractor: executeParameterExtractorNode,
   templateTransform: executeTemplateTransformNode,
   tool: executeToolNode,

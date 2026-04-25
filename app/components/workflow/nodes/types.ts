@@ -19,7 +19,6 @@ import LlmNode from "@/app/components/workflow/nodes/llm/ui";
 import LoopEndNode from "@/app/components/workflow/nodes/loop-end/ui";
 import LoopStartNode from "@/app/components/workflow/nodes/loop-start/ui";
 import LoopNode from "@/app/components/workflow/nodes/loop/ui";
-import NoteNode from "@/app/components/workflow/nodes/note/ui";
 import ParameterExtractorNode from "@/app/components/workflow/nodes/parameter-extractor/ui";
 import QuestionClassifierNode from "@/app/components/workflow/nodes/question-classifier/ui";
 import SimpleNode from "@/app/components/workflow/nodes/simple/ui";
@@ -60,7 +59,6 @@ export type CustomNodeType =
   | "variableAssigner"
   | "end"
   | "ifElse"
-  | "note"
   | "simple"
   | "knowledgeBase"
   | "knowledgeRetrieval"
@@ -98,7 +96,6 @@ export const NodeComponentMap: Record<string, ComponentType<Partial<NodeProps>>>
   variableAssigner: VariableAssignerNode as ComponentType<Partial<NodeProps>>,
   end: EndNode as ComponentType<Partial<NodeProps>>,
   ifElse: IfElseNode as ComponentType<Partial<NodeProps>>,
-  note: NoteNode as ComponentType<Partial<NodeProps>>,
   simple: SimpleNode as ComponentType<Partial<NodeProps>>,
   knowledgeBase: KnowledgeBaseNode as ComponentType<Partial<NodeProps>>,
   knowledgeRetrieval: KnowledgeRetrievalNode as ComponentType<Partial<NodeProps>>,

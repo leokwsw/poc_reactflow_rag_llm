@@ -46,12 +46,6 @@ export default function PanelContextMenu({
       >
         Add Question Classifier Node
       </button>
-      <button
-        className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
-        onClick={() => onAddNode("note")}
-      >
-        Add Note Node
-      </button>
       <hr/>
       <button
         className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-zinc-100"

@@ -95,8 +95,6 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = { ...data, label: "Loop End", aggregate: "collect_results" };
   } else if (type === "loopStart") {
     data = { ...data, label: "Loop Start", scopeName: "loop_scope" };
-  } else if (type === "note") {
-    data = { ...data, text: "New note", author: "You", theme: "yellow" };
   } else if (type === "parameterExtractor") {
     data = { ...data, label: "Parameter Extractor", parameters: [{ name: "product", type: "string" }] };
   } else if (type === "questionClassifier") {

@@ -21,7 +21,6 @@ import LlmPanel from "@/app/components/workflow/nodes/llm/panel";
 import LoopEndPanel from "@/app/components/workflow/nodes/loop-end/panel";
 import LoopStartPanel from "@/app/components/workflow/nodes/loop-start/panel";
 import LoopPanel from "@/app/components/workflow/nodes/loop/panel";
-import NotePanel from "@/app/components/workflow/nodes/note/panel";
 import ParameterExtractorPanel from "@/app/components/workflow/nodes/parameter-extractor/panel";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import QuestionClassifierPanel from "@/app/components/workflow/nodes/question-classifier/panel";
@@ -57,7 +56,6 @@ export const nodeSettingsPanelMap: Record<string, ComponentType<NodePanelProps>>
   loop: LoopPanel,
   loopEnd: LoopEndPanel,
   loopStart: LoopStartPanel,
-  note: NotePanel,
   parameterExtractor: ParameterExtractorPanel,
   simple: SimplePanel,
   templateTransform: TemplateTransformPanel,
