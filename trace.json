@@ -1,15 +1,24 @@
 [
   {
-    "nodeId": "1775711823881",
+    "input": {
+      "files": [],
+      "query": "how many t in strawberry?"
+    },
+    "processData": {},
+    "output": {
+      "sys.files": [],
+      "sys.query": "how many t in strawberry?"
+    },
+    "nodeId": "sys",
     "nodeType": "start",
     "status": "completed",
-    "detail": "query=124 chars, files=0",
+    "detail": "query=25 chars, files=0",
     "node": {
-      "id": "1775711823881",
+      "id": "sys",
       "type": "custom",
       "position": {
-        "x": -2.686090950614272,
-        "y": 28.651636806552077
+        "x": 0,
+        "y": 0
       },
       "data": {
         "variables": [
@@ -25,31 +34,72 @@
         ],
         "type": "start",
         "title": "開始",
-        "selected": false,
         "label": "開始",
         "runStatus": "idle"
       },
       "width": 242,
-      "height": 201,
+      "height": 73,
       "positionAbsolute": {
-        "x": -2.686090950614272,
-        "y": 28.651636806552077
+        "x": 0,
+        "y": 0
       },
-      "selected": false,
       "dragging": false
-    },
-    "input": {
-      "files": [],
-      "query": "I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn"
-    },
-    "processData": {},
-    "output": {
-      "sys.files": [],
-      "sys.query": "I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn",
-      "sys.dialogue_count": 1
     }
   },
   {
+    "input": {},
+    "processData": {
+      "model_mode": "chat",
+      "prompts": [
+        {
+          "files": [],
+          "role": "system",
+          "text": "u are a helpful assistant"
+        },
+        {
+          "files": [],
+          "role": "user",
+          "text": "how many t in strawberry?\n\n"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 86,
+        "completion_tokens": 91,
+        "total_tokens": 177,
+        "input_tokens": 86,
+        "output_tokens": 91,
+        "cached_tokens": null,
+        "model_load_duration": null,
+        "time_to_first_token": null,
+        "total_time": null,
+        "prompt_eval_duration": null,
+        "generation_duration": null,
+        "prompt_tokens_per_second": null,
+        "generation_tokens_per_second": null
+      },
+      "finish_reason": "stop",
+      "model_name": "gpt-oss-120b-MXFP4-Q8"
+    },
+    "output": {
+      "text": "The word **“strawberry”** contains **one** letter “t”.",
+      "reasoning_content": "",
+      "usage": {
+        "prompt_tokens": 86,
+        "completion_tokens": 91,
+        "total_tokens": 177,
+        "input_tokens": 86,
+        "output_tokens": 91,
+        "cached_tokens": null,
+        "model_load_duration": null,
+        "time_to_first_token": null,
+        "total_time": null,
+        "prompt_eval_duration": null,
+        "generation_duration": null,
+        "prompt_tokens_per_second": null,
+        "generation_tokens_per_second": null
+      },
+      "finish_reason": "stop"
+    },
     "nodeId": "llm",
     "nodeType": "llm",
     "status": "completed",
@@ -63,70 +113,55 @@
       },
       "data": {
         "type": "llm",
-        "label": "llm",
+        "label": "llm 1",
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
-        "provider": "",
         "model": "gpt-oss-120b-MXFP4-Q8",
-        "prompt_template": [
+        "messages": [
           {
             "role": "system",
-            "text": "{{#context#}}\n\nu are a helpful assestaint",
-            "id": "62622fa9-da43-4d86-8e5e-c309b82e881a",
-            "edition_type": "basic"
+            "content": "u are a helpful assistant"
+          },
+          {
+            "role": "user",
+            "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
           }
         ],
-        "context": {
-          "enabled": true,
-          "variable_selector": [
-            "sys",
-            "query"
-          ]
-        },
-        "vision": {
-          "enabled": false
-        },
-        "memory": {
-          "window": {
-            "enabled": false,
-            "size": 10
-          },
-          "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
-          "role_prefix": {
-            "user": "",
-            "assistant": ""
-          }
-        },
-        "prompt_config": {
-          "jinja2_variables": []
-        },
-        "systemPrompt": "{{#context#}}\n\nu are a helpful assestaint"
+        "context_variable": "",
+        "vision_enable": false
       },
-      "width": 245,
-      "height": 199,
+      "width": 240,
+      "height": 120,
       "positionAbsolute": {
         "x": 422,
         "y": 0
       },
-      "selected": false,
-      "dragging": false
-    },
+      "dragging": false,
+      "selected": false
+    }
+  },
+  {
     "input": {},
     "processData": {
       "model_mode": "chat",
       "prompts": [
         {
           "files": [],
+          "role": "system",
+          "text": "You are a helpful assistant."
+        },
+        {
+          "files": [],
           "role": "user",
-          "text": "I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn\n\n"
+          "text": "how many t in strawberry?\n\n"
         }
       ],
       "usage": {
-        "prompt_tokens": 118,
-        "completion_tokens": 480,
-        "total_tokens": 598,
-        "input_tokens": 118,
-        "output_tokens": 480,
+        "prompt_tokens": 86,
+        "completion_tokens": 112,
+        "total_tokens": 198,
+        "input_tokens": 86,
+        "output_tokens": 112,
         "cached_tokens": null,
         "model_load_duration": null,
         "time_to_first_token": null,
@@ -137,18 +172,17 @@
         "generation_tokens_per_second": null
       },
       "finish_reason": "stop",
-      "model_name": "gpt-oss-120b-MXFP4-Q8",
-      "system_prompt": "{{#context#}}\n\nu are a helpful assestaint"
+      "model_name": "gpt-oss-120b-MXFP4-Q8"
     },
     "output": {
-      "text": "## Welcome to the Interactive Guide on **Mac MLX ASR**  \n\n*(MLX = Machine‑Learning eXchange – Apple’s platform for bringing custom ML models to macOS. The ASR part is the Automatic Speech‑Recognition framework that lives inside the Speech framework.)*  \n\nI’ll walk you through the whole process **step‑by‑step**, pausing after each major action so you can try it on your own machine and tell me how it went. Feel free to ask for clarification at any point.\n\n---\n\n### 1️⃣  Set the Stage – What Do You Have Already?\n\n> **Please answer the following questions (you can answer all at once or one by one):**  \n\n1. Which macOS version are you running?  \n2. Do you have Xcode installed? If so, which version?  \n3. Which language do you prefer for macOS development – **Swift** or **Objective‑C**?  \n4. Have you ever used the **Speech** framework before?  \n\nYour answers will let me tailor the next steps to your environment.  \n\n---  \n\n\n\n---  \n\n\n\n(When you’re ready, just type your responses and we’ll move on to the next step!)",
+      "text": "The word **“strawberry”** contains **one** letter **t**. (It appears only once, as the second character.)",
       "reasoning_content": "",
       "usage": {
-        "prompt_tokens": 118,
-        "completion_tokens": 480,
-        "total_tokens": 598,
-        "input_tokens": 118,
-        "output_tokens": 480,
+        "prompt_tokens": 86,
+        "completion_tokens": 112,
+        "total_tokens": 198,
+        "input_tokens": 86,
+        "output_tokens": 112,
         "cached_tokens": null,
         "model_load_duration": null,
         "time_to_first_token": null,
@@ -159,9 +193,7 @@
         "generation_tokens_per_second": null
       },
       "finish_reason": "stop"
-    }
-  },
-  {
+    },
     "nodeId": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
     "nodeType": "llm",
     "status": "completed",
@@ -170,109 +202,45 @@
       "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
       "type": "custom",
       "position": {
-        "x": 419.78735114633565,
-        "y": 224.18287974089773
+        "x": 422,
+        "y": 146.0964285714286
       },
       "data": {
         "type": "llm",
-        "label": "llm",
+        "label": "llm 2",
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
-        "provider": "",
         "model": "gpt-oss-120b-MXFP4-Q8",
-        "prompt_template": [
+        "messages": [
           {
             "role": "system",
-            "text": "You are a helpful assistant.",
-            "edition_type": "basic"
+            "content": "You are a helpful assistant."
+          },
+          {
+            "role": "user",
+            "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
           }
         ],
-        "context": {
-          "enabled": true,
-          "variable_selector": [
-            "sys",
-            "query"
-          ]
-        },
-        "vision": {
-          "enabled": false
-        },
-        "memory": {
-          "window": {
-            "enabled": false,
-            "size": 10
-          },
-          "query_prompt_template": "{{query}}\n\n{{files}}",
-          "role_prefix": {
-            "user": "",
-            "assistant": ""
-          }
-        },
-        "prompt_config": {
-          "jinja2_variables": []
-        },
-        "systemPrompt": "You are a helpful assistant."
+        "context_variable": "",
+        "vision_enable": false
       },
-      "width": 245,
-      "height": 199,
-      "selected": false,
+      "width": 240,
+      "height": 120,
       "positionAbsolute": {
-        "x": 419.78735114633565,
-        "y": 224.18287974089773
+        "x": 422,
+        "y": 146.0964285714286
       },
-      "dragging": false
-    },
-    "input": {},
-    "processData": {
-      "model_mode": "chat",
-      "prompts": [
-        {
-          "files": [],
-          "role": "user",
-          "text": "I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn\n\n"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 111,
-        "completion_tokens": 2266,
-        "total_tokens": 2377,
-        "input_tokens": 111,
-        "output_tokens": 2266,
-        "cached_tokens": null,
-        "model_load_duration": null,
-        "time_to_first_token": null,
-        "total_time": null,
-        "prompt_eval_duration": null,
-        "generation_duration": null,
-        "prompt_tokens_per_second": null,
-        "generation_tokens_per_second": null
-      },
-      "finish_reason": "stop",
-      "model_name": "gpt-oss-120b-MXFP4-Q8",
-      "system_prompt": "You are a helpful assistant."
-    },
-    "output": {
-      "text": "Below is a **structured, interactive roadmap** you can follow to become comfortable with **Mac MLX ASR** (the Apple‑backed MLX framework for Automatic Speech Recognition on macOS).  \nI’ll pause after each chunk and ask you to confirm or answer a quick question before we move on. Feel free to type “skip”, “repeat”, or ask for more detail at any point.\n\n---\n\n## 1️⃣ Overview – What is MLX ASR?\n\n| Piece | What it means |\n|------|----------------|\n| **MLX** | Apple’s open‑source **MLX** library (formerly “MLX‑Framework”) – a lightweight, JIT‑compiled, NumPy‑compatible tensor library that runs natively on macOS (CPU, GPU via Metal, and Apple‑silicon accelerators). |\n| **ASR** | Automatic Speech Recognition – turning spoken audio into text. |\n| **Mac MLX ASR** | A collection of ready‑to‑run MLX models (e.g., Whisper‑style, QuartzNet, Conformer) packaged with helper scripts so you can transcribe audio locally on a Mac without sending data to the cloud. |\n\n**Why use it?**  \n- **Privacy‑first** – everything runs on‑device.  \n- **Speed** – Metal‑accelerated inference on M‑series chips can hit real‑time or faster.  \n- **Flexibility** – you can fine‑tune or swap models, export to Core ML, or embed in a Swift app.\n\n---\n\n## 2️⃣ Check Your Mac & Install Prerequisites  \n\n> **Action:** Run the commands I list in **Terminal** and tell me the result (or copy‑paste any error).\n\n| Step | Command | What you’ll see |\n|------|---------|-----------------|\n| **2.1** | `sw_vers` | macOS version (needs 13.0+ for Metal‑based MLX). |\n| **2.2** | `uname -m` | Architecture (`arm64` for Apple Silicon, `x86_64` for Intel). |\n| **2.3** | `python3 --version` | Python 3.10 or newer is recommended. |\n| **2.4** | `xcode-select --install` | Installs Command‑Line Tools if not already present. |\n| **2.5** | `brew install ffmpeg` | Installs FFmpeg (used for audio preprocessing). |\n\n**Your turn:**  \n1️⃣ Open **Terminal** → copy‑paste each line (press **Enter** after each).  \n2️⃣ After you finish, reply with the outputs (you can redact any personal info).  \n\nIf any step fails, let me know the error and we’ll troubleshoot before moving on.\n\n---\n\n## 3️⃣ Set Up a Python Virtual Environment  \n\nWe’ll keep the MLX packages isolated.\n\n```bash\n# 3.1 Create a folder for the project\nmkdir -p ~/mlx_asr && cd ~/mlx_asr\n\n# 3.2 Create a venv (Python 3)\npython3 -m venv .venv\n\n# 3.3 Activate it\nsource .venv/bin/activate   # (you’ll see the prompt change to (.venv))\n```\n\n**Next:**  \n- Run the three commands above.  \n- When the prompt changes, reply **“venv ready”**.\n\n---\n\n## 4️⃣ Install MLX and the ASR Toolkit  \n\nApple publishes the core library on PyPI and a companion repo `mlx-asr` with model zoo, utilities, and examples.\n\n```bash\n# 4.1 Upgrade pip, wheel, setuptools\npip install --upgrade pip wheel setuptools\n\n# 4.2 Install the core MLX library (CPU + Metal GPU support)\npip install mlx==0.13.0   # replace with latest version if you check PyPI\n\n# 4.3 Install the ASR helper package (includes model zoo, preprocessing, etc.)\npip install mlx-asr\n```\n\n> **Tip:** If you get a warning about “metal‑accelerated kernels not found”, it usually means you’re on an Intel Mac; the CPU fallback will still work (just slower).\n\n**Your turn:**  \nRun the three `pip install` lines.  \nIf installation succeeds, reply **“MLX installed”**.  \nIf you see any error (especially related to `torch` or `numpy`), copy the traceback so I can help.\n\n---\n\n## 5️⃣ Quick‑Start: Run a Pre‑Trained ASR Model  \n\nThe `mlx-asr` package ships a small Whisper‑style model called **`mlx-whisper-base`** (≈ 150 MB). Let’s download and test it.\n\n```bash\n# 5.1 Create a folder for models & download\nmkdir -p models && cd models\nmlx-asr download mlx-whisper-base   # pulls the model & config\n\n# 5.2 Go back to the project root\ncd ..\n\n# 5.3 Grab a short test audio (you can use any .wav ≤ 10 s)\n# Here we download a public sample\ncurl -L -o sample.wav https://raw.githubusercontent.com/openai/whisper/main/tests/jfk.wav\n```\n\nNow run inference:\n\n```bash\nmlx-asr transcribe \\\n  --model models/mlx-whisper-base \\\n  --audio sample.wav \\\n  --output transcript.txt\n```\n\nYou should see something like:\n\n```\n[INFO] Loading model...\n[INFO] Running on Metal GPU (M1/M2)...\n[INFO] Transcription: \"And so my fellow Americans…\"\n```\n\n**Your turn:**  \n\n1. Execute steps **5.1‑5.3**.  \n2. Run the `mlx-asr transcribe` command.  \n3. Open `transcript.txt` (`cat transcript.txt`) and tell me what the output looks like.\n\nIf you get an error about missing `ffmpeg` or audio format, let me know the exact message.\n\n---\n\n## 6️⃣ Digging Deeper – What’s Under the Hood?  \n\nOnce you have a working transcription, we can explore three core concepts:\n\n| Concept | Why it matters | Quick experiment |\n|---------|----------------|-------------------|\n| **Model Architecture** | Understand the Conformer/Transformer blocks that power the model. | Open `models/mlx-whisper-base/config.json` and look at `num_layers`, `d_model`, etc. |\n| **Metal‑GPU Profiling** | Verify you’re really using the GPU (important for performance). | Run `mlx-asr profile …` or set `MLX_DEBUG=1` before transcribing. |\n| **Fine‑tuning / Custom vocab** | Adapt the model to a domain (e.g., medical dict). | Use `mlx-asr finetune` with a small CSV of `(audio_path, transcript)` pairs. |\n\n**Prompt:** Which of the three topics above would you like to explore first? (Type **1**, **2**, or **3**.)\n\n---\n\n## 7️⃣ Optional: Embedding MLX‑ASR in a Swift/macOS App  \n\nIf you’re comfortable with the Python side and want to ship the ASR engine inside a native macOS app:\n\n1. **Export to Core ML**  \n   ```bash\n   mlx-asr export \\\n     --model models/mlx-whisper-base \\\n     --output WhisperBase.mlmodel\n   ```\n2. **Add to Xcode** – drag the `.mlmodel` into your project.  \n3. **Run inference with `MLModel`** – Apple’s `MLModel` API will automatically use Metal.\n\n**Prompt:** Do you want a brief walkthrough of the export step now, or would you rather stay in Python a bit longer? (Reply **export** or **python**.)\n\n---\n\n## 8️⃣ Next Steps & Resources  \n\n| Resource | Link | What you’ll find |\n|----------|------|------------------|\n| **MLX GitHub** | <https://github.com/ml-explore/mlx> | Source code, issues, examples. |\n| **MLX‑ASR repo** | <https://github.com/ml-explore/mlx-asr> | Model zoo, CLI docs, fine‑tuning scripts. |\n| **Apple WWDC 2024 – “MLX on Apple Silicon”** | Video on Apple Developer site | Deep dive on Metal kernels, performance tricks. |\n| **Hands‑on notebook** | <https://github.com/ml-explore/mlx-asr/blob/main/examples/transcribe.ipynb> | Interactive Jupyter notebook (run locally with `jupyter`). |\n| **Community Slack** | `mlx-community.slack.com` | Ask questions, share benchmarks. |\n\n---\n\n## 9️⃣ Your Turn – Recap & Personal Plan  \n\n1. **Summarize** where you are now (e.g., “MLX installed, transcription works”).  \n2. **Pick** the next deep‑dive topic (model internals, profiling, fine‑tuning, or export).  \n3. **Set a small goal** for the next 24‑48 h (e.g., “run a profiling test on a 30‑second audio file”).  \n\nReply with your summary and the next step you’d like to take, and I’ll give you the precise commands and checkpoints to hit that goal.  \n\nLet’s keep this interactive—feel free to ask any “why?” or “what if?” along the way!",
-      "reasoning_content": "",
-      "usage": {
-        "prompt_tokens": 111,
-        "completion_tokens": 2266,
-        "total_tokens": 2377,
-        "input_tokens": 111,
-        "output_tokens": 2266,
-        "cached_tokens": null,
-        "model_load_duration": null,
-        "time_to_first_token": null,
-        "total_time": null,
-        "prompt_eval_duration": null,
-        "generation_duration": null,
-        "prompt_tokens_per_second": null,
-        "generation_tokens_per_second": null
-      },
-      "finish_reason": "stop"
+      "dragging": false,
+      "selected": false
     }
   },
   {
+    "input": {},
+    "processData": {},
+    "output": {
+      "answer": "LLM 1 :\nThe word **“strawberry”** contains **one** letter “t”.\n-----\nLLM 2 : \nThe word **“strawberry”** contains **one** letter **t**. (It appears only once, as the second character.)",
+      "files": []
+    },
     "nodeId": "answer",
     "nodeType": "answer",
     "status": "completed",
@@ -281,32 +249,26 @@
       "id": "answer",
       "type": "custom",
       "position": {
-        "x": 891.2453324807167,
-        "y": 111.21124110017982
+        "x": 842,
+        "y": 0
       },
       "data": {
         "type": "answer",
-        "label": "answer",
-        "answer": "LLM 1\n{{#llm.text#}}\nLLM 2\n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
+        "label": "Answer",
+        "answer": "LLM 1 :\n{{#llm.text#}}\n-----\nLLM 2 : \n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
         "outputs": [
           "llm.text",
           "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
         ]
       },
       "width": 260,
-      "height": 191,
+      "height": 180,
       "positionAbsolute": {
-        "x": 891.2453324807167,
-        "y": 111.21124110017982
+        "x": 842,
+        "y": 0
       },
-      "selected": true,
-      "dragging": false
-    },
-    "input": {},
-    "processData": {},
-    "output": {
-      "answer": "LLM 1\n## Welcome to the Interactive Guide on **Mac MLX ASR**  \n\n*(MLX = Machine‑Learning eXchange – Apple’s platform for bringing custom ML models to macOS. The ASR part is the Automatic Speech‑Recognition framework that lives inside the Speech framework.)*  \n\nI’ll walk you through the whole process **step‑by‑step**, pausing after each major action so you can try it on your own machine and tell me how it went. Feel free to ask for clarification at any point.\n\n---\n\n### 1️⃣  Set the Stage – What Do You Have Already?\n\n> **Please answer the following questions (you can answer all at once or one by one):**  \n\n1. Which macOS version are you running?  \n2. Do you have Xcode installed? If so, which version?  \n3. Which language do you prefer for macOS development – **Swift** or **Objective‑C**?  \n4. Have you ever used the **Speech** framework before?  \n\nYour answers will let me tailor the next steps to your environment.  \n\n---  \n\n\n\n---  \n\n\n\n(When you’re ready, just type your responses and we’ll move on to the next step!)\nLLM 2\nBelow is a **structured, interactive roadmap** you can follow to become comfortable with **Mac MLX ASR** (the Apple‑backed MLX framework for Automatic Speech Recognition on macOS).  \nI’ll pause after each chunk and ask you to confirm or answer a quick question before we move on. Feel free to type “skip”, “repeat”, or ask for more detail at any point.\n\n---\n\n## 1️⃣ Overview – What is MLX ASR?\n\n| Piece | What it means |\n|------|----------------|\n| **MLX** | Apple’s open‑source **MLX** library (formerly “MLX‑Framework”) – a lightweight, JIT‑compiled, NumPy‑compatible tensor library that runs natively on macOS (CPU, GPU via Metal, and Apple‑silicon accelerators). |\n| **ASR** | Automatic Speech Recognition – turning spoken audio into text. |\n| **Mac MLX ASR** | A collection of ready‑to‑run MLX models (e.g., Whisper‑style, QuartzNet, Conformer) packaged with helper scripts so you can transcribe audio locally on a Mac without sending data to the cloud. |\n\n**Why use it?**  \n- **Privacy‑first** – everything runs on‑device.  \n- **Speed** – Metal‑accelerated inference on M‑series chips can hit real‑time or faster.  \n- **Flexibility** – you can fine‑tune or swap models, export to Core ML, or embed in a Swift app.\n\n---\n\n## 2️⃣ Check Your Mac & Install Prerequisites  \n\n> **Action:** Run the commands I list in **Terminal** and tell me the result (or copy‑paste any error).\n\n| Step | Command | What you’ll see |\n|------|---------|-----------------|\n| **2.1** | `sw_vers` | macOS version (needs 13.0+ for Metal‑based MLX). |\n| **2.2** | `uname -m` | Architecture (`arm64` for Apple Silicon, `x86_64` for Intel). |\n| **2.3** | `python3 --version` | Python 3.10 or newer is recommended. |\n| **2.4** | `xcode-select --install` | Installs Command‑Line Tools if not already present. |\n| **2.5** | `brew install ffmpeg` | Installs FFmpeg (used for audio preprocessing). |\n\n**Your turn:**  \n1️⃣ Open **Terminal** → copy‑paste each line (press **Enter** after each).  \n2️⃣ After you finish, reply with the outputs (you can redact any personal info).  \n\nIf any step fails, let me know the error and we’ll troubleshoot before moving on.\n\n---\n\n## 3️⃣ Set Up a Python Virtual Environment  \n\nWe’ll keep the MLX packages isolated.\n\n```bash\n# 3.1 Create a folder for the project\nmkdir -p ~/mlx_asr && cd ~/mlx_asr\n\n# 3.2 Create a venv (Python 3)\npython3 -m venv .venv\n\n# 3.3 Activate it\nsource .venv/bin/activate   # (you’ll see the prompt change to (.venv))\n```\n\n**Next:**  \n- Run the three commands above.  \n- When the prompt changes, reply **“venv ready”**.\n\n---\n\n## 4️⃣ Install MLX and the ASR Toolkit  \n\nApple publishes the core library on PyPI and a companion repo `mlx-asr` with model zoo, utilities, and examples.\n\n```bash\n# 4.1 Upgrade pip, wheel, setuptools\npip install --upgrade pip wheel setuptools\n\n# 4.2 Install the core MLX library (CPU + Metal GPU support)\npip install mlx==0.13.0   # replace with latest version if you check PyPI\n\n# 4.3 Install the ASR helper package (includes model zoo, preprocessing, etc.)\npip install mlx-asr\n```\n\n> **Tip:** If you get a warning about “metal‑accelerated kernels not found”, it usually means you’re on an Intel Mac; the CPU fallback will still work (just slower).\n\n**Your turn:**  \nRun the three `pip install` lines.  \nIf installation succeeds, reply **“MLX installed”**.  \nIf you see any error (especially related to `torch` or `numpy`), copy the traceback so I can help.\n\n---\n\n## 5️⃣ Quick‑Start: Run a Pre‑Trained ASR Model  \n\nThe `mlx-asr` package ships a small Whisper‑style model called **`mlx-whisper-base`** (≈ 150 MB). Let’s download and test it.\n\n```bash\n# 5.1 Create a folder for models & download\nmkdir -p models && cd models\nmlx-asr download mlx-whisper-base   # pulls the model & config\n\n# 5.2 Go back to the project root\ncd ..\n\n# 5.3 Grab a short test audio (you can use any .wav ≤ 10 s)\n# Here we download a public sample\ncurl -L -o sample.wav https://raw.githubusercontent.com/openai/whisper/main/tests/jfk.wav\n```\n\nNow run inference:\n\n```bash\nmlx-asr transcribe \\\n  --model models/mlx-whisper-base \\\n  --audio sample.wav \\\n  --output transcript.txt\n```\n\nYou should see something like:\n\n```\n[INFO] Loading model...\n[INFO] Running on Metal GPU (M1/M2)...\n[INFO] Transcription: \"And so my fellow Americans…\"\n```\n\n**Your turn:**  \n\n1. Execute steps **5.1‑5.3**.  \n2. Run the `mlx-asr transcribe` command.  \n3. Open `transcript.txt` (`cat transcript.txt`) and tell me what the output looks like.\n\nIf you get an error about missing `ffmpeg` or audio format, let me know the exact message.\n\n---\n\n## 6️⃣ Digging Deeper – What’s Under the Hood?  \n\nOnce you have a working transcription, we can explore three core concepts:\n\n| Concept | Why it matters | Quick experiment |\n|---------|----------------|-------------------|\n| **Model Architecture** | Understand the Conformer/Transformer blocks that power the model. | Open `models/mlx-whisper-base/config.json` and look at `num_layers`, `d_model`, etc. |\n| **Metal‑GPU Profiling** | Verify you’re really using the GPU (important for performance). | Run `mlx-asr profile …` or set `MLX_DEBUG=1` before transcribing. |\n| **Fine‑tuning / Custom vocab** | Adapt the model to a domain (e.g., medical dict). | Use `mlx-asr finetune` with a small CSV of `(audio_path, transcript)` pairs. |\n\n**Prompt:** Which of the three topics above would you like to explore first? (Type **1**, **2**, or **3**.)\n\n---\n\n## 7️⃣ Optional: Embedding MLX‑ASR in a Swift/macOS App  \n\nIf you’re comfortable with the Python side and want to ship the ASR engine inside a native macOS app:\n\n1. **Export to Core ML**  \n   ```bash\n   mlx-asr export \\\n     --model models/mlx-whisper-base \\\n     --output WhisperBase.mlmodel\n   ```\n2. **Add to Xcode** – drag the `.mlmodel` into your project.  \n3. **Run inference with `MLModel`** – Apple’s `MLModel` API will automatically use Metal.\n\n**Prompt:** Do you want a brief walkthrough of the export step now, or would you rather stay in Python a bit longer? (Reply **export** or **python**.)\n\n---\n\n## 8️⃣ Next Steps & Resources  \n\n| Resource | Link | What you’ll find |\n|----------|------|------------------|\n| **MLX GitHub** | <https://github.com/ml-explore/mlx> | Source code, issues, examples. |\n| **MLX‑ASR repo** | <https://github.com/ml-explore/mlx-asr> | Model zoo, CLI docs, fine‑tuning scripts. |\n| **Apple WWDC 2024 – “MLX on Apple Silicon”** | Video on Apple Developer site | Deep dive on Metal kernels, performance tricks. |\n| **Hands‑on notebook** | <https://github.com/ml-explore/mlx-asr/blob/main/examples/transcribe.ipynb> | Interactive Jupyter notebook (run locally with `jupyter`). |\n| **Community Slack** | `mlx-community.slack.com` | Ask questions, share benchmarks. |\n\n---\n\n## 9️⃣ Your Turn – Recap & Personal Plan  \n\n1. **Summarize** where you are now (e.g., “MLX installed, transcription works”).  \n2. **Pick** the next deep‑dive topic (model internals, profiling, fine‑tuning, or export).  \n3. **Set a small goal** for the next 24‑48 h (e.g., “run a profiling test on a 30‑second audio file”).  \n\nReply with your summary and the next step you’d like to take, and I’ll give you the precise commands and checkpoints to hit that goal.  \n\nLet’s keep this interactive—feel free to ask any “why?” or “what if?” along the way!",
-      "files": []
+      "dragging": false,
+      "selected": false
     }
   }
 ]
