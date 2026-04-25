@@ -77,6 +77,7 @@ export default function Home() {
     completedNodeIds?: string[];
   } | null>(null);
   const [isJsonCopied, setIsJsonCopied] = useState(false);
+  const [isTraceCopied, setIsTraceCopied] = useState(false);
 
   const handleWorkflowDataChange = useCallback((next: WorkflowDataType) => {
     setData(next);
@@ -239,6 +240,16 @@ export default function Home() {
     }
   }, [data]);
 
+  const handleCopyTraceJson = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(runResult?.trace ?? liveTrace, null, 2));
+      setIsTraceCopied(true);
+      window.setTimeout(() => setIsTraceCopied(false), 1500);
+    } catch {
+      setIsTraceCopied(false);
+    }
+  }, [liveTrace, runResult?.trace]);
+
   return (
     <div className="flex h-screen w-full bg-[#f5f7fb]">
       <div className="min-w-0 flex-1">
@@ -360,7 +371,16 @@ export default function Home() {
                   ))}
                 </div>
                 <div className="mt-6">
-                  <h3 className="mb-2 text-sm font-semibold text-zinc-900">Trace JSON</h3>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-zinc-900">Trace JSON</h3>
+                    <button
+                      className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+                      type="button"
+                      onClick={handleCopyTraceJson}
+                    >
+                      {isTraceCopied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
                   <pre className="max-h-96 overflow-auto rounded-2xl bg-zinc-950 p-3 text-xs text-zinc-100">
                     {JSON.stringify(runResult?.trace ?? liveTrace, null, 2)}
                   </pre>

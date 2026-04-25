@@ -1,0 +1,245 @@
+[
+  {
+    "nodeId": "1775711823881",
+    "nodeType": "start",
+    "status": "completed",
+    "detail": "query=124 chars, files=0",
+    "node": {
+      "id": "1775711823881",
+      "type": "custom",
+      "position": {
+        "x": -2.686090950614272,
+        "y": 28.651636806552077
+      },
+      "data": {
+        "variables": [
+          {
+            "name": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "files",
+            "type": "file[]"
+          }
+        ],
+        "type": "start",
+        "title": "開始",
+        "selected": false,
+        "label": "開始",
+        "runStatus": "idle"
+      },
+      "width": 242,
+      "height": 201,
+      "positionAbsolute": {
+        "x": -2.686090950614272,
+        "y": 28.651636806552077
+      },
+      "selected": false,
+      "dragging": false
+    },
+    "output": {
+      "query": "I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn",
+      "files": []
+    }
+  },
+  {
+    "nodeId": "llm",
+    "nodeType": "llm",
+    "status": "completed",
+    "detail": "model=gpt-oss-120b-MXFP4-Q8",
+    "node": {
+      "id": "llm",
+      "type": "custom",
+      "position": {
+        "x": 422,
+        "y": 0
+      },
+      "data": {
+        "type": "llm",
+        "label": "llm",
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "provider": "",
+        "model": "gpt-oss-120b-MXFP4-Q8",
+        "prompt_template": [
+          {
+            "role": "system",
+            "text": "{{#context#}}\n\nu are a helpful assestaint",
+            "id": "62622fa9-da43-4d86-8e5e-c309b82e881a",
+            "edition_type": "basic"
+          }
+        ],
+        "context": {
+          "enabled": true,
+          "variable_selector": [
+            "sys",
+            "query"
+          ]
+        },
+        "vision": {
+          "enabled": false
+        },
+        "memory": {
+          "window": {
+            "enabled": false,
+            "size": 10
+          },
+          "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
+          "role_prefix": {
+            "user": "",
+            "assistant": ""
+          }
+        },
+        "prompt_config": {
+          "jinja2_variables": []
+        },
+        "systemPrompt": "{{#context#}}\n\nu are a helpful assestaint"
+      },
+      "width": 245,
+      "height": 199,
+      "positionAbsolute": {
+        "x": 422,
+        "y": 0
+      },
+      "selected": false,
+      "dragging": false
+    },
+    "output": {
+      "text": "Hello! How can I assist you today?",
+      "usage": {
+        "prompt_tokens": 88,
+        "completion_tokens": 67,
+        "total_tokens": 155,
+        "input_tokens": 88,
+        "output_tokens": 67,
+        "cached_tokens": null,
+        "model_load_duration": null,
+        "time_to_first_token": null,
+        "total_time": null,
+        "prompt_eval_duration": null,
+        "generation_duration": null,
+        "prompt_tokens_per_second": null,
+        "generation_tokens_per_second": null
+      },
+      "model": "gpt-oss-120b-MXFP4-Q8"
+    }
+  },
+  {
+    "nodeId": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
+    "nodeType": "llm",
+    "status": "completed",
+    "detail": "model=gpt-oss-120b-MXFP4-Q8",
+    "node": {
+      "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
+      "type": "custom",
+      "position": {
+        "x": 419.78735114633565,
+        "y": 224.18287974089773
+      },
+      "data": {
+        "type": "llm",
+        "label": "llm",
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "provider": "",
+        "model": "gpt-oss-120b-MXFP4-Q8",
+        "prompt_template": [
+          {
+            "role": "system",
+            "text": "You are a helpful assistant.",
+            "edition_type": "basic"
+          }
+        ],
+        "context": {
+          "enabled": true,
+          "variable_selector": [
+            "sys",
+            "query"
+          ]
+        },
+        "vision": {
+          "enabled": false
+        },
+        "memory": {
+          "window": {
+            "enabled": false,
+            "size": 10
+          },
+          "query_prompt_template": "{{query}}\n\n{{files}}",
+          "role_prefix": {
+            "user": "",
+            "assistant": ""
+          }
+        },
+        "prompt_config": {
+          "jinja2_variables": []
+        },
+        "systemPrompt": "You are a helpful assistant."
+      },
+      "width": 245,
+      "height": 199,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 419.78735114633565,
+        "y": 224.18287974089773
+      },
+      "dragging": false
+    },
+    "output": {
+      "text": "Sure! Let’s build a hands‑on learning path for **Mac MLX ASR** (Apple’s “MLX” Automatic Speech‑Recognition framework).  \nI’ll break the journey into bite‑size steps, and after each step I’ll ask you to confirm you’ve completed it (or let me know if you hit a snag). Feel free to ask questions at any point.\n\n---\n\n## 🎯 What You’ll End Up With\n1. A working macOS development environment (Xcode + Swift or Python).  \n2. Ability to load and run the pre‑trained MLX‑ASR model on audio files.  \n3. Knowledge of how to fine‑tune/customize the model (optional but useful).  \n4. Tools to evaluate transcription quality (WER, CER).  \n\n---\n\n## 📋 Step‑0 – Quick Check‑In\n\n1. **macOS version** – Which version are you on? (e.g., macOS 14.5 Ventura)  \n2. **Preferred language** – Do you want to use **Swift** (native Apple SDK) or **Python** (via `mlx‑asr` Python package)?  \n3. **Development tools** – Do you already have Xcode installed? (If not, we’ll install it.)\n\n*Reply with your answers, and we’ll tailor the next steps.*",
+      "usage": {
+        "prompt_tokens": 112,
+        "completion_tokens": 567,
+        "total_tokens": 679,
+        "input_tokens": 112,
+        "output_tokens": 567,
+        "cached_tokens": null,
+        "model_load_duration": null,
+        "time_to_first_token": null,
+        "total_time": null,
+        "prompt_eval_duration": null,
+        "generation_duration": null,
+        "prompt_tokens_per_second": null,
+        "generation_tokens_per_second": null
+      },
+      "model": "gpt-oss-120b-MXFP4-Q8"
+    }
+  },
+  {
+    "nodeId": "answer",
+    "nodeType": "answer",
+    "status": "completed",
+    "detail": "outputs=1",
+    "node": {
+      "id": "answer",
+      "type": "custom",
+      "position": {
+        "x": 891.2453324807167,
+        "y": 111.21124110017982
+      },
+      "data": {
+        "type": "answer",
+        "label": "answer",
+        "answer": "LLM 1\n{{#llm.text#}}\nLLM 2\n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
+        "outputs": [
+          "llm.text",
+          "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
+        ]
+      },
+      "width": 260,
+      "height": 191,
+      "positionAbsolute": {
+        "x": 891.2453324807167,
+        "y": 111.21124110017982
+      },
+      "selected": true,
+      "dragging": false
+    },
+    "output": {
+      "output": "Hello! How can I assist you today?",
+      "outputs": {},
+      "answer": "LLM 1\n{{#llm.text#}}\nLLM 2\n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}"
+    }
+  }
+]
