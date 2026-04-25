@@ -59,7 +59,7 @@ function renderTokenizedText(value: string, tokenChipRenderer: (expression: stri
 }
 
 export const PanelTextArea = forwardRef<HTMLTextAreaElement, PanelTextAreaProps>(function PanelTextArea(
-  { tokenChipRenderer, className, value, ...props },
+  { tokenChipRenderer, className, value, style, ...props },
   ref,
 ) {
   const hasTokenOverlay = typeof tokenChipRenderer === "function" && typeof value === "string";
@@ -89,6 +89,17 @@ export const PanelTextArea = forwardRef<HTMLTextAreaElement, PanelTextAreaProps>
         ref={ref}
         value={value}
         {...props}
+        style={
+          hasTokenOverlay
+            ? {
+                ...style,
+                color: "transparent",
+                backgroundColor: "transparent",
+                caretColor: "#27272a",
+                WebkitTextFillColor: "transparent",
+              }
+            : style
+        }
         className={`w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 ${
           hasTokenOverlay ? "relative z-10 bg-transparent text-transparent caret-zinc-800 selection:bg-indigo-100" : ""
         } ${className ?? ""}`.trim()}
