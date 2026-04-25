@@ -1,7 +1,7 @@
 import sampleGraph from "@/sample-graph.json";
 import { WorkflowDataType } from "@/app/components/workflow/types";
 
-type DifyGraphNode = {
+type GraphNode = {
   id: string;
   type?: string;
   position?: { x?: number; y?: number };
@@ -82,7 +82,7 @@ type DifyGraphNode = {
   };
 };
 
-type DifyGraphEdge = {
+type GraphEdge = {
   id: string;
   source: string;
   target: string;
@@ -96,16 +96,16 @@ type DifyGraphEdge = {
   [key: string]: unknown;
 };
 
-type DifyIfElseCondition = {
+type IfElseCondition = {
   comparison_operator?: string;
   variable_selector?: string[];
   value?: string;
 };
 
-type DifyGraphPayload = {
+type GraphPayload = {
   graph?: {
-    nodes?: DifyGraphNode[];
-    edges?: DifyGraphEdge[];
+    nodes?: GraphNode[];
+    edges?: GraphEdge[];
     readOnly?: boolean;
     viewport?: {
       x?: number;
@@ -115,7 +115,7 @@ type DifyGraphPayload = {
   };
 };
 
-const rawGraph = sampleGraph as DifyGraphPayload;
+const rawGraph = sampleGraph as GraphPayload;
 
 function mapNodeType(type?: string) {
   switch (type) {
@@ -171,7 +171,7 @@ function extractOutputsFromAnswer(answer?: string) {
     .map((match) => `${match[1]}.${match[2]}`);
 }
 
-function normalizeIfElseCondition(condition: DifyIfElseCondition) {
+function normalizeIfElseCondition(condition: IfElseCondition) {
   const selector = condition.variable_selector?.join(".") ?? "value";
   const rawValue = condition.value ?? "";
 
@@ -215,7 +215,7 @@ function normalizeLlmMessages(messages: Array<{ role?: string; content?: string 
   ];
 }
 
-function buildNodeData(node: DifyGraphNode) {
+function buildNodeData(node: GraphNode) {
   const data = node.data ?? {};
   const nodeType = mapNodeType(data.type);
   const label = data.label ?? data.title ?? nodeType;
