@@ -31,7 +31,6 @@
           "x": 0,
           "y": 0
         },
-        "selected": false,
         "dragging": false
       },
       {
@@ -66,7 +65,6 @@
           "x": 422,
           "y": 0
         },
-        "selected": false,
         "dragging": false
       },
       {
@@ -91,7 +89,6 @@
           "x": 842,
           "y": 0
         },
-        "selected": true,
         "dragging": false
       },
       {
@@ -122,7 +119,6 @@
         },
         "width": 240,
         "height": 120,
-        "selected": false,
         "positionAbsolute": {
           "x": 422,
           "y": 146.0964285714286

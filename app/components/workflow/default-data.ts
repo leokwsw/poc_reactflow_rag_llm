@@ -8,7 +8,6 @@ type GraphNode = {
   width?: number;
   height?: number;
   positionAbsolute?: { x: number; y: number };
-  selected?: boolean;
   dragging?: boolean;
   data?: {
     type?: string;
