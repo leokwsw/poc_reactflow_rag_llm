@@ -28,6 +28,15 @@ function normalizeMessages(messages?: LlmMessage[]) {
   return [systemMessage, ...otherMessages];
 }
 
+function getWordCount(content: string) {
+  const trimmed = content.trim();
+  if (!trimmed) {
+    return 0;
+  }
+
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
+
 function getAncestorNodeIds(currentNodeId: string, edges: Edge[]) {
   const parentsByTarget = new Map<string, string[]>();
   edges.forEach((edge) => {
@@ -225,16 +234,22 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
               )}
 
               <PanelField label="Content">
-                <PanelTextArea
-                  rows={index === 0 ? 4 : 5}
-                  value={message.content}
-                  placeholder="Write your prompt word here, enter '{' to insert a variable, enter '/' to insert a prompt content block"
-                  onChange={(event) =>
-                    updateMessage(index, {
-                      ...message,
-                      content: event.target.value,
-                    })}
-                />
+                <div className="relative">
+                  <PanelTextArea
+                    rows={index === 0 ? 4 : 5}
+                    className="pt-8"
+                    value={message.content}
+                    placeholder="Write your prompt word here, enter '{' to insert a variable, enter '/' to insert a prompt content block"
+                    onChange={(event) =>
+                      updateMessage(index, {
+                        ...message,
+                        content: event.target.value,
+                      })}
+                  />
+                  <div className="pointer-events-none absolute right-3 top-2 text-[11px] font-medium text-zinc-400">
+                    {getWordCount(message.content)} words
+                  </div>
+                </div>
               </PanelField>
             </div>
           ))}
