@@ -59,34 +59,12 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       apiBaseUrl: "https://api.openai.com/v1",
       apiKey: "",
       model: "gpt-4o-mini",
-      prompt_template: [
-        {
-          role: "system",
-          text: "You are a helpful assistant.",
-          edition_type: "basic",
-        },
-      ],
+      prompt_template: "{{query}}\n\n{{files}}",
       context: {
         enabled: true,
         variable_selector: ["sys", "query"],
       },
-      vision: {
-        enabled: false,
-      },
-      memory: {
-        window: {
-          enabled: false,
-          size: 10,
-        },
-        query_prompt_template: "{{query}}\n\n{{files}}",
-        role_prefix: {
-          user: "",
-          assistant: "",
-        },
-      },
-      prompt_config: {
-        jinja2_variables: [],
-      },
+      vision_enable: false,
       systemPrompt: "You are a helpful assistant.",
     };
   } else if (type === "end") {

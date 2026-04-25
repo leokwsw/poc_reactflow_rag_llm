@@ -50,27 +50,13 @@ type DifyGraphNode = {
       text?: string;
       id?: string;
       edition_type?: string;
-    }>;
+    }> | string;
     context?: {
       enabled?: boolean;
       variable_selector?: string[];
     };
     vision?: {
       enabled?: boolean;
-    };
-    memory?: {
-      window?: {
-        enabled?: boolean;
-        size?: number;
-      };
-      query_prompt_template?: string;
-      role_prefix?: {
-        user?: string;
-        assistant?: string;
-      };
-    };
-    prompt_config?: {
-      jinja2_variables?: string[];
     };
     query_variable_selector?: string[];
     cases?: Array<{
@@ -245,6 +231,19 @@ function buildNodeData(node: DifyGraphNode) {
   }
 
   if (nodeType === "llm") {
+    const rawPromptTemplate = (data as Record<string, unknown>).prompt_template;
+    const rawPromptTemplateText = typeof rawPromptTemplate === "string"
+      ? rawPromptTemplate
+      : Array.isArray(rawPromptTemplate)
+        ? String((rawPromptTemplate.find((item) => item.role !== "system")?.text) ?? "")
+        : "";
+    const rawMemoryQueryPrompt = typeof (data as Record<string, unknown>).memory === "object" && (data as Record<string, unknown>).memory
+      ? String((((data as Record<string, unknown>).memory as Record<string, unknown>).query_prompt_template) ?? "")
+      : "";
+    const rawSystemPrompt = Array.isArray(rawPromptTemplate)
+      ? String((rawPromptTemplate.find((item) => item.role === "system")?.text) ?? "")
+      : "";
+
     return {
       type: nodeType,
       label,
@@ -252,40 +251,13 @@ function buildNodeData(node: DifyGraphNode) {
       apiKey: data.apiKey ?? "",
       provider: data.provider ?? "",
       model: data.model ?? "",
-      prompt_template: Array.isArray((data as Record<string, unknown>).prompt_template)
-        ? (data as Record<string, unknown>).prompt_template
-        : [
-            {
-              role: "system",
-              text: "",
-              edition_type: "basic",
-            },
-          ],
+      prompt_template: rawMemoryQueryPrompt || rawPromptTemplateText || "{{query}}\n\n{{files}}",
       context: (data as Record<string, unknown>).context ?? {
         enabled: true,
         variable_selector: ["sys", "query"],
       },
-      vision: (data as Record<string, unknown>).vision ?? {
-        enabled: false,
-      },
-      memory: (data as Record<string, unknown>).memory ?? {
-        window: {
-          enabled: false,
-          size: 10,
-        },
-        query_prompt_template: "{{query}}\n\n{{files}}",
-        role_prefix: {
-          user: "",
-          assistant: "",
-        },
-      },
-      prompt_config: (data as Record<string, unknown>).prompt_config ?? {
-        jinja2_variables: [],
-      },
-      systemPrompt:
-        Array.isArray((data as Record<string, unknown>).prompt_template)
-          ? String((((data as Record<string, unknown>).prompt_template as Array<Record<string, unknown>>).find((item) => item.role === "system")?.text) ?? "")
-          : "",
+      vision_enable: Boolean(data.vision?.enabled ?? (data as Record<string, unknown>).vision_enable ?? false),
+      systemPrompt: rawSystemPrompt || String((data as Record<string, unknown>).systemPrompt ?? ""),
     };
   }
 

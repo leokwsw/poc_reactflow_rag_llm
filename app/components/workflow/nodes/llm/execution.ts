@@ -8,31 +8,14 @@ type LlmNodeConfig = {
   model?: string;
   systemPrompt?: string;
   temperature?: number;
-  prompt_template?: Array<{
-    role?: string;
-    text?: string;
-  }>;
-  memory?: {
-    query_prompt_template?: string;
-  };
+  prompt_template?: string;
+  vision_enable?: boolean;
 };
 
 function getRenderedUserPrompt(config: LlmNodeConfig, context: NodeExecutionContext, upstreamText: string) {
-  const promptTemplateItems = Array.isArray(config.prompt_template)
-    ? config.prompt_template.filter((item) => (item.role || "user") !== "system")
-    : [];
-  const promptTemplateText = promptTemplateItems
-    .map((item) => interpolateTemplate(item.text || "", context))
-    .filter((item) => item.trim().length > 0)
-    .join("\n\n");
-
-  if (promptTemplateText) {
-    return promptTemplateText;
-  }
-
-  const queryPromptTemplate = config.memory?.query_prompt_template?.trim();
-  if (queryPromptTemplate) {
-    return interpolateTemplate(queryPromptTemplate, context);
+  const promptTemplate = config.prompt_template?.trim();
+  if (promptTemplate) {
+    return interpolateTemplate(promptTemplate, context);
   }
 
   const fileSummary = summarizeFiles(context.input.files);
@@ -64,9 +47,7 @@ export async function executeLlmNode({
   const apiBaseUrl = (config.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
   const model = config.model || process.env.OPENAI_MODEL;
-  const systemPrompt = Array.isArray(config.prompt_template)
-    ? config.prompt_template.find((item) => item.role === "system")?.text || config.systemPrompt || ""
-    : config.systemPrompt || "";
+  const systemPrompt = config.systemPrompt || "";
 
   if (!apiKey) {
     throw new Error(`LLM node "${node.id}" is missing apiKey, and OPENAI_API_KEY is not set.`);
