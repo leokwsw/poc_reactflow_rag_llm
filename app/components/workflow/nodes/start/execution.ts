@@ -7,8 +7,18 @@ export async function executeStartNode({
     output: {
       query: input.query,
       files: input.files,
+      dialogue_count: 1,
     },
     detail: `query=${input.query.length} chars, files=${input.files.length}`,
+    traceInput: {
+      files: input.files,
+      query: input.query,
+    },
+    traceProcessData: {},
+    traceOutput: {
+      "sys.files": input.files,
+      "sys.query": input.query,
+      "sys.dialogue_count": 1,
+    },
   };
 }
-

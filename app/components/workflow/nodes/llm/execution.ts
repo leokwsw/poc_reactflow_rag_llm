@@ -17,6 +17,30 @@ type LlmNodeConfig = {
   };
 };
 
+function getRenderedUserPrompt(config: LlmNodeConfig, context: NodeExecutionContext, upstreamText: string) {
+  const promptTemplateItems = Array.isArray(config.prompt_template)
+    ? config.prompt_template.filter((item) => (item.role || "user") !== "system")
+    : [];
+  const promptTemplateText = promptTemplateItems
+    .map((item) => interpolateTemplate(item.text || "", context))
+    .filter((item) => item.trim().length > 0)
+    .join("\n\n");
+
+  if (promptTemplateText) {
+    return promptTemplateText;
+  }
+
+  const queryPromptTemplate = config.memory?.query_prompt_template?.trim();
+  if (queryPromptTemplate) {
+    return interpolateTemplate(queryPromptTemplate, context);
+  }
+
+  const fileSummary = summarizeFiles(context.input.files);
+  return [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 export async function executeLlmNode({
                                        node,
                                        nodeId,
@@ -51,21 +75,16 @@ export async function executeLlmNode({
     throw new Error(`LLM node "${node.id}" is missing model.`);
   }
 
-  const fileSummary = summarizeFiles(input.files);
-  const queryPromptTemplate = config.memory?.query_prompt_template?.trim();
-  const userContent = queryPromptTemplate
-    ? interpolateTemplate(queryPromptTemplate, {
-      node,
-      nodeId,
-      workflow,
-      input,
-      edges,
-      nodeOutputs,
-      aliasMap,
-    })
-    : [upstreamText, fileSummary ? `Attached files:\n${fileSummary}` : ""]
-      .filter(Boolean)
-      .join("\n\n");
+  const contextObject = {
+    node,
+    nodeId,
+    workflow,
+    input,
+    edges,
+    nodeOutputs,
+    aliasMap,
+  };
+  const userContent = getRenderedUserPrompt(config, contextObject, upstreamText);
 
   const messages = [
     systemPrompt
@@ -96,8 +115,10 @@ export async function executeLlmNode({
   const payload = (await response.json()) as {
     error?: { message?: string };
     choices?: Array<{
+      finish_reason?: string;
       message?: {
         content?: string | Array<{ type?: string; text?: string }>;
+        reasoning_content?: string;
       };
     }>;
     usage?: Record<string, unknown>;
@@ -108,6 +129,10 @@ export async function executeLlmNode({
   }
 
   const content = payload.choices?.[0]?.message?.content;
+  const finishReason = payload.choices?.[0]?.finish_reason || "stop";
+  const reasoningContent = typeof payload.choices?.[0]?.message?.reasoning_content === "string"
+    ? payload.choices?.[0]?.message?.reasoning_content
+    : "";
   const text = typeof content === "string"
     ? content
     : Array.isArray(content)
@@ -119,9 +144,32 @@ export async function executeLlmNode({
   return {
     output: {
       text,
+      reasoning_content: reasoningContent,
       usage: payload.usage ?? {},
+      finish_reason: finishReason,
       model,
     },
     detail: `model=${model}`,
+    traceInput: {},
+    traceProcessData: {
+      model_mode: "chat",
+      prompts: [
+        {
+          files: input.files,
+          role: "user",
+          text: userContent,
+        },
+      ],
+      usage: payload.usage ?? {},
+      finish_reason: finishReason,
+      model_name: model,
+      ...(systemPrompt ? { system_prompt: systemPrompt } : {}),
+    },
+    traceOutput: {
+      text,
+      reasoning_content: reasoningContent,
+      usage: payload.usage ?? {},
+      finish_reason: finishReason,
+    },
   };
 }

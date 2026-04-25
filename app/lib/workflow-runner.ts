@@ -52,6 +52,7 @@ export async function runWorkflow(
   if (!startNode) {
     throw new Error("Workflow requires one entry node.");
   }
+  aliasMap.set("sys", startNode.id);
 
   let finalOutput = "";
   let finalOutputs: Record<string, unknown> = {};
@@ -70,6 +71,9 @@ export async function runWorkflow(
       nodeType,
       status: "running",
       node: structuredClone(node),
+      input: {},
+      processData: {},
+      output: {},
     });
     options.onEvent?.({
       type: "node_running",
@@ -85,7 +89,9 @@ export async function runWorkflow(
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
-        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : undefined,
+        input: {},
+        processData: {},
+        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : {},
       };
       options.onEvent?.({
         type: "node_error",
@@ -114,7 +120,9 @@ export async function runWorkflow(
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
-        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : undefined,
+        input: {},
+        processData: {},
+        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : {},
       };
       options.onEvent?.({
         type: "node_error",
@@ -138,7 +146,9 @@ export async function runWorkflow(
       status: "completed",
       detail: result.detail,
       node: structuredClone(node),
-      output: structuredClone(result.output),
+      input: structuredClone(result.traceInput ?? {}),
+      processData: structuredClone(result.traceProcessData ?? {}),
+      output: structuredClone(result.traceOutput ?? result.output),
     };
     options.onEvent?.({
       type: "node_completed",

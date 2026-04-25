@@ -14,7 +14,9 @@ export type WorkflowTraceItem = {
   status: "pending" | "running" | "completed" | "error";
   detail?: string;
   node: Node;
-  output?: Record<string, unknown>;
+  input: Record<string, unknown>;
+  processData: Record<string, unknown>;
+  output: Record<string, unknown>;
 };
 
 export type WorkflowRunInput = {
@@ -46,4 +48,7 @@ export type NodeExecutionResult = {
   finalOutput?: string;
   finalOutputs?: Record<string, unknown>;
   selectedSourceHandles?: string[];
+  traceInput?: Record<string, unknown>;
+  traceProcessData?: Record<string, unknown>;
+  traceOutput?: Record<string, unknown>;
 };

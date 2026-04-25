@@ -6,20 +6,14 @@ import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
 import {defaultData} from "@/app/components/workflow/default-data";
 import type {WorkflowDataType} from "@/app/components/workflow/types";
+import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
 
 type WorkflowRunResponse = {
   success: boolean;
   result?: {
     output: string;
     outputs: Record<string, unknown>;
-    trace: Array<{
-      nodeId: string;
-      nodeType: string;
-      status: string;
-      detail?: string;
-      node: Node;
-      output?: Record<string, unknown>;
-    }>;
+    trace: WorkflowTraceItem[];
   };
   error?: string;
 };
@@ -349,12 +343,12 @@ export default function Home() {
                   {(runResult?.trace ?? liveTrace).map((item) => (
                     <button
                       key={`${item.nodeId}-${item.status}`}
-                      className={`block w-full rounded-xl px-2.5 py-2 text-left text-xs transition hover:bg-zinc-100 hover:text-zinc-800 ${
+                      className={`block w-full rounded-2xl px-3 py-3 text-left text-xs transition hover:bg-zinc-100 hover:text-zinc-800 ${
                         item.status === "running"
                           ? "bg-sky-50 text-sky-700"
                           : item.status === "error"
                             ? "bg-red-50 text-red-700"
-                            : "text-zinc-500"
+                            : "text-zinc-600"
                       }`}
                       type="button"
                       onClick={() => {
@@ -365,8 +359,43 @@ export default function Home() {
                         });
                       }}
                     >
-                      {item.nodeType} ({item.nodeId}) - {item.status}
-                      {item.detail ? ` - ${item.detail}` : ""}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold">
+                            {item.nodeType} ({item.nodeId})
+                          </div>
+                          <div className="mt-1 text-[11px] opacity-80">
+                            {item.status}
+                            {item.detail ? ` - ${item.detail}` : ""}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-2">
+                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                            Input
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+                            {JSON.stringify(item.input, null, 2)}
+                          </pre>
+                        </div>
+                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                            Process Data
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+                            {JSON.stringify(item.processData, null, 2)}
+                          </pre>
+                        </div>
+                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                            Output
+                          </div>
+                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+                            {JSON.stringify(item.output, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
                     </button>
                   ))}
                 </div>

@@ -1,8 +1,11 @@
 import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
 import { getIncomingEdges, resolveExpression } from "@/app/components/workflow/nodes/execution-utils";
+import { interpolateTemplate } from "@/app/components/workflow/nodes/_base/execution-helpers";
 
 export async function executeEndNode({
   node,
+  workflow,
+  input,
   edges,
   nodeOutputs,
   aliasMap,
@@ -14,16 +17,27 @@ export async function executeEndNode({
   const outputExpressions = answerExpression
     ? [answerExpression]
     : configuredOutputs.length > 0
-    ? configuredOutputs
-    : fallbackSourceId
-      ? [`${fallbackSourceId}.text`]
-      : [];
+      ? configuredOutputs
+      : fallbackSourceId
+        ? [`${fallbackSourceId}.text`]
+        : [];
 
   const finalOutputs: Record<string, unknown> = {};
   let finalOutput = "";
 
   outputExpressions.forEach((expression, index) => {
-    finalOutputs[expression] = resolveExpression(expression, nodeOutputs, aliasMap);
+    const resolvedValue = answerExpression
+      ? interpolateTemplate(expression, {
+          node,
+          nodeId: node.id,
+          workflow,
+          input,
+          edges,
+          nodeOutputs,
+          aliasMap,
+        } as NodeExecutionContext)
+      : resolveExpression(expression, nodeOutputs, aliasMap);
+    finalOutputs[expression] = resolvedValue;
     if (index === 0 && typeof finalOutputs[expression] === "string") {
       finalOutput = finalOutputs[expression] as string;
     }
@@ -35,12 +49,19 @@ export async function executeEndNode({
 
   return {
     output: {
+      answer: finalOutput,
       output: finalOutput,
+      files: input.files,
       outputs: finalOutputs,
-      answer: answerExpression || undefined,
     },
     detail: `outputs=${outputExpressions.length}`,
     finalOutput,
     finalOutputs,
+    traceInput: {},
+    traceProcessData: {},
+    traceOutput: {
+      answer: finalOutput,
+      files: input.files,
+    },
   };
 }

@@ -52,7 +52,7 @@
           "prompt_template": [
             {
               "role": "system",
-              "text": "{{#context#}}\n\nu are a helpful assestaint",
+              "text": "u are a helpful assistant.\n\n{{#sys.query#}}",
               "id": "62622fa9-da43-4d86-8e5e-c309b82e881a",
               "edition_type": "basic"
             }

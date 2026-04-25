@@ -10,10 +10,11 @@ export function getPrimaryParentOutput(context: NodeExecutionContext) {
 export function interpolateTemplate(template: string, context: NodeExecutionContext) {
   return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, rawExpression: string) => {
     const expression = rawExpression.trim();
-    if (expression === "query" || expression === "sys.query")
+    const normalized = expression.replace(/^#/, "").replace(/#$/g, "");
+    if (normalized === "query" || normalized === "sys.query")
       return context.input.query;
-    if (expression === "files" || expression === "sys.files")
-      return JSON.stringify(context.input.files);
+    if (normalized === "files" || normalized === "sys.files")
+      return context.input.files.length > 0 ? JSON.stringify(context.input.files) : "";
 
     const resolved = resolveExpression(expression, context.nodeOutputs, context.aliasMap);
     if (resolved === null || resolved === undefined)
