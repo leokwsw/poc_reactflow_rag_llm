@@ -6,7 +6,11 @@ import type {
   WorkflowTraceItem,
 } from "@/app/components/workflow/nodes/execution-types";
 import { nodeExecutors } from "@/app/components/workflow/nodes/executors";
-import { getNodeType, getOutgoingEdges } from "@/app/components/workflow/nodes/execution-utils";
+import {
+  buildTraceSections,
+  getNodeType,
+  getOutgoingEdges,
+} from "@/app/components/workflow/nodes/execution-utils";
 
 type WorkflowRunEvent =
   | {
@@ -83,15 +87,19 @@ export async function runWorkflow(
     const executor = nodeExecutors[nodeType];
     if (!executor) {
       const errorMessage = `Unsupported node type "${nodeType}" in runner.`;
+      const traceSections = buildTraceSections({
+        node,
+        nodeId,
+        edges,
+        nodeOutputs,
+      });
       trace[trace.length - 1] = {
         nodeId,
         nodeType,
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
-        input: {},
-        processData: {},
-        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : {},
+        ...traceSections,
       };
       options.onEvent?.({
         type: "node_error",
@@ -114,15 +122,19 @@ export async function runWorkflow(
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : `Node "${nodeId}" execution failed.`;
+      const traceSections = buildTraceSections({
+        node,
+        nodeId,
+        edges,
+        nodeOutputs,
+      });
       trace[trace.length - 1] = {
         nodeId,
         nodeType,
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
-        input: {},
-        processData: {},
-        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : {},
+        ...traceSections,
       };
       options.onEvent?.({
         type: "node_error",
@@ -141,14 +153,18 @@ export async function runWorkflow(
     }
 
     trace[trace.length - 1] = {
+      ...buildTraceSections({
+        node,
+        nodeId,
+        edges,
+        nodeOutputs,
+        result,
+      }),
       nodeId,
       nodeType,
       status: "completed",
       detail: result.detail,
       node: structuredClone(node),
-      input: structuredClone(result.traceInput ?? {}),
-      processData: structuredClone(result.traceProcessData ?? {}),
-      output: structuredClone(result.traceOutput ?? result.output),
     };
     options.onEvent?.({
       type: "node_completed",

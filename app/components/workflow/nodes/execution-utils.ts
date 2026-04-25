@@ -1,5 +1,9 @@
 import type { Edge, Node } from "reactflow";
-import type { NodeOutputMap, WorkflowFile } from "@/app/components/workflow/nodes/execution-types";
+import type {
+  NodeExecutionResult,
+  NodeOutputMap,
+  WorkflowFile,
+} from "@/app/components/workflow/nodes/execution-types";
 
 export function getNodeType(node: Node) {
   return String(node.data?.type ?? node.type ?? "unknown");
@@ -62,3 +66,70 @@ export function summarizeFiles(files: WorkflowFile[]) {
     .join("\n\n");
 }
 
+function sanitizeValue(key: string, value: unknown): unknown {
+  if (/(api.?key|authorization|token|secret|password)/i.test(key)) {
+    return value ? "***" : "";
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      item && typeof item === "object"
+        ? sanitizeRecord(item as Record<string, unknown>)
+        : item,
+    );
+  }
+
+  if (value && typeof value === "object") {
+    return sanitizeRecord(value as Record<string, unknown>);
+  }
+
+  return value;
+}
+
+export function sanitizeRecord(record: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [key, sanitizeValue(key, value)]),
+  );
+}
+
+export function buildGenericTraceInput(nodeId: string, edges: Edge[], nodeOutputs: NodeOutputMap) {
+  const incomingEdges = getIncomingEdges(nodeId, edges);
+  if (incomingEdges.length === 0) {
+    return {};
+  }
+
+  if (incomingEdges.length === 1) {
+    const sourceId = incomingEdges[0].source;
+    return sanitizeRecord(structuredClone(nodeOutputs[sourceId] ?? {}));
+  }
+
+  return sanitizeRecord(
+    Object.fromEntries(
+      incomingEdges.map((edge) => [edge.source, structuredClone(nodeOutputs[edge.source] ?? {})]),
+    ),
+  );
+}
+
+export function buildGenericTraceProcessData(node: Node) {
+  const nodeData = ((node.data ?? {}) as Record<string, unknown>);
+  const filtered = Object.fromEntries(
+    Object.entries(nodeData).filter(([key]) => !["type", "label", "runStatus"].includes(key)),
+  );
+  return sanitizeRecord(structuredClone(filtered));
+}
+
+export function buildTraceSections(args: {
+  node: Node;
+  nodeId: string;
+  edges: Edge[];
+  nodeOutputs: NodeOutputMap;
+  result?: NodeExecutionResult;
+}) {
+  const { node, nodeId, edges, nodeOutputs, result } = args;
+
+  return {
+    input: structuredClone(result?.traceInput ?? buildGenericTraceInput(nodeId, edges, nodeOutputs)),
+    processData: structuredClone(result?.traceProcessData ?? buildGenericTraceProcessData(node)),
+    output: structuredClone(result?.traceOutput ?? result?.output ?? nodeOutputs[nodeId] ?? {}),
+  };
+}
