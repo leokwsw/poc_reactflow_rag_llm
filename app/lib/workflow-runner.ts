@@ -85,6 +85,7 @@ export async function runWorkflow(
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
+        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : undefined,
       };
       options.onEvent?.({
         type: "node_error",
@@ -113,6 +114,7 @@ export async function runWorkflow(
         status: "error",
         detail: errorMessage,
         node: structuredClone(node),
+        output: nodeOutputs[nodeId] ? structuredClone(nodeOutputs[nodeId]) : undefined,
       };
       options.onEvent?.({
         type: "node_error",
@@ -136,6 +138,7 @@ export async function runWorkflow(
       status: "completed",
       detail: result.detail,
       node: structuredClone(node),
+      output: structuredClone(result.output),
     };
     options.onEvent?.({
       type: "node_completed",

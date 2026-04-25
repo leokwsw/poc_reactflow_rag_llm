@@ -18,6 +18,7 @@ type WorkflowRunResponse = {
       status: string;
       detail?: string;
       node: Node;
+      output?: Record<string, unknown>;
     }>;
   };
   error?: string;
