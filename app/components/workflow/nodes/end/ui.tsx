@@ -20,10 +20,8 @@ type OutputToken = {
 function normalizeExpression(expression: string) {
   return expression
     .trim()
-    .replace(/^\{\{\s*/, "")
-    .replace(/\s*\}\}$/, "")
-    .replace(/^#/, "")
-    .replace(/#$/g, "");
+    .replace(/^\{\{#\s*/, "")
+    .replace(/\s*#\}\}$/, "");
 }
 
 function extractOutputTokens(answer?: string, outputs?: string[]) {
@@ -35,7 +33,7 @@ function extractOutputTokens(answer?: string, outputs?: string[]) {
     return [];
   }
 
-  const matches = Array.from(answer.matchAll(/\{\{\s*([^}]+?)\s*\}\}/g));
+  const matches = Array.from(answer.matchAll(/\{\{#\s*([^}]+?)\s*#\}\}/g));
   return matches
     .map((match) => parseOutputToken(match[1] ?? ""))
     .filter(Boolean) as OutputToken[];

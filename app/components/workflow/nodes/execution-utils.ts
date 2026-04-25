@@ -20,10 +20,8 @@ export function getOutgoingEdges(nodeId: string, edges: Edge[]) {
 export function normalizeExpression(expression: string) {
   return expression
     .trim()
-    .replace(/^\{\{/, "")
-    .replace(/\}\}$/, "")
-    .replace(/^#/, "")
-    .replace(/#$/g, "");
+    .replace(/^\{\{#\s*/, "")
+    .replace(/\s*#\}\}$/, "");
 }
 
 export function getValueByPath(value: unknown, path: string[]) {

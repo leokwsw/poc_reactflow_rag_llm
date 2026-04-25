@@ -156,7 +156,7 @@ function normalizeExpression(value: string[] | string | undefined) {
     return value.join(".");
   }
 
-  return value.replace(/\{\{\s*#?([^}#]+?)#?\s*\}\}/g, "{{#$1#}}");
+  return value;
 }
 
 function extractOutputsFromAnswer(answer?: string) {
