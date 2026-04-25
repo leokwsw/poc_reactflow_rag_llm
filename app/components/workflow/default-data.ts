@@ -5,11 +5,18 @@ type GraphNode = {
   id: string;
   type?: string;
   position?: { x?: number; y?: number };
+  width?: number;
+  height?: number;
+  positionAbsolute?: { x: number; y: number };
+  selected?: boolean;
+  dragging?: boolean;
   data?: {
     type?: string;
     label?: string;
     title?: string;
+    runStatus?: "idle" | "running" | "completed" | "error";
     answer?: string;
+    outputs?: string[];
     template?: string;
     output_type?: string;
     variable_selector?: string[];
@@ -86,8 +93,8 @@ type GraphEdge = {
   id: string;
   source: string;
   target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
   style?: {
     strokeDasharray?: string;
     opacity?: number;

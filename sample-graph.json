@@ -22,7 +22,6 @@
           ],
           "type": "start",
           "title": "開始",
-          "selected": false,
           "label": "開始",
           "runStatus": "idle"
         },
