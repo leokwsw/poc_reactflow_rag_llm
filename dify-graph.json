@@ -1,0 +1,217 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "data": {
+          "selected": false,
+          "title": "開始",
+          "type": "start",
+          "variables": []
+        },
+        "height": 73,
+        "id": "1774371813752",
+        "position": {
+          "x": 0,
+          "y": 19.15056634642663
+        },
+        "positionAbsolute": {
+          "x": 0,
+          "y": 19.15056634642663
+        },
+        "selected": true,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 242
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "memory": {
+            "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
+            "role_prefix": {
+              "assistant": "",
+              "user": ""
+            },
+            "window": {
+              "enabled": false,
+              "size": 10
+            }
+          },
+          "model": {
+            "completion_params": {
+              "temperature": 0.7
+            },
+            "mode": "chat",
+            "name": "deepseek-chat",
+            "provider": "langgenius/deepseek/deepseek"
+          },
+          "prompt_template": [
+            {
+              "id": "59c7ee16-4e69-4454-85dd-7ebd6884d5be",
+              "role": "system",
+              "text": ""
+            }
+          ],
+          "selected": false,
+          "title": "LLM",
+          "type": "llm",
+          "vision": {
+            "enabled": false
+          }
+        },
+        "height": 88,
+        "id": "llm",
+        "position": {
+          "x": 362,
+          "y": 3
+        },
+        "positionAbsolute": {
+          "x": 362,
+          "y": 3
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 242
+      },
+      {
+        "data": {
+          "answer": "DeepSeek : \n{{#llm.text#}}\nQwen3 : \n{{#1774372170198.text#}}",
+          "selected": false,
+          "title": "直接回覆",
+          "type": "answer",
+          "variables": []
+        },
+        "height": 122,
+        "id": "answer",
+        "position": {
+          "x": 724,
+          "y": 3
+        },
+        "positionAbsolute": {
+          "x": 724,
+          "y": 3
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 242
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "model": {
+            "completion_params": {
+              "temperature": 0.7
+            },
+            "mode": "chat",
+            "name": "qwen/qwen3-14b",
+            "provider": "langgenius/openai_api_compatible/openai_api_compatible"
+          },
+          "prompt_template": [
+            {
+              "id": "e3190439-d3dc-44f3-b1f3-448b36992d7e",
+              "role": "system",
+              "text": ""
+            },
+            {
+              "id": "90489a50-1fe6-49f6-855d-664c7022328c",
+              "role": "user",
+              "text": "{{#sys.query#}}\n\n{{#sys.files#}}"
+            }
+          ],
+          "selected": false,
+          "title": "LLM 2",
+          "type": "llm",
+          "vision": {
+            "enabled": false
+          }
+        },
+        "height": 88,
+        "id": "1774372170198",
+        "position": {
+          "x": 362,
+          "y": 167.15056634642661
+        },
+        "positionAbsolute": {
+          "x": 362,
+          "y": 167.15056634642661
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 242
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "sourceType": "start",
+          "targetType": "llm"
+        },
+        "id": "1774371813752-llm",
+        "source": "1774371813752",
+        "sourceHandle": "source",
+        "target": "llm",
+        "targetHandle": "target",
+        "type": "custom"
+      },
+      {
+        "data": {
+          "sourceType": "llm",
+          "targetType": "answer"
+        },
+        "id": "llm-answer",
+        "source": "llm",
+        "sourceHandle": "source",
+        "target": "answer",
+        "targetHandle": "target",
+        "type": "custom"
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "isInLoop": false,
+          "sourceType": "start",
+          "targetType": "llm"
+        },
+        "id": "1774371813752-source-1774372170198-target",
+        "source": "1774371813752",
+        "sourceHandle": "source",
+        "target": "1774372170198",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      },
+      {
+        "data": {
+          "isInLoop": false,
+          "sourceType": "llm",
+          "targetType": "answer"
+        },
+        "id": "1774372170198-source-answer-target",
+        "source": "1774372170198",
+        "sourceHandle": "source",
+        "target": "answer",
+        "targetHandle": "target",
+        "type": "custom",
+        "zIndex": 0
+      }
+    ],
+    "viewport": {
+      "x": 213.26045741568555,
+      "y": 263.7290473544979,
+      "zoom": 1.1772549813552002
+    }
+  }
+}
