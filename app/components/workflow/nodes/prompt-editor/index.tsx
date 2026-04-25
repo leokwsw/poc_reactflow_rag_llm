@@ -28,11 +28,11 @@ import {
   setEditorValueFromString,
   syncWorkflowVariableLabels,
   type WorkflowPromptVariableOption,
-} from "@/app/components/workflow/prompt-editor/utils";
+} from "./utils";
 import {
   $createWorkflowVariableNode,
   WorkflowVariableNode,
-} from "@/app/components/workflow/prompt-editor/workflow-variable-node";
+} from "./workflow-variable-node";
 
 type WorkflowPromptEditorProps = {
   value?: string;

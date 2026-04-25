@@ -1,42 +1,18 @@
 "use client";
 
+import {
+  getWorkflowVariableDisplayLabel,
+  useWorkflowVariableLabelMap,
+  WorkflowVariableBadge,
+} from "../prompt-editor/workflow-variable-shared";
 import { useMemo } from "react";
-import { useNodes } from "reactflow";
 
 type ReadonlyTemplateWithVariablesProps = {
   value?: string;
 };
 
-function getNodeDisplayLabel(nodeId: string, labelMap: Map<string, string>) {
-  return labelMap.get(nodeId) || nodeId;
-}
-
-function parseExpression(expression: string) {
-  const normalized = expression.trim();
-  const parts = normalized.split(".").filter(Boolean);
-  if (parts.length === 0) {
-    return null;
-  }
-
-  return {
-    source: parts[0],
-    field: parts.slice(1).join(".") || "value",
-  };
-}
-
 export default function ReadonlyTemplateWithVariables({ value }: ReadonlyTemplateWithVariablesProps) {
-  const nodes = useNodes();
-  const labelMap = useMemo(() => {
-    return new Map(
-      nodes.map((node) => {
-        const nodeData = (node.data ?? {}) as Record<string, unknown>;
-        const label = typeof nodeData.label === "string" && nodeData.label.trim()
-          ? nodeData.label.trim()
-          : node.id;
-        return [node.id, label] as const;
-      }),
-    );
-  }, [nodes]);
+  const labelMap = useWorkflowVariableLabelMap();
 
   const content = value?.trim() ?? "";
   const parts = useMemo(() => {
@@ -92,19 +68,15 @@ export default function ReadonlyTemplateWithVariables({ value }: ReadonlyTemplat
           );
         }
 
-        const parsed = parseExpression(part.value);
-        const label = parsed
-          ? `${getNodeDisplayLabel(parsed.source, labelMap)}/${parsed.field}`
-          : part.value;
+        const label = getWorkflowVariableDisplayLabel(part.value, labelMap);
 
         return (
-          <span
+          <WorkflowVariableBadge
             key={`${part.type}-${index}`}
-            className="mx-0.5 inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 align-middle"
-            title={`{{#${part.value}#}}`}
-          >
-            {label}
-          </span>
+            expression={part.value}
+            label={label}
+            className="mx-0.5 text-[11px]"
+          />
         );
       })}
     </div>

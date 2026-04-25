@@ -1,8 +1,8 @@
 "use client";
 import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
-import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
-import type { WorkflowPromptVariableOption } from "@/app/components/workflow/prompt-editor/utils";
+import WorkflowPromptEditor from "../prompt-editor";
+import type { WorkflowPromptVariableOption } from "../prompt-editor/utils";
 import type { Edge } from "reactflow";
 
 type LlmMessage = {

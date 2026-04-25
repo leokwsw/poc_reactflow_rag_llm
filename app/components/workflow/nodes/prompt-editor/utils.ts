@@ -2,7 +2,7 @@
 
 import type { LexicalEditor } from "lexical";
 import { $createParagraphNode, $createTextNode, $getRoot, $nodesOfType } from "lexical";
-import { $createWorkflowVariableNode, WorkflowVariableNode } from "@/app/components/workflow/prompt-editor/workflow-variable-node";
+import { $createWorkflowVariableNode, WorkflowVariableNode } from "./workflow-variable-node";
 
 export type WorkflowPromptVariableOption = {
   key: string;

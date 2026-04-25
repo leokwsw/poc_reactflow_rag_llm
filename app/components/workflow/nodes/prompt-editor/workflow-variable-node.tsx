@@ -3,22 +3,7 @@
 import type { ReactElement } from "react";
 import type { LexicalNode, NodeKey, SerializedLexicalNode, Spread } from "lexical";
 import { DecoratorNode } from "lexical";
-
-type WorkflowVariableChipProps = {
-  label: string;
-  expression: string;
-};
-
-function WorkflowVariableChip({ label, expression }: WorkflowVariableChipProps) {
-  return (
-    <span
-      className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 align-middle"
-      title={`{{#${expression}#}}`}
-    >
-      ({label})
-    </span>
-  );
-}
+import { WorkflowVariableBadge } from "./workflow-variable-shared";
 
 export type SerializedWorkflowVariableNode = Spread<
   {
@@ -76,7 +61,13 @@ export class WorkflowVariableNode extends DecoratorNode<ReactElement> {
   }
 
   decorate(): ReactElement {
-    return <WorkflowVariableChip expression={this.__expression} label={this.__label} />;
+    return (
+      <WorkflowVariableBadge
+        expression={this.__expression}
+        label={this.__label}
+        className="text-xs"
+      />
+    );
   }
 
   getTextContent(): string {
