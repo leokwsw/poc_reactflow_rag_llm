@@ -2,6 +2,7 @@
 
 import { PanelButton, PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import type { Edge } from "reactflow";
 
 type LlmMessage = {
   role: "system" | "user" | "assistant";
@@ -27,11 +28,39 @@ function normalizeMessages(messages?: LlmMessage[]) {
   return [systemMessage, ...otherMessages];
 }
 
-function getContextOptions(allNodes: NodePanelProps["allNodes"], currentNodeId: string) {
+function getAncestorNodeIds(currentNodeId: string, edges: Edge[]) {
+  const parentsByTarget = new Map<string, string[]>();
+  edges.forEach((edge) => {
+    const existing = parentsByTarget.get(edge.target) ?? [];
+    existing.push(edge.source);
+    parentsByTarget.set(edge.target, existing);
+  });
+
+  const visited = new Set<string>();
+  const stack = [...(parentsByTarget.get(currentNodeId) ?? [])];
+
+  while (stack.length > 0) {
+    const nodeId = stack.pop()!;
+    if (visited.has(nodeId)) {
+      continue;
+    }
+    visited.add(nodeId);
+    (parentsByTarget.get(nodeId) ?? []).forEach((parentId) => {
+      if (!visited.has(parentId)) {
+        stack.push(parentId);
+      }
+    });
+  }
+
+  return visited;
+}
+
+function getContextOptions(allNodes: NodePanelProps["allNodes"], allEdges: NodePanelProps["allEdges"], currentNodeId: string) {
   const nodes = allNodes ?? [];
+  const ancestorNodeIds = getAncestorNodeIds(currentNodeId, allEdges ?? []);
 
   return nodes.flatMap((item) => {
-    if (item.id === currentNodeId) {
+    if (!ancestorNodeIds.has(item.id)) {
       return [];
     }
 
@@ -65,10 +94,10 @@ function getContextOptions(allNodes: NodePanelProps["allNodes"], currentNodeId: 
   });
 }
 
-export default function LlmPanel({ node, patchNodeData, allNodes }: NodePanelProps) {
+export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: NodePanelProps) {
   const data = (node.data ?? {}) as LlmNodeData;
   const messages = normalizeMessages(data.messages);
-  const availableContextOptions = getContextOptions(allNodes, node.id);
+  const availableContextOptions = getContextOptions(allNodes, allEdges, node.id);
   const requiresContextPlaceholder = Boolean(data.context_variable);
 
   function updateMessage(index: number, nextMessage: LlmMessage) {

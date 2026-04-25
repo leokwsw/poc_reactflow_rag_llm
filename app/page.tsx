@@ -435,7 +435,12 @@ export default function Home() {
           {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
 
           {selectedNode && SelectedNodePanel && (
-            <SelectedNodePanel node={selectedNode} patchNodeData={patchSelectedNodeData} allNodes={data.nodes} />
+            <SelectedNodePanel
+              node={selectedNode}
+              patchNodeData={patchSelectedNodeData}
+              allNodes={data.nodes}
+              allEdges={data.edges}
+            />
           )}
 
           {selectedNode && !SelectedNodePanel && (
