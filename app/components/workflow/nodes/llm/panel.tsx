@@ -1,8 +1,8 @@
 "use client";
-
-import { useEffect, useRef } from "react";
-import { PanelButton, PanelCard, PanelField, PanelInput, PanelTextArea } from "@/app/components/workflow/nodes/_base/panel-form";
+import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import WorkflowPromptEditor from "@/app/components/workflow/prompt-editor";
+import type { WorkflowPromptVariableOption } from "@/app/components/workflow/prompt-editor/utils";
 import type { Edge } from "reactflow";
 
 type LlmMessage = {
@@ -105,15 +105,29 @@ function getContextOptions(allNodes: NodePanelProps["allNodes"], allEdges: NodeP
   });
 }
 
-function getNodeLabelMap(allNodes: NodePanelProps["allNodes"]) {
-  return new Map(
-    (allNodes ?? []).map((item) => {
-      const label = typeof item.data?.label === "string" && item.data.label.trim()
-        ? item.data.label.trim()
-        : item.id;
-      return [item.id, label] as const;
-    }),
-  );
+function getPromptVariableOptions(
+  allNodes: NodePanelProps["allNodes"],
+  allEdges: NodePanelProps["allEdges"],
+  currentNodeId: string,
+  contextVariable?: string,
+): WorkflowPromptVariableOption[] {
+  const contextOptions = getContextOptions(allNodes, allEdges, currentNodeId);
+  const options: WorkflowPromptVariableOption[] = contextOptions.map((option) => ({
+    key: option.value,
+    expression: option.value,
+    label: option.label.replace(/^\(|\)$/g, ""),
+  }));
+
+  if (contextVariable) {
+    options.unshift({
+      key: "context",
+      expression: "context",
+      label: "context",
+      typeLabel: "Context",
+    });
+  }
+
+  return options;
 }
 
 export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: NodePanelProps) {
@@ -121,37 +135,7 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
   const messages = normalizeMessages(data.messages);
   const availableContextOptions = getContextOptions(allNodes, allEdges, node.id);
   const requiresContextPlaceholder = Boolean(data.context_variable);
-  const messageRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
-  const nodeLabelMap = getNodeLabelMap(allNodes);
-
-  function renderTokenChip(expression: string) {
-    if (expression === "context") {
-      return "context";
-    }
-
-    const parts = expression.split(".").filter(Boolean);
-    if (parts.length === 0) {
-      return expression;
-    }
-
-    const source = parts[0];
-    const field = parts.slice(1).join(".") || "value";
-    const sourceLabel = nodeLabelMap.get(source) || source;
-    return `${sourceLabel}/${field}`;
-  }
-
-  function resizeTextArea(textarea: HTMLTextAreaElement | null) {
-    if (!textarea) {
-      return;
-    }
-
-    textarea.style.height = "56px";
-    textarea.style.height = `${Math.max(56, textarea.scrollHeight)}px`;
-  }
-
-  useEffect(() => {
-    messageRefs.current.forEach((textarea) => resizeTextArea(textarea));
-  }, [messages]);
+  const promptVariableOptions = getPromptVariableOptions(allNodes, allEdges, node.id, data.context_variable);
 
   function updateMessage(index: number, nextMessage: LlmMessage) {
     const nextMessages = [...messages];
@@ -280,21 +264,15 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
 
               <PanelField label="Content">
                 <div className="relative">
-                  <PanelTextArea
-                    ref={(element) => {
-                      messageRefs.current[index] = element;
-                    }}
-                    tokenChipRenderer={renderTokenChip}
-                    rows={1}
-                    className="min-h-[56px] resize-none overflow-hidden pt-8"
-                    style={{ height: 56 }}
+                  <WorkflowPromptEditor
                     value={message.content}
+                    variableOptions={promptVariableOptions}
+                    minHeightClassName="min-h-[56px] pt-8"
                     placeholder="Write your prompt word here, enter '{' to insert a variable, enter '/' to insert a prompt content block"
                     onChange={(event) => {
-                      resizeTextArea(event.currentTarget);
                       updateMessage(index, {
                         ...message,
-                        content: event.target.value,
+                        content: event,
                       });
                     }}
                   />
