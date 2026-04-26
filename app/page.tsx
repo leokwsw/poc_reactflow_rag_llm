@@ -1,6 +1,7 @@
 "use client";
 
 import {useCallback, useRef, useState} from "react";
+import Markdown from "@/app/components/base/markdown";
 import {nodeSettingsPanelMap} from "@/app/components/workflow/nodes/panels";
 import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
@@ -328,9 +329,13 @@ export default function Home() {
             <div className="space-y-3">
               <div className="rounded-2xl border border-zinc-200 bg-white p-3">
                 <p className="mb-1 text-xs font-medium text-zinc-700">Final Output</p>
-                <pre className="whitespace-pre-wrap break-words text-sm text-zinc-800">
-                  {runResult?.output || (isRunning ? "Running..." : "")}
-                </pre>
+                {runResult?.output ? (
+                  <Markdown content={runResult.output} />
+                ) : (
+                  <pre className="whitespace-pre-wrap break-words text-sm text-zinc-800">
+                    {isRunning ? "Running..." : ""}
+                  </pre>
+                )}
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white p-3">
                 <p className="mb-1 text-xs font-medium text-zinc-700">Trace</p>
