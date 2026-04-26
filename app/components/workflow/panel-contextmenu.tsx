@@ -92,16 +92,18 @@ export default function PanelContextMenu({
           <div className="px-2 pb-1 text-[11px] font-semibold tracking-[0.08em] text-zinc-400">
             {group.title}
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col items-stretch">
             {group.items.map((item) => (
-              <button
-                key={item.type}
-                className="block rounded px-2 py-1.5 text-left text-sm whitespace-nowrap hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={() => onAddNode(item.type)}
-                disabled={item.disabled}
-              >
-                Add {item.label} Node
-              </button>
+              <div key={item.type} className="block">
+                <button
+                  className="block w-full rounded px-2 py-1.5 text-left text-sm whitespace-nowrap hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => onAddNode(item.type)}
+                  disabled={item.disabled}
+                  type="button"
+                >
+                  Add {item.label} Node
+                </button>
+              </div>
             ))}
           </div>
         </div>

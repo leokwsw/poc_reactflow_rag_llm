@@ -48,14 +48,22 @@ type WorkflowProps = {
   } | null;
 };
 
+function normalizeNodeGuards(node: Node): Node {
+  return {
+    ...node,
+    deletable: node.data?.type === "start" ? false : node.deletable,
+  };
+}
+
 function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange, runNodeState}: WorkflowProps) {
-  const [nodes, setNodes] = useNodesState(initData.nodes);
+  const [nodes, setNodes] = useNodesState(initData.nodes.map(normalizeNodeGuards));
   const [edges, setEdges] = useEdgesState(initData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("hand");
   const wrapperRef = useRef<HTMLElement | null>(null);
   const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
+  const blockedProtectedEdgeRemovalIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
@@ -95,13 +103,51 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
 
   const _onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      setNodes(nds => applyNodeChanges(changes, nds))
+      const protectedNodeIds = new Set(
+        nodes
+          .filter((node) => node.data?.type === "start")
+          .map((node) => node.id),
+      );
+      const blockedEdgeIds = new Set<string>();
+
+      changes.forEach((change) => {
+        if (change.type !== "remove" || !protectedNodeIds.has(change.id)) {
+          return;
+        }
+
+        edges.forEach((edge) => {
+          if (edge.source === change.id || edge.target === change.id) {
+            blockedEdgeIds.add(edge.id);
+          }
+        });
+      });
+
+      blockedProtectedEdgeRemovalIdsRef.current = blockedEdgeIds;
+      const safeChanges = changes.filter((change) => {
+        if (change.type !== "remove") {
+          return true;
+        }
+
+        return !protectedNodeIds.has(change.id);
+      });
+
+      setNodes(nds => applyNodeChanges(safeChanges, nds))
     },
-    [setNodes],
+    [edges, nodes, setNodes],
   )
   const _onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      setEdges(edges => applyEdgeChanges(changes, edges))
+      const blockedEdgeIds = blockedProtectedEdgeRemovalIdsRef.current;
+      const safeChanges = changes.filter((change) => {
+        if (change.type !== "remove") {
+          return true;
+        }
+
+        return !blockedEdgeIds.has(change.id);
+      });
+
+      blockedProtectedEdgeRemovalIdsRef.current = new Set();
+      setEdges(edges => applyEdgeChanges(safeChanges, edges))
     },
     [setEdges],
   )

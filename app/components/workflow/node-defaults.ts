@@ -177,6 +177,7 @@ export function createNodeAtPosition(type: CustomNodeType, position: { x: number
     id: crypto.randomUUID(),
     type: "custom",
     position,
+    deletable: type !== "start",
     data: createNodeData(type),
   };
 }
