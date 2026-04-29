@@ -1,0 +1,21 @@
+{
+  "documents": [
+    {
+      "id": "file-abc1234",
+      "file_name": "CHAP 16 _ QUIZ.docx",
+      "dataset_id": "",
+      "file_size": 1,
+      "created_at": "",
+      "updated_time": "",
+      "uploaded_time": "",
+      "deleted": "false",
+      "deleted_at": "",
+      "upload_source": "file",
+      "mime_type": "",
+      "ext": "",
+      "storage_page": "",
+      "status": "",
+      "enabled": true
+    }
+  ]
+}

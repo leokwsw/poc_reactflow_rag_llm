@@ -1,0 +1,15 @@
+{
+  "chunks": [
+    {
+      "id": "chunk-abc1234",
+      "file_id": "file-abc1234",
+      "text": "",
+      "position": 0,
+      "metadata": {
+
+      },
+      "es_document_id": "",
+      "enabled": true
+    }
+  ]
+}
