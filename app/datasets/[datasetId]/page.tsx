@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {
-  datasets,
   documentGridColumns,
   formatDate,
   formatFileSize,
   getChunksForDocument,
   getDatasetById,
+  getDatasets,
   getDocumentsForDataset,
 } from "@/app/datasets/data";
 
@@ -17,10 +17,12 @@ type DatasetDetailsPageProps = {
 };
 
 export function generateStaticParams() {
-  return datasets.map((dataset) => ({
+  return getDatasets().map((dataset) => ({
     datasetId: dataset.id,
   }));
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function DatasetDetailsPage({params}: DatasetDetailsPageProps) {
   const {datasetId} = await params;
@@ -81,7 +83,15 @@ export default async function DatasetDetailsPage({params}: DatasetDetailsPagePro
                     <div className="text-sm text-zinc-600">{formatFileSize(document.file_size)}</div>
                     <div className="text-sm text-zinc-600">{formatDate(document.uploaded_time)}</div>
                     <div>
-                      <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                          ["indexed", "ready"].includes(document.status)
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                            : document.status === "failed"
+                              ? "bg-red-50 text-red-700 ring-1 ring-red-200"
+                              : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                        }`}
+                      >
                         {document.status}
                       </span>
                     </div>

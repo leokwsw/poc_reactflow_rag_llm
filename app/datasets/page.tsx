@@ -1,8 +1,10 @@
 import Link from "next/link";
-import {datasetGridColumns, datasets as datasetRows, formatDate, formatFileSize, getDatasetStats} from "@/app/datasets/data";
+import {datasetGridColumns, formatDate, formatFileSize, getDatasets, getDatasetStats} from "@/app/datasets/data";
+
+export const dynamic = "force-dynamic";
 
 export default function DatasetsPage() {
-  const datasets = datasetRows.map((dataset) => ({
+  const datasets = getDatasets().map((dataset) => ({
     ...dataset,
     stats: getDatasetStats(dataset),
   }));
@@ -15,12 +17,12 @@ export default function DatasetsPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Knowledge</p>
             <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Datasets</h1>
           </div>
-          <button
+          <Link
             className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
-            type="button"
+            href="/datasets/new"
           >
             New Dataset
-          </button>
+          </Link>
         </div>
 
         <section className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
@@ -61,8 +63,10 @@ export default function DatasetsPage() {
                     <div>
                       <span
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          dataset.stats.status === "Ready"
+                          ["Ready"].includes(dataset.stats.status)
                             ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                            : dataset.stats.status === "Failed"
+                              ? "bg-red-50 text-red-700 ring-1 ring-red-200"
                             : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
                         }`}
                       >

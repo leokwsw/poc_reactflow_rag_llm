@@ -2,12 +2,12 @@ import Link from "next/link";
 import {notFound} from "next/navigation";
 import {
   chunkGridColumns,
-  documents,
   formatDate,
   formatFileSize,
   getChunksForDocument,
   getDatasetById,
   getDocumentById,
+  getDocuments,
 } from "@/app/datasets/data";
 
 type FileDetailsPageProps = {
@@ -18,11 +18,13 @@ type FileDetailsPageProps = {
 };
 
 export function generateStaticParams() {
-  return documents.map((document) => ({
+  return getDocuments().map((document) => ({
     datasetId: document.dataset_id,
     fileId: document.id,
   }));
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function FileDetailsPage({params}: FileDetailsPageProps) {
   const {datasetId, fileId} = await params;
