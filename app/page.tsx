@@ -290,6 +290,7 @@ export default function Home() {
               value={runQuery}
               onChange={(event) => setRunQuery(event.target.value)}
               placeholder="Type the start node input here..."
+              suppressHydrationWarning
             />
           </label>
 
@@ -303,6 +304,7 @@ export default function Home() {
               type="file"
               multiple
               onChange={(event) => setRunFiles(Array.from(event.target.files ?? []))}
+              suppressHydrationWarning
             />
           </label>
 
