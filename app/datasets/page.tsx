@@ -1,43 +1,8 @@
-import datasetsSource from "@/data/0-datasets.json";
-import documentsSource from "@/data/1-documents.json";
-import chunksSource from "@/data/2-chunk.json";
-
-type Dataset = (typeof datasetsSource.datasets)[number];
-
-const datasetGridColumns = "minmax(360px, 1fr) 110px 110px 120px 150px 120px";
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
-
-const formatFileSize = (bytes: number) => {
-  if (bytes >= 1024 * 1024) {
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-};
-
-const getDatasetStats = (dataset: Dataset) => {
-  const documents = documentsSource.documents.filter((document) => document.dataset_id === dataset.id && document.enabled);
-  const documentIds = new Set(documents.map((document) => document.id));
-  const chunks = chunksSource.chunks.filter((chunk) => documentIds.has(chunk.file_id) && chunk.enabled);
-  const totalSize = documents.reduce((sum, document) => sum + document.file_size, 0);
-
-  return {
-    chunkCount: chunks.length,
-    documentCount: documents.length,
-    documents,
-    status: documents.every((document) => document.status === "indexed") ? "Ready" : "Indexing",
-    totalSize,
-  };
-};
+import Link from "next/link";
+import {datasetGridColumns, datasets as datasetRows, formatDate, formatFileSize, getDatasetStats} from "@/app/datasets/data";
 
 export default function DatasetsPage() {
-  const datasets = datasetsSource.datasets.map((dataset) => ({
+  const datasets = datasetRows.map((dataset) => ({
     ...dataset,
     stats: getDatasetStats(dataset),
   }));
@@ -74,8 +39,9 @@ export default function DatasetsPage() {
               </div>
               <div className="divide-y divide-zinc-100">
                 {datasets.map((dataset) => (
-                  <article
+                  <Link
                     className="grid items-center gap-4 px-4 py-4 transition hover:bg-zinc-50"
+                    href={`/datasets/${dataset.id}`}
                     key={dataset.id}
                     style={{gridTemplateColumns: datasetGridColumns}}
                   >
@@ -103,7 +69,7 @@ export default function DatasetsPage() {
                         {dataset.stats.status}
                       </span>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             </div>
