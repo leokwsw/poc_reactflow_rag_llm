@@ -1,14 +1,195 @@
 {
   "chunks": [
     {
-      "id": "chunk-abc1234",
-      "file_id": "file-abc1234",
-      "text": "",
+      "id": "chunk-econ-quiz-ch16-001",
+      "file_id": "file-econ-quiz-ch16",
+      "text": "A quota limits the maximum quantity that may be traded. If the quota is set below the free-market equilibrium quantity, it creates scarcity and may raise market price.",
       "position": 0,
       "metadata": {
-
+        "page": 1,
+        "section": "Market intervention"
       },
-      "es_document_id": "",
+      "es_document_id": "es-econ-quiz-ch16-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-quiz-ch16-002",
+      "file_id": "file-econ-quiz-ch16",
+      "text": "A price ceiling is effective only when it is set below equilibrium price. The resulting shortage equals quantity demanded minus quantity supplied at the controlled price.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Price control"
+      },
+      "es_document_id": "es-econ-quiz-ch16-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-quiz-elasticity-001",
+      "file_id": "file-econ-quiz-elasticity",
+      "text": "Price elasticity of demand measures the percentage change in quantity demanded divided by the percentage change in price, holding other factors constant.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "Elasticity formula"
+      },
+      "es_document_id": "es-econ-quiz-elasticity-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-quiz-elasticity-002",
+      "file_id": "file-econ-quiz-elasticity",
+      "text": "When demand is price elastic, total revenue moves in the opposite direction of price. A price increase lowers total revenue.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Revenue test"
+      },
+      "es_document_id": "es-econ-quiz-elasticity-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-notes-demand-supply-001",
+      "file_id": "file-econ-notes-demand-supply",
+      "text": "A change in demand shifts the entire demand curve. A change in quantity demanded is a movement along the curve caused by a change in the good's own price.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "Demand"
+      },
+      "es_document_id": "es-econ-notes-demand-supply-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-notes-demand-supply-002",
+      "file_id": "file-econ-notes-demand-supply",
+      "text": "An increase in supply shifts the supply curve to the right, lowering equilibrium price and increasing equilibrium quantity when demand is unchanged.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Supply"
+      },
+      "es_document_id": "es-econ-notes-demand-supply-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-notes-macro-001",
+      "file_id": "file-econ-notes-macro",
+      "text": "Nominal GDP is measured at current market prices. Real GDP removes the effect of price changes and is better for comparing output over time.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "GDP"
+      },
+      "es_document_id": "es-econ-notes-macro-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-econ-notes-macro-002",
+      "file_id": "file-econ-notes-macro",
+      "text": "The unemployment rate counts unemployed people as a percentage of the labour force, not the total population.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Labour market"
+      },
+      "es_document_id": "es-econ-notes-macro-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-dse-2022-paper1-001",
+      "file_id": "file-dse-2022-paper1",
+      "text": "For short structured questions, identify the relevant economic concept first, then apply it directly to the case facts before drawing a conclusion.",
+      "position": 0,
+      "metadata": {
+        "page": 3,
+        "section": "Question technique"
+      },
+      "es_document_id": "es-dse-2022-paper1-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-dse-2022-paper1-002",
+      "file_id": "file-dse-2022-paper1",
+      "text": "Marks are often awarded for correct comparison language, such as greater than, smaller than, increase, decrease, surplus, and shortage.",
+      "position": 1,
+      "metadata": {
+        "page": 4,
+        "section": "Mark allocation"
+      },
+      "es_document_id": "es-dse-2022-paper1-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-dse-marking-guide-001",
+      "file_id": "file-dse-marking-guide",
+      "text": "A full-credit answer should include the key term, a correct explanation, and an explicit link to the data or scenario in the question.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "Answer structure"
+      },
+      "es_document_id": "es-dse-marking-guide-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-dse-marking-guide-002",
+      "file_id": "file-dse-marking-guide",
+      "text": "Avoid unsupported memorized definitions. Application marks require using the named buyer, seller, government policy, or market shown in the question.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Application marks"
+      },
+      "es_document_id": "es-dse-marking-guide-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-mlx-asr-setup-001",
+      "file_id": "file-mlx-asr-setup",
+      "text": "Install a recent Python version, create a virtual environment, and confirm the machine is using Apple silicon before installing MLX packages.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "Environment"
+      },
+      "es_document_id": "es-mlx-asr-setup-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-mlx-asr-setup-002",
+      "file_id": "file-mlx-asr-setup",
+      "text": "Keep model files in a predictable local cache path so the ASR workflow can load them without repeated downloads.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Model storage"
+      },
+      "es_document_id": "es-mlx-asr-setup-002",
+      "enabled": true
+    },
+    {
+      "id": "chunk-mlx-asr-pipeline-001",
+      "file_id": "file-mlx-asr-pipeline",
+      "text": "A local ASR pipeline typically normalizes audio, chunks long files, runs transcription, then optionally performs punctuation restoration and summarization.",
+      "position": 0,
+      "metadata": {
+        "page": 1,
+        "section": "Pipeline"
+      },
+      "es_document_id": "es-mlx-asr-pipeline-001",
+      "enabled": true
+    },
+    {
+      "id": "chunk-mlx-asr-pipeline-002",
+      "file_id": "file-mlx-asr-pipeline",
+      "text": "For interactive learning, prompt the user after each step to confirm installation output, model selection, and transcription quality before continuing.",
+      "position": 1,
+      "metadata": {
+        "page": 2,
+        "section": "Interactive workflow"
+      },
+      "es_document_id": "es-mlx-asr-pipeline-002",
       "enabled": true
     }
   ]

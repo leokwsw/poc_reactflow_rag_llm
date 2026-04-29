@@ -1,11 +1,11 @@
 {
   "datasets": [
     {
-      "id": "abc1234",
+      "id": "dataset-econ-quiz",
       "title": "Econ Quiz",
-      "description": "",
-      "created_at": "2026-04-29T20:00:00",
-      "updated_at": "2026-04-29T20:00:00",
+      "description": "Short quiz documents for practicing Hong Kong DSE economics concepts, definitions, and MC-style reasoning.",
+      "created_at": "2026-04-29T20:00:00+08:00",
+      "updated_at": "2026-04-29T20:22:00+08:00",
       "embedding_config": {
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
@@ -20,11 +20,11 @@
       }
     },
     {
-      "id": "abc12341",
+      "id": "dataset-econ-notes",
       "title": "Econ Notes",
-      "description": "",
-      "created_at": "2026-04-29T20:00:00",
-      "updated_at": "2026-04-29T20:00:00",
+      "description": "Chapter notes covering demand, supply, elasticity, market intervention, and macroeconomic indicators.",
+      "created_at": "2026-04-29T20:04:00+08:00",
+      "updated_at": "2026-04-29T20:24:00+08:00",
       "embedding_config": {
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
@@ -34,16 +34,35 @@
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
         "model": "gpt-oss-120b-MXFP4-Q8",
-        "top_k": 3,
+        "top_k": 5,
+        "score": 0.45
+      }
+    },
+    {
+      "id": "dataset-econ-dse-pp",
+      "title": "Econ DSE Past Papers",
+      "description": "Past-paper extracts and marking notes for retrieval tests against structured exam answers.",
+      "created_at": "2026-04-29T20:08:00+08:00",
+      "updated_at": "2026-04-29T20:26:00+08:00",
+      "embedding_config": {
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "model": "gpt-oss-120b-MXFP4-Q8"
+      },
+      "reranking_config": {
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "model": "gpt-oss-120b-MXFP4-Q8",
+        "top_k": 4,
         "score": 0.5
       }
     },
     {
-      "id": "abc12342",
-      "title": "Econ DSE PP",
-      "description": "",
-      "created_at": "2026-04-29T20:00:00",
-      "updated_at": "2026-04-29T20:00:00",
+      "id": "dataset-mac-mlx-asr",
+      "title": "Mac MLX ASR",
+      "description": "Reference notes for building a local speech recognition workflow with MLX models on Apple silicon.",
+      "created_at": "2026-04-29T20:12:00+08:00",
+      "updated_at": "2026-04-29T20:28:00+08:00",
       "embedding_config": {
         "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
         "apiKey": "octopusPass",
@@ -54,7 +73,7 @@
         "apiKey": "octopusPass",
         "model": "gpt-oss-120b-MXFP4-Q8",
         "top_k": 3,
-        "score": 0.5
+        "score": 0.55
       }
     }
   ]
