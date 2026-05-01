@@ -1,13 +1,15 @@
-"use server";
-
 import fs from "node:fs";
 import path from "node:path";
 import {randomUUID} from "node:crypto";
-import {redirect} from "next/navigation";
 import {revalidatePath} from "next/cache";
+import {NextResponse} from "next/server";
 import {dataPath, getDatasets, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
 
+export const runtime = "nodejs";
+
+const maxFiles = 10;
+const maxFileSize = 20 * 1024 * 1024;
 const allowedExtensions = new Set([
   ".pdf",
   ".txt",
@@ -34,23 +36,35 @@ const toSlug = (value: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
 
-export async function createDatasetFromUpload(formData: FormData) {
+const badRequest = (message: string) => NextResponse.json({error: message}, {status: 400});
+
+export async function POST(request: Request) {
+  const wantsJson = request.headers.get("accept")?.includes("application/json") ?? false;
+  const formData = await request.formData();
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const files = formData.getAll("files").filter((value): value is File => value instanceof File && value.size > 0);
 
   if (!title) {
-    throw new Error("Dataset title is required.");
+    return badRequest("Dataset title is required.");
   }
 
   if (files.length === 0) {
-    throw new Error("Select at least one file to upload.");
+    return badRequest("Select at least one file to upload.");
+  }
+
+  if (files.length > maxFiles) {
+    return badRequest(`Upload ${maxFiles} files or fewer.`);
   }
 
   for (const file of files) {
     const extension = path.extname(file.name).toLowerCase();
     if (!allowedExtensions.has(extension)) {
-      throw new Error(`${file.name} is not an accepted dataset file type.`);
+      return badRequest(`${file.name} is not an accepted dataset file type.`);
+    }
+
+    if (file.size > maxFileSize) {
+      return badRequest(`${file.name} is larger than 20 MB.`);
     }
   }
 
@@ -127,5 +141,14 @@ export async function createDatasetFromUpload(formData: FormData) {
 
   revalidatePath("/datasets");
   revalidatePath(`/datasets/${datasetId}`);
-  redirect(`/datasets/${datasetId}`);
+  if (wantsJson) {
+    return NextResponse.json({
+      dataset_id: datasetId,
+      document_ids: documentIds,
+      redirect_url: `/datasets/${datasetId}`,
+      task_status: "queued",
+    });
+  }
+
+  return NextResponse.redirect(new URL(`/datasets/${datasetId}`, request.url), 303);
 }

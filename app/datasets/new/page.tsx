@@ -1,5 +1,4 @@
 import Link from "next/link";
-import {createDatasetFromUpload} from "@/app/datasets/new/actions";
 
 const acceptedFileTypes = ".pdf,.txt,.rtx,.rtf,.html,.csv,.xls,.xlsx,.doc,.docx,.ppt,.pptx";
 
@@ -15,8 +14,10 @@ export default function NewDatasetPage() {
         </div>
 
         <form
-          action={createDatasetFromUpload}
+          action="/api/datasets"
           className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm"
+          encType="multipart/form-data"
+          method="post"
         >
           <div className="grid gap-5">
             <label className="grid gap-2">
