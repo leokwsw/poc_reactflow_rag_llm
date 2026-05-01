@@ -3,6 +3,7 @@ import path from "node:path";
 import {createHash, randomUUID} from "node:crypto";
 import type {DatasetDocument, DocumentChunk} from "@/app/datasets/data";
 import {dataPath, getChunks, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
+import {getElasticsearchClient} from "@/app/lib/elasticsearch";
 
 type DatasetTask = {
   id: string;
@@ -167,21 +168,21 @@ const embedText = async (text: string, config: EmbeddingConfig): Promise<{provid
 };
 
 const saveEmbeddingToElasticsearch = async (embedding: EmbeddingRecord, chunk: DocumentChunk) => {
-  const elasticsearchUrl = process.env.ELASTICSEARCH_URL;
-  if (!elasticsearchUrl) {
+  const client = getElasticsearchClient();
+  if (!client) {
     return false;
   }
 
   try {
-    const response = await fetch(`${elasticsearchUrl.replace(/\/$/, "")}/rag_chunks/_doc/${embedding.id}`, {
-      method: "PUT",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
+    const response = await client.index({
+      index: "rag_chunks",
+      id: embedding.id,
+      document: {
         chunk,
         embedding: embedding.vector,
-      }),
+      },
     });
-    return response.ok;
+    return response.result === "created" || response.result === "updated";
   } catch {
     return false;
   }

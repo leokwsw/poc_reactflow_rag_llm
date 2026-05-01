@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "9.3.4",
     "@lexical/react": "^0.43.0",
     "@lexical/rich-text": "^0.43.0",
     "@lexical/utils": "^0.43.0",
