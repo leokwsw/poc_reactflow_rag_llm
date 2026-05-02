@@ -3,28 +3,12 @@ import path from "node:path";
 import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {NextResponse} from "next/server";
+import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
 import {dataPath, getDatasets, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
+import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
 export const runtime = "nodejs";
-
-const maxFiles = 10;
-const maxFileSize = 20 * 1024 * 1024;
-const allowedExtensions = new Set([
-  ".pdf",
-  ".txt",
-  ".rtx",
-  ".rtf",
-  ".html",
-  ".htm",
-  ".csv",
-  ".xls",
-  ".xlsx",
-  ".doc",
-  ".docx",
-  ".ppt",
-  ".pptx",
-]);
 
 const safeFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "upload";
 
@@ -38,34 +22,94 @@ const toSlug = (value: string) =>
 
 const badRequest = (message: string) => NextResponse.json({error: message}, {status: 400});
 
+const isUploadFileRef = (value: unknown): value is UploadFileRef => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const o = value as Record<string, unknown>;
+  return (
+    typeof o.id === "string" &&
+    typeof o.file_name === "string" &&
+    typeof o.mime === "string" &&
+    typeof o.file_size === "number" &&
+    Number.isFinite(o.file_size) &&
+    o.file_size >= 0
+  );
+};
+
+type PreparedDatasetFile = {
+  displayName: string;
+  size: number;
+  mime: string;
+  extension: string;
+  bytes: Buffer;
+  stagingId: string;
+};
+
 export async function POST(request: Request) {
-  const wantsJson = request.headers.get("accept")?.includes("application/json") ?? false;
-  const formData = await request.formData();
-  const title = String(formData.get("title") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
-  const files = formData.getAll("files").filter((value): value is File => value instanceof File && value.size > 0);
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return NextResponse.json(
+      {error: "Content-Type must be application/json. Send staged file objects from POST /api/file/upload in a `files` array."},
+      {status: 415},
+    );
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return badRequest("Invalid JSON body.");
+  }
+
+  if (!body || typeof body !== "object") {
+    return badRequest("Request body must be a JSON object.");
+  }
+
+  const o = body as Record<string, unknown>;
+  const title = typeof o.title === "string" ? o.title.trim() : "";
+  const description = typeof o.description === "string" ? o.description.trim() : "";
+  const fileRefs = o.files;
 
   if (!title) {
     return badRequest("Dataset title is required.");
   }
 
-  if (files.length === 0) {
-    return badRequest("Select at least one file to upload.");
+  if (!Array.isArray(fileRefs) || fileRefs.length === 0) {
+    return badRequest("files must be a non-empty array of objects from the file upload API.");
   }
 
-  if (files.length > maxFiles) {
-    return badRequest(`Upload ${maxFiles} files or fewer.`);
+  if (!fileRefs.every(isUploadFileRef)) {
+    return badRequest("Each file entry must include id, file_name, file_size, and mime (upload API response shape).");
   }
 
-  for (const file of files) {
-    const extension = path.extname(file.name).toLowerCase();
-    if (!allowedExtensions.has(extension)) {
-      return badRequest(`${file.name} is not an accepted dataset file type.`);
+  const prepared: PreparedDatasetFile[] = [];
+
+  for (const ref of fileRefs) {
+    if (!isValidUploadId(ref.id)) {
+      return badRequest(`Invalid file id: ${ref.id}.`);
     }
 
-    if (file.size > maxFileSize) {
-      return badRequest(`${file.name} is larger than 20 MB.`);
+    const meta = await readMeta(ref.id);
+    const bytes = await readBlob(ref.id);
+    if (!meta || !bytes) {
+      return badRequest(`Missing staged upload for id ${ref.id}. Upload the file first via POST /api/file/upload.`);
     }
+
+    if (meta.id !== ref.id || meta.file_name !== ref.file_name || meta.file_size !== ref.file_size || meta.mime !== ref.mime) {
+      return badRequest(`Staged file metadata does not match stored upload for id ${ref.id}.`);
+    }
+
+    const extension = path.extname(meta.file_name).toLowerCase();
+
+    prepared.push({
+      displayName: meta.file_name,
+      size: bytes.length,
+      mime: meta.mime,
+      extension,
+      bytes,
+      stagingId: ref.id,
+    });
   }
 
   const timestamp = new Date().toISOString();
@@ -82,30 +126,29 @@ export async function POST(request: Request) {
   const documentIds: string[] = [];
   const filePaths: string[] = [];
 
-  for (const file of files) {
-    const extension = path.extname(file.name).toLowerCase();
+  for (const item of prepared) {
     const documentId = `file-${randomUUID()}`;
-    const storedName = `${documentId}-${safeFileName(file.name)}`;
+    const storedName = `${documentId}-${safeFileName(item.displayName)}`;
     const relativePath = path.join("uploads", datasetId, storedName);
     const filePath = dataPath(relativePath);
-    const bytes = Buffer.from(await file.arrayBuffer());
 
-    fs.writeFileSync(filePath, bytes);
+    fs.writeFileSync(filePath, item.bytes);
+    await removeUpload(item.stagingId);
     documentIds.push(documentId);
     filePaths.push(filePath);
     documents.push({
       id: documentId,
-      file_name: file.name,
+      file_name: item.displayName,
       dataset_id: datasetId,
-      file_size: file.size,
+      file_size: item.size,
       created_at: timestamp,
       updated_time: timestamp,
       uploaded_time: timestamp,
       deleted: "false",
       deleted_at: "",
       upload_source: "file",
-      mime_type: file.type,
-      ext: extension,
+      mime_type: item.mime,
+      ext: item.extension,
       storage_page: relativePath,
       status: "queued",
       enabled: true,
@@ -141,14 +184,11 @@ export async function POST(request: Request) {
 
   revalidatePath("/datasets");
   revalidatePath(`/datasets/${datasetId}`);
-  if (wantsJson) {
-    return NextResponse.json({
-      dataset_id: datasetId,
-      document_ids: documentIds,
-      redirect_url: `/datasets/${datasetId}`,
-      task_status: "queued",
-    });
-  }
 
-  return NextResponse.redirect(new URL(`/datasets/${datasetId}`, request.url), 303);
+  return NextResponse.json({
+    dataset_id: datasetId,
+    document_ids: documentIds,
+    redirect_url: `/datasets/${datasetId}`,
+    task_status: "queued",
+  });
 }
