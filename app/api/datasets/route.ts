@@ -22,6 +22,62 @@ const toSlug = (value: string) =>
 
 const badRequest = (message: string) => NextResponse.json({error: message}, {status: 400});
 
+type ModelConfigJson = {
+  apiBaseUrl: string;
+  apiKey: string;
+  model: string;
+};
+
+const defaultModelBase = (): ModelConfigJson =>
+  readJsonFile<ModelConfigJson>("model-base.json", {
+    apiBaseUrl: "",
+    apiKey: "",
+    model: "local-deterministic",
+  });
+
+const mergeModelConfig = (raw: unknown): ModelConfigJson => {
+  const base = defaultModelBase();
+  if (!raw || typeof raw !== "object") {
+    return base;
+  }
+  const o = raw as Record<string, unknown>;
+  return {
+    apiBaseUrl: typeof o.apiBaseUrl === "string" ? o.apiBaseUrl.trim() : base.apiBaseUrl,
+    apiKey: typeof o.apiKey === "string" ? o.apiKey.trim() : base.apiKey,
+    model: typeof o.model === "string" ? o.model.trim() : base.model,
+  };
+};
+
+const mergeRerankingConfig = (raw: unknown): ModelConfigJson & {top_k: number; score: number} => {
+  const merged = mergeModelConfig(raw);
+  const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const top_k = typeof o.top_k === "number" && Number.isFinite(o.top_k) ? Math.max(1, Math.floor(o.top_k)) : 3;
+  const score =
+    typeof o.score === "number" && Number.isFinite(o.score) ? Math.min(1, Math.max(0, o.score)) : 0.5;
+  return {...merged, top_k, score};
+};
+
+const parseChunkConfig = (raw: unknown): {chunk_size_words: number; overlap_words: number} | null => {
+  if (raw === undefined) {
+    return null;
+  }
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+  const o = raw as Record<string, unknown>;
+  const cs = o.chunk_size_words;
+  const ov = o.overlap_words;
+  if (typeof cs !== "number" || typeof ov !== "number" || !Number.isFinite(cs) || !Number.isFinite(ov)) {
+    return null;
+  }
+  const chunk_size_words = Math.floor(cs);
+  const overlap_words = Math.floor(ov);
+  if (chunk_size_words < 10 || chunk_size_words > 50_000 || overlap_words < 0 || overlap_words >= chunk_size_words) {
+    return null;
+  }
+  return {chunk_size_words, overlap_words};
+};
+
 const isUploadFileRef = (value: unknown): value is UploadFileRef => {
   if (!value || typeof value !== "object") {
     return false;
@@ -117,11 +173,18 @@ export async function POST(request: Request) {
   const uploadDirectory = dataPath("uploads", datasetId);
   fs.mkdirSync(uploadDirectory, {recursive: true});
 
-  const modelBase = readJsonFile("model-base.json", {
-    apiBaseUrl: "",
-    apiKey: "",
-    model: "local-deterministic",
-  });
+  const embedding_config = mergeModelConfig(o.embedding_config);
+  const reranking_config =
+    o.reranking_config !== undefined ? mergeRerankingConfig(o.reranking_config) : {...embedding_config, top_k: 3, score: 0.5};
+
+  const chunkParsed = parseChunkConfig(o.chunk_config);
+  if (o.chunk_config !== undefined && chunkParsed === null) {
+    return badRequest(
+      "chunk_config must include chunk_size_words (10–50000) and overlap_words (0 ≤ overlap < chunk_size).",
+    );
+  }
+  const chunk_config = chunkParsed ?? {chunk_size_words: 120, overlap_words: 20};
+
   const documents = getDocuments();
   const documentIds: string[] = [];
   const filePaths: string[] = [];
@@ -164,12 +227,9 @@ export async function POST(request: Request) {
         description,
         created_at: timestamp,
         updated_at: timestamp,
-        embedding_config: modelBase,
-        reranking_config: {
-          ...modelBase,
-          top_k: 3,
-          score: 0.5,
-        },
+        embedding_config,
+        reranking_config,
+        chunk_config,
       },
     ],
   });

@@ -7,6 +7,11 @@ type ModelConfig = {
   model: string;
 };
 
+export type ChunkConfig = {
+  chunk_size_words: number;
+  overlap_words: number;
+};
+
 export type Dataset = {
   id: string;
   title: string;
@@ -18,6 +23,7 @@ export type Dataset = {
     top_k: number;
     score: number;
   };
+  chunk_config?: ChunkConfig;
 };
 
 export type DatasetDocument = {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {useCallback, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent} from "react";
+import {useRouter} from "next/navigation";
+import {useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent} from "react";
 import {allowedExtensions, maxFileSize} from "@/app/api/file/upload-limits";
 import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
@@ -20,16 +21,46 @@ const formatBytes = (n: number) => {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+type Step = 1 | 2 | 3;
+
 export default function NewDatasetPage() {
+  const router = useRouter();
+  const [step, setStep] = useState<Step>(1);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [chunkSizeWords, setChunkSizeWords] = useState(120);
+  const [overlapWords, setOverlapWords] = useState(20);
+
+  const [embedApiBaseUrl, setEmbedApiBaseUrl] = useState("");
+  const [embedApiKey, setEmbedApiKey] = useState("");
+  const [embedModel, setEmbedModel] = useState("local-deterministic");
+
+  const [rerankApiBaseUrl, setRerankApiBaseUrl] = useState("");
+  const [rerankApiKey, setRerankApiKey] = useState("");
+  const [rerankModel, setRerankModel] = useState("local-deterministic");
+  const [rerankTopK, setRerankTopK] = useState(3);
+  const [rerankScore, setRerankScore] = useState(0.5);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "uploading" | "creating">("idle");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [pickHint, setPickHint] = useState<string | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragDepthRef = useRef(0);
+
+  useEffect(() => {
+    if (step !== 3 || !redirectUrl) return;
+    const id = window.setTimeout(() => {
+      router.push(redirectUrl);
+    }, 3000);
+    return () => window.clearTimeout(id);
+  }, [step, redirectUrl, router]);
 
   const mergeIncoming = useCallback((incoming: File[]) => {
     let skippedInvalid = 0;
@@ -108,24 +139,38 @@ export default function NewDatasetPage() {
     setPickHint(null);
   };
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const title = String(formData.get("title") ?? "").trim();
-    const description = String(formData.get("description") ?? "").trim();
-
-    if (!title) {
+  const goStep2 = () => {
+    setError(null);
+    if (!title.trim()) {
       setError("Dataset name is required.");
       return;
     }
-
     if (selectedFiles.length === 0) {
-      setError("Add at least one file (choose or drag files here).");
+      setError("Add at least one file.");
+      return;
+    }
+    setStep(2);
+  };
+
+  const copyEmbeddingToRerank = () => {
+    setRerankApiBaseUrl(embedApiBaseUrl);
+    setRerankApiKey(embedApiKey);
+    setRerankModel(embedModel);
+  };
+
+  const startIngestion = async () => {
+    setError(null);
+    const cs = Math.floor(Number(chunkSizeWords));
+    const ov = Math.floor(Number(overlapWords));
+    if (!Number.isFinite(cs) || cs < 10 || cs > 50_000) {
+      setError("Chunk size must be between 10 and 50000 words.");
+      return;
+    }
+    if (!Number.isFinite(ov) || ov < 0 || ov >= cs) {
+      setError("Overlap must be at least 0 and smaller than chunk size.");
       return;
     }
 
-    setError(null);
     setBusy(true);
     const stagedFiles: UploadFileRef[] = [];
 
@@ -165,7 +210,24 @@ export default function NewDatasetPage() {
       const res = await fetch("/api/datasets", {
         method: "POST",
         headers: {"Content-Type": "application/json", Accept: "application/json"},
-        body: JSON.stringify({title, description, files: stagedFiles}),
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+          files: stagedFiles,
+          chunk_config: {chunk_size_words: cs, overlap_words: ov},
+          embedding_config: {
+            apiBaseUrl: embedApiBaseUrl.trim(),
+            apiKey: embedApiKey.trim(),
+            model: embedModel.trim(),
+          },
+          reranking_config: {
+            apiBaseUrl: rerankApiBaseUrl.trim(),
+            apiKey: rerankApiKey.trim(),
+            model: rerankModel.trim(),
+            top_k: Math.max(1, Math.floor(Number(rerankTopK))),
+            score: Math.min(1, Math.max(0, Number(rerankScore))),
+          },
+        }),
       });
       const payload = (await res.json().catch(() => ({}))) as {error?: string; redirect_url?: string};
 
@@ -174,13 +236,29 @@ export default function NewDatasetPage() {
       }
 
       const next = payload.redirect_url ?? "/datasets";
-      window.location.assign(next);
+      setRedirectUrl(next);
+      setStep(3);
+      setBusy(false);
+      setPhase("idle");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setBusy(false);
       setPhase("idle");
     }
-  }
+  };
+
+  const stepCircle = (n: Step, label: string) => (
+    <div className="flex flex-1 flex-col items-center gap-1.5 text-center">
+      <span
+        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
+          step >= n ? "bg-indigo-600 text-white" : "bg-zinc-200 text-zinc-600"
+        }`}
+      >
+        {n}
+      </span>
+      <span className={`text-xs font-medium ${step >= n ? "text-zinc-900" : "text-zinc-500"}`}>{label}</span>
+    </div>
+  );
 
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
@@ -192,116 +270,314 @@ export default function NewDatasetPage() {
           <h1 className="mt-2 text-2xl font-semibold text-zinc-950">New Dataset</h1>
         </div>
 
-        <form className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm" onSubmit={onSubmit}>
-          <div className="grid gap-5">
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-zinc-800">Dataset Name</span>
-              <input
-                className="rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                name="title"
-                placeholder="e.g. Customer Support Handbook"
-                required
-                type="text"
-              />
-            </label>
+        <div className="flex items-start gap-2 rounded-2xl border border-zinc-200/80 bg-white px-4 py-4 shadow-sm">
+          {stepCircle(1, "Upload")}
+          <div className="mt-4 h-px flex-1 bg-zinc-200" />
+          {stepCircle(2, "Chunk & models")}
+          <div className="mt-4 h-px flex-1 bg-zinc-200" />
+          {stepCircle(3, "Started")}
+        </div>
 
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-zinc-800">Description</span>
-              <textarea
-                className="min-h-24 rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                name="description"
-                placeholder="What should this dataset be used for?"
-              />
-            </label>
+        {step === 1 ? (
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-zinc-900">Step 1 · Dataset & files</h2>
+            <p className="mt-1 text-sm text-zinc-600">Title, description, and upload the documents to ingest.</p>
 
-            <div className="grid gap-2">
-              <span className="text-sm font-medium text-zinc-800">Files</span>
-              <input
-                ref={fileInputRef}
-                accept={acceptedFileTypes}
-                className="sr-only"
-                disabled={busy}
-                multiple
-                onChange={onFileInputChange}
-                type="file"
-              />
-              <div
-                className={`flex min-h-[140px] cursor-default flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-6 text-center text-sm transition ${
-                  dragOver
-                    ? "border-indigo-400 bg-indigo-50 text-indigo-900"
-                    : "border-zinc-300 bg-zinc-50 text-zinc-600"
-                } ${busy ? "pointer-events-none opacity-60" : ""}`}
-                onDragEnter={onDragEnter}
-                onDragLeave={onDragLeave}
-                onDragOver={onDragOver}
-                onDrop={onDrop}
-              >
-                <p>
-                  {dragOver
-                    ? "Drop files to add them"
-                    : "Drag files here, or choose files — multi-select in the dialog (Shift-click or Ctrl / ⌘-click)."}
-                </p>
-                <button
-                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50"
+            <div className="mt-5 grid gap-5">
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-zinc-800">Dataset name</span>
+                <input
+                  className="rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  placeholder="e.g. Customer Support Handbook"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-zinc-800">Description</span>
+                <textarea
+                  className="min-h-24 rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                  placeholder="What should this dataset be used for?"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </label>
+
+              <div className="grid gap-2">
+                <span className="text-sm font-medium text-zinc-800">Files</span>
+                <input
+                  ref={fileInputRef}
+                  accept={acceptedFileTypes}
+                  className="sr-only"
                   disabled={busy}
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  multiple
+                  type="file"
+                  onChange={onFileInputChange}
+                />
+                <div
+                  className={`flex min-h-[140px] cursor-default flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-6 text-center text-sm transition ${
+                    dragOver
+                      ? "border-indigo-400 bg-indigo-50 text-indigo-900"
+                      : "border-zinc-300 bg-zinc-50 text-zinc-600"
+                  }`}
+                  onDragEnter={onDragEnter}
+                  onDragLeave={onDragLeave}
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
                 >
-                  Choose files…
-                </button>
-              </div>
+                  <p>
+                    {dragOver
+                      ? "Drop files to add them"
+                      : "Drag files here, or choose files — multi-select in the dialog (Shift-click or Ctrl / ⌘-click)."}
+                  </p>
+                  <button
+                    className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Choose files…
+                  </button>
+                </div>
 
-              {selectedFiles.length > 0 ? (
-                <ul className="mt-1 divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white">
-                  {selectedFiles.map((f, i) => (
-                    <li
-                      key={fileKey(f)}
-                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm text-zinc-800"
-                    >
-                      <span className="min-w-0 truncate" title={f.name}>
-                        {f.name}
-                        <span className="ml-2 text-zinc-500">({formatBytes(f.size)})</span>
-                      </span>
-                      <button
-                        className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
-                        disabled={busy}
-                        type="button"
-                        onClick={() => removeAt(i)}
+                {selectedFiles.length > 0 ? (
+                  <ul className="mt-1 divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white">
+                    {selectedFiles.map((f, i) => (
+                      <li
+                        key={fileKey(f)}
+                        className="flex items-center justify-between gap-3 px-3 py-2 text-sm text-zinc-800"
                       >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                        <span className="min-w-0 truncate" title={f.name}>
+                          {f.name}
+                          <span className="ml-2 text-zinc-500">({formatBytes(f.size)})</span>
+                        </span>
+                        <button
+                          className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+                          type="button"
+                          onClick={() => removeAt(i)}
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
 
-              {pickHint ? <p className="text-xs text-amber-700">{pickHint}</p> : null}
-              <span className="text-xs text-zinc-500">PDF, TXT, RTX, HTML, CSV, XLS, XLSX, DOC, DOCX, PPT, PPTX · max 20 MB each</span>
+                {pickHint ? <p className="text-xs text-amber-700">{pickHint}</p> : null}
+                <span className="text-xs text-zinc-500">
+                  PDF, TXT, RTX, HTML, CSV, XLS, XLSX, DOC, DOCX, PPT, PPTX · max 20 MB each
+                </span>
+              </div>
+            </div>
+
+            {error ? (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Link
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                href="/datasets"
+              >
+                Cancel
+              </Link>
+              <button
+                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+                type="button"
+                onClick={goStep2}
+              >
+                Continue
+              </button>
             </div>
           </div>
+        ) : null}
 
-          {error ? (
-            <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
-              {error}
+        {step === 2 ? (
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-zinc-900">Step 2 · Chunking & models</h2>
+            <p className="mt-1 text-sm text-zinc-600">
+              Configure how text is split before embedding, and which models to use for embeddings and reranking.
             </p>
-          ) : null}
 
-          <div className="mt-6 flex justify-end gap-3">
-            <Link
-              className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-              href="/datasets"
-            >
-              Cancel
-            </Link>
-            <button
-              className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={busy}
-              type="submit"
-            >
-              {phase === "uploading" ? "Uploading files…" : phase === "creating" ? "Creating dataset…" : "Upload and Create"}
-            </button>
+            <div className="mt-5 grid gap-6">
+              <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
+                <legend className="px-1 text-sm font-semibold text-zinc-800">Chunk config</legend>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-medium text-zinc-700">Chunk size (words)</span>
+                    <input
+                      className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                      min={10}
+                      type="number"
+                      value={chunkSizeWords}
+                      onChange={(e) => setChunkSizeWords(Number(e.target.value))}
+                    />
+                  </label>
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-medium text-zinc-700">Overlap (words)</span>
+                    <input
+                      className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                      min={0}
+                      type="number"
+                      value={overlapWords}
+                      onChange={(e) => setOverlapWords(Number(e.target.value))}
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-zinc-500">Overlap must be smaller than chunk size. Defaults match the previous single-step flow (120 / 20).</p>
+              </fieldset>
+
+              <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
+                <legend className="px-1 text-sm font-semibold text-zinc-800">Embedding</legend>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">API base URL</span>
+                  <input
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    placeholder="https://api.example.com/v1"
+                    type="url"
+                    value={embedApiBaseUrl}
+                    onChange={(e) => setEmbedApiBaseUrl(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">API key</span>
+                  <input
+                    autoComplete="off"
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    placeholder="Optional if using local deterministic embeddings"
+                    type="password"
+                    value={embedApiKey}
+                    onChange={(e) => setEmbedApiKey(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">Model</span>
+                  <input
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    type="text"
+                    value={embedModel}
+                    onChange={(e) => setEmbedModel(e.target.value)}
+                  />
+                </label>
+              </fieldset>
+
+              <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
+                <legend className="px-1 text-sm font-semibold text-zinc-800">Reranking</legend>
+                <button
+                  className="w-fit rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
+                  type="button"
+                  onClick={copyEmbeddingToRerank}
+                >
+                  Copy embedding URL / key / model
+                </button>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">API base URL</span>
+                  <input
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    placeholder="https://api.example.com/v1"
+                    type="url"
+                    value={rerankApiBaseUrl}
+                    onChange={(e) => setRerankApiBaseUrl(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">API key</span>
+                  <input
+                    autoComplete="off"
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    type="password"
+                    value={rerankApiKey}
+                    onChange={(e) => setRerankApiKey(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">Model</span>
+                  <input
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    type="text"
+                    value={rerankModel}
+                    onChange={(e) => setRerankModel(e.target.value)}
+                  />
+                </label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-medium text-zinc-700">Top K</span>
+                    <input
+                      className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                      min={1}
+                      type="number"
+                      value={rerankTopK}
+                      onChange={(e) => setRerankTopK(Number(e.target.value))}
+                    />
+                  </label>
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-medium text-zinc-700">Score threshold (0–1)</span>
+                    <input
+                      className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                      max={1}
+                      min={0}
+                      step={0.05}
+                      type="number"
+                      value={rerankScore}
+                      onChange={(e) => setRerankScore(Number(e.target.value))}
+                    />
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+
+            {error ? (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Link
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                href="/datasets"
+              >
+                Cancel
+              </Link>
+              <button
+                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                disabled={busy}
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setStep(1);
+                }}
+              >
+                Back
+              </button>
+              <button
+                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={busy}
+                type="button"
+                onClick={() => void startIngestion()}
+              >
+                {phase === "uploading" ? "Uploading files…" : phase === "creating" ? "Creating dataset…" : "Start ingestion"}
+              </button>
+            </div>
           </div>
-        </form>
+        ) : null}
+
+        {step === 3 && redirectUrl ? (
+          <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-emerald-950">Ingestion task started</h2>
+            <p className="mt-2 text-sm text-emerald-900">
+              Your dataset was created and background processing has begun. You will be redirected to the dataset detail page in about 3 seconds.
+            </p>
+            <p className="mt-4 text-sm">
+              <Link className="font-medium text-indigo-700 underline-offset-2 hover:underline" href={redirectUrl}>
+                Open dataset now
+              </Link>
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import path from "node:path";
 import {createHash, randomUUID} from "node:crypto";
 import type {DatasetDocument, DocumentChunk} from "@/app/datasets/data";
-import {dataPath, getChunks, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
+import {dataPath, getChunks, getDatasetById, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
 import {getElasticsearchClient} from "@/app/lib/elasticsearch";
 
@@ -105,10 +105,10 @@ const normalizeText = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const splitTextIntoChunks = (text: string) => {
+const splitTextIntoChunks = (text: string, chunkSizeWords: number, overlapWords: number) => {
+  const chunkSize = Math.max(1, Math.floor(chunkSizeWords));
+  const overlap = Math.min(Math.max(0, Math.floor(overlapWords)), chunkSize - 1);
   const words = text.split(/\s+/).filter(Boolean);
-  const chunkSize = 120;
-  const overlap = 20;
   const chunks: string[] = [];
 
   for (let start = 0; start < words.length; start += chunkSize - overlap) {
@@ -184,11 +184,15 @@ const processTask = async (taskId: string) => {
   updateTask(task.id, {status: "processing"});
 
   try {
-    const modelBase = readJsonFile<EmbeddingConfig>("model-base.json", {
+    const fallbackConfig = readJsonFile<EmbeddingConfig>("model-base.json", {
       apiBaseUrl: "",
       apiKey: "",
       model: "local-deterministic",
     });
+    const dataset = getDatasetById(task.dataset_id);
+    const embeddingCfg = dataset?.embedding_config ?? fallbackConfig;
+    const chunkSizeWords = dataset?.chunk_config?.chunk_size_words ?? 120;
+    const overlapWords = dataset?.chunk_config?.overlap_words ?? 20;
 
     for (const documentId of task.document_ids) {
       const document = getDocuments().find((item) => item.id === documentId);
@@ -198,7 +202,7 @@ const processTask = async (taskId: string) => {
 
       const raw = await extractFileToText(dataPath(document.storage_page));
       const text = normalizeText(raw) || `Uploaded file ${path.basename(document.storage_page)} had no extractable text.`;
-      const chunkTexts = splitTextIntoChunks(text);
+      const chunkTexts = splitTextIntoChunks(text, chunkSizeWords, overlapWords);
       const createdAt = now();
       const nextChunks: DocumentChunk[] = [];
       const nextEmbeddings: EmbeddingRecord[] = [];
@@ -219,7 +223,7 @@ const processTask = async (taskId: string) => {
           es_document_id: esDocumentId,
           enabled: true,
         };
-        const embedded = await embedText(chunkText, modelBase);
+        const embedded = await embedText(chunkText, embeddingCfg);
         const embedding: EmbeddingRecord = {
           id: esDocumentId,
           chunk_id: chunkId,
