@@ -1,15 +1,112 @@
 "use client";
 
 import Link from "next/link";
-import {useState, type FormEvent} from "react";
+import {useCallback, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent} from "react";
+import {allowedExtensions, maxFileSize} from "@/app/api/file/upload-limits";
 import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
 const acceptedFileTypes = ".pdf,.txt,.rtx,.rtf,.html,.csv,.xls,.xlsx,.doc,.docx,.ppt,.pptx";
+
+const extOf = (name: string) => {
+  const i = name.lastIndexOf(".");
+  return i >= 0 ? name.slice(i).toLowerCase() : "";
+};
+
+const fileKey = (f: File) => `${f.name}\0${f.size}\0${f.lastModified}`;
+
+const formatBytes = (n: number) => {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export default function NewDatasetPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "uploading" | "creating">("idle");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const [pickHint, setPickHint] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragDepthRef = useRef(0);
+
+  const mergeIncoming = useCallback((incoming: File[]) => {
+    let skippedInvalid = 0;
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      const ext = extOf(f.name);
+      if (!allowedExtensions.has(ext) || f.size === 0 || f.size > maxFileSize) {
+        skippedInvalid++;
+        continue;
+      }
+      accepted.push(f);
+    }
+
+    setSelectedFiles((prev) => {
+      const keys = new Set(prev.map(fileKey));
+      const next = [...prev];
+      for (const f of accepted) {
+        const k = fileKey(f);
+        if (keys.has(k)) continue;
+        keys.add(k);
+        next.push(f);
+      }
+      return next;
+    });
+
+    if (skippedInvalid > 0) {
+      setPickHint(`${skippedInvalid} file(s) skipped (type not allowed or over 20 MB).`);
+    } else {
+      setPickHint(null);
+    }
+  }, []);
+
+  const onFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (list?.length) {
+      mergeIncoming(Array.from(list));
+    }
+    e.target.value = "";
+  };
+
+  const onDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current += 1;
+    setDragOver(true);
+  };
+
+  const onDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current -= 1;
+    if (dragDepthRef.current <= 0) {
+      dragDepthRef.current = 0;
+      setDragOver(false);
+    }
+  };
+
+  const onDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current = 0;
+    setDragOver(false);
+    const list = e.dataTransfer.files;
+    if (list?.length) {
+      mergeIncoming(Array.from(list));
+    }
+  };
+
+  const removeAt = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPickHint(null);
+  };
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,17 +114,14 @@ export default function NewDatasetPage() {
     const formData = new FormData(form);
     const title = String(formData.get("title") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
-    const input = form.elements.namedItem("files");
-    const fileInput = input instanceof HTMLInputElement ? input : null;
-    const fileList = fileInput?.files;
 
     if (!title) {
       setError("Dataset name is required.");
       return;
     }
 
-    if (!fileList?.length) {
-      setError("Select at least one file.");
+    if (selectedFiles.length === 0) {
+      setError("Add at least one file (choose or drag files here).");
       return;
     }
 
@@ -37,7 +131,7 @@ export default function NewDatasetPage() {
 
     try {
       setPhase("uploading");
-      for (const file of Array.from(fileList)) {
+      for (const file of selectedFiles) {
         const body = new FormData();
         body.set("file", file);
         const res = await fetch("/api/file/upload", {method: "POST", body});
@@ -120,19 +214,70 @@ export default function NewDatasetPage() {
               />
             </label>
 
-            <label className="grid gap-2">
+            <div className="grid gap-2">
               <span className="text-sm font-medium text-zinc-800">Files</span>
               <input
+                ref={fileInputRef}
                 accept={acceptedFileTypes}
-                className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-3 py-6 text-sm text-zinc-600"
+                className="sr-only"
                 disabled={busy}
                 multiple
-                name="files"
-                required
+                onChange={onFileInputChange}
                 type="file"
               />
-              <span className="text-xs text-zinc-500">PDF, TXT, RTX, HTML, CSV, XLS, XLSX, DOC, DOCX, PPT, PPTX</span>
-            </label>
+              <div
+                className={`flex min-h-[140px] cursor-default flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-6 text-center text-sm transition ${
+                  dragOver
+                    ? "border-indigo-400 bg-indigo-50 text-indigo-900"
+                    : "border-zinc-300 bg-zinc-50 text-zinc-600"
+                } ${busy ? "pointer-events-none opacity-60" : ""}`}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+              >
+                <p>
+                  {dragOver
+                    ? "Drop files to add them"
+                    : "Drag files here, or choose files — multi-select in the dialog (Shift-click or Ctrl / ⌘-click)."}
+                </p>
+                <button
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50"
+                  disabled={busy}
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose files…
+                </button>
+              </div>
+
+              {selectedFiles.length > 0 ? (
+                <ul className="mt-1 divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white">
+                  {selectedFiles.map((f, i) => (
+                    <li
+                      key={fileKey(f)}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm text-zinc-800"
+                    >
+                      <span className="min-w-0 truncate" title={f.name}>
+                        {f.name}
+                        <span className="ml-2 text-zinc-500">({formatBytes(f.size)})</span>
+                      </span>
+                      <button
+                        className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+                        disabled={busy}
+                        type="button"
+                        onClick={() => removeAt(i)}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {pickHint ? <p className="text-xs text-amber-700">{pickHint}</p> : null}
+              <span className="text-xs text-zinc-500">PDF, TXT, RTX, HTML, CSV, XLS, XLSX, DOC, DOCX, PPT, PPTX · max 20 MB each</span>
+            </div>
           </div>
 
           {error ? (

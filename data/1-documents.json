@@ -135,6 +135,57 @@
       "storage_page": "/data/asr/local-asr-pipeline-notes.md",
       "status": "indexed",
       "enabled": true
+    },
+    {
+      "id": "file-66002d2b-2e9f-4c12-ac69-8fb099254a7f",
+      "file_name": "Ch8 The Growth of Firm NOTE (CHECKED).docx",
+      "dataset_id": "dataset-test-23e1a8c9",
+      "file_size": 150256,
+      "created_at": "2026-05-02T10:23:12.277Z",
+      "updated_time": "2026-05-02T10:23:30.848Z",
+      "uploaded_time": "2026-05-02T10:23:12.277Z",
+      "deleted": "false",
+      "deleted_at": "",
+      "upload_source": "file",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "ext": ".docx",
+      "storage_page": "uploads/dataset-test-23e1a8c9/file-66002d2b-2e9f-4c12-ac69-8fb099254a7f-Ch8-The-Growth-of-Firm-NOTE-CHECKED-.docx",
+      "status": "ready",
+      "enabled": true
+    },
+    {
+      "id": "file-a89bdce4-2af3-454e-b514-b513863a4214",
+      "file_name": "Ch20 Monetary Policy and QTM NOTE (CHECKED).docx",
+      "dataset_id": "dataset-test-23e1a8c9",
+      "file_size": 202869,
+      "created_at": "2026-05-02T10:23:12.277Z",
+      "updated_time": "2026-05-02T10:23:52.471Z",
+      "uploaded_time": "2026-05-02T10:23:12.277Z",
+      "deleted": "false",
+      "deleted_at": "",
+      "upload_source": "file",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "ext": ".docx",
+      "storage_page": "uploads/dataset-test-23e1a8c9/file-a89bdce4-2af3-454e-b514-b513863a4214-Ch20-Monetary-Policy-and-QTM-NOTE-CHECKED-.docx",
+      "status": "ready",
+      "enabled": true
+    },
+    {
+      "id": "file-3c610046-b6ab-4fac-b075-46f5c9b77b6d",
+      "file_name": "Ch4 Market Intervention NOTE(CHECKED).docx",
+      "dataset_id": "dataset-test-23e1a8c9",
+      "file_size": 272751,
+      "created_at": "2026-05-02T10:23:12.277Z",
+      "updated_time": "2026-05-02T10:24:21.918Z",
+      "uploaded_time": "2026-05-02T10:23:12.277Z",
+      "deleted": "false",
+      "deleted_at": "",
+      "upload_source": "file",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "ext": ".docx",
+      "storage_page": "uploads/dataset-test-23e1a8c9/file-3c610046-b6ab-4fac-b075-46f5c9b77b6d-Ch4-Market-Intervention-NOTE-CHECKED-.docx",
+      "status": "ready",
+      "enabled": true
     }
   ]
 }
