@@ -1,8 +1,8 @@
-import fs from "node:fs";
 import path from "node:path";
 import {createHash, randomUUID} from "node:crypto";
 import type {DatasetDocument, DocumentChunk} from "@/app/datasets/data";
 import {dataPath, getChunks, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
+import {extractFileToText} from "@/app/datasets/extract-file-to-text";
 import {getElasticsearchClient} from "@/app/lib/elasticsearch";
 
 type DatasetTask = {
@@ -97,67 +97,13 @@ const appendEmbeddings = (nextEmbeddings: EmbeddingRecord[]) => {
   });
 };
 
-const normalizeText = (text: string) => text.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-
-const extractTextFromFile = (filePath: string) => {
-  const extension = path.extname(filePath).toLowerCase();
-  const buffer = fs.readFileSync(filePath);
-
-  // TODO : add support for more file types
-
-  // Excel files
-  if ([".xlsx", ".xls"].includes(extension)) {
-    // ExcelExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // PDF files
-  if ([".pdf"].includes(extension)) {
-    // PdfExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // Markdown files
-  if ([".md", ".markdown", ".mdx"].includes(extension)) {
-    // MarkdownExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // html files
-  if ([".html", ".htm"].includes(extension)) {
-    // HtmlExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // Word files
-  if ([".docx"].includes(extension)) {
-    // WordExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // PowerPoint files
-  if ([".pptx"].includes(extension)) {
-    // PowerPointExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // Images
-  if ([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".jp2", ".tiff"].includes(extension)) {
-    // ImageExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  if ([".csv"].includes(extension)) {
-    // CsvExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // Text files
-  if ([".txt", ".rtx", ".rtf", ".html", ".htm", ".csv"].includes(extension)) {
-    // TextExtractor
-    return normalizeText(buffer.toString("utf8"));
-  }
-  // Other files
-  const printableText = buffer
-    .toString("latin1")
-    .replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, " ")
+const normalizeText = (text: string) =>
+  text
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-
-  return normalizeText(printableText || `Uploaded file ${path.basename(filePath)} could not be text-decoded.`);
-};
 
 const splitTextIntoChunks = (text: string) => {
   const words = text.split(/\s+/).filter(Boolean);
@@ -250,7 +196,8 @@ const processTask = async (taskId: string) => {
 
       updateDocument(document.id, {status: "processing"});
 
-      const text = extractTextFromFile(dataPath(document.storage_page));
+      const raw = await extractFileToText(dataPath(document.storage_page));
+      const text = normalizeText(raw) || `Uploaded file ${path.basename(document.storage_page)} had no extractable text.`;
       const chunkTexts = splitTextIntoChunks(text);
       const createdAt = now();
       const nextChunks: DocumentChunk[] = [];
