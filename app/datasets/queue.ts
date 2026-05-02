@@ -103,10 +103,53 @@ const extractTextFromFile = (filePath: string) => {
   const extension = path.extname(filePath).toLowerCase();
   const buffer = fs.readFileSync(filePath);
 
-  if ([".txt", ".rtx", ".rtf", ".html", ".htm", ".csv"].includes(extension)) {
+  // TODO : add support for more file types
+
+  // Excel files
+  if ([".xlsx", ".xls"].includes(extension)) {
+    // ExcelExtractor
     return normalizeText(buffer.toString("utf8"));
   }
-
+  // PDF files
+  if ([".pdf"].includes(extension)) {
+    // PdfExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // Markdown files
+  if ([".md", ".markdown", ".mdx"].includes(extension)) {
+    // MarkdownExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // html files
+  if ([".html", ".htm"].includes(extension)) {
+    // HtmlExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // Word files
+  if ([".docx"].includes(extension)) {
+    // WordExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // PowerPoint files
+  if ([".pptx"].includes(extension)) {
+    // PowerPointExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // Images
+  if ([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".jp2", ".tiff"].includes(extension)) {
+    // ImageExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  if ([".csv"].includes(extension)) {
+    // CsvExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // Text files
+  if ([".txt", ".rtx", ".rtf", ".html", ".htm", ".csv"].includes(extension)) {
+    // TextExtractor
+    return normalizeText(buffer.toString("utf8"));
+  }
+  // Other files
   const printableText = buffer
     .toString("latin1")
     .replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, " ")
