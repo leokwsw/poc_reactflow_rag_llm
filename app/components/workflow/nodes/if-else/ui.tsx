@@ -3,6 +3,7 @@
 import { Handle, Position, type NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
 type IfElseCase = {
   id: string;
@@ -10,10 +11,8 @@ type IfElseCase = {
   conditions: string[];
 };
 
-type IfElseNodeData = {
-  label?: string;
+type IfElseNodeData = WorkflowNodeDataBase & {
   cases?: IfElseCase[];
-  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {

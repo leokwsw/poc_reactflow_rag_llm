@@ -4,12 +4,11 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type LlmNodeData = {
-  label?: string;
+type LlmNodeData = WorkflowNodeDataBase & {
   model?: string;
   tools?: string[];
-  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function LlmNode({ data }: NodeProps<LlmNodeData>) {

@@ -4,9 +4,9 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type DocumentExtractorNodeData = {
-  label?: string;
+type DocumentExtractorNodeData = WorkflowNodeDataBase & {
   variable_selector?: string[];
   sourceSelector?: string;
   is_array_file?: boolean;

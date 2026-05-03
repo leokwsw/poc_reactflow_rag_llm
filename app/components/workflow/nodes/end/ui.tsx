@@ -4,12 +4,11 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import ReadonlyTemplateWithVariables from "@/app/components/workflow/nodes/_base/readonly-template-with-variables";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type EndNodeData = {
-  label?: string;
+type EndNodeData = WorkflowNodeDataBase & {
   outputs?: string[];
   answer?: string;
-  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function EndNode({ data }: NodeProps<EndNodeData>) {

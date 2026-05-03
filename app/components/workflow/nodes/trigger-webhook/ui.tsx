@@ -4,9 +4,9 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type TriggerWebhookNodeData = {
-  label?: string;
+type TriggerWebhookNodeData = WorkflowNodeDataBase & {
   webhook_url?: string;
   method?: string;
   content_type?: string;

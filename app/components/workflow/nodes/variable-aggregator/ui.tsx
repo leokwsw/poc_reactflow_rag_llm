@@ -4,13 +4,13 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
 type VariableAggregatorItem = {
   expression: string;
 };
 
-type VariableAggregatorNodeData = {
-  label?: string;
+type VariableAggregatorNodeData = WorkflowNodeDataBase & {
   output_type?: string;
   variables?: Array<VariableAggregatorItem | string[]>;
   advanced_settings?: {

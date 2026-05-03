@@ -4,14 +4,14 @@ import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
 type VariableAssignerItem = {
   name: string;
   expression: string;
 };
 
-type VariableAssignerNodeData = {
-  label?: string;
+type VariableAssignerNodeData = WorkflowNodeDataBase & {
   variables?: VariableAssignerItem[];
 };
 

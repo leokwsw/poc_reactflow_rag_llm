@@ -2,6 +2,7 @@
 
 import {Handle, Position} from "reactflow";
 import type {ReactNode} from "react";
+import type {WorkflowNodeRunStatus} from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
 type NodeTone = "zinc" | "indigo" | "emerald" | "amber";
 
@@ -12,7 +13,7 @@ type BaseNodeProps = {
   hasTarget?: boolean;
   hasSource?: boolean;
   minWidthClassName?: string;
-  runStatus?: "idle" | "running" | "completed" | "error";
+  runStatus?: WorkflowNodeRunStatus;
 };
 
 const toneClassMap: Record<NodeTone, {

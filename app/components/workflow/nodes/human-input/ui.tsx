@@ -5,9 +5,9 @@ import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 import { Handle, Position } from "reactflow";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type HumanInputNodeData = {
-  label?: string;
+type HumanInputNodeData = WorkflowNodeDataBase & {
   variableName?: string;
   required_variables?: string[];
   selectedBranch?: string;

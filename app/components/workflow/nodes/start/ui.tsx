@@ -2,10 +2,10 @@
 
 import type { NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
+import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
-type StartNodeData = {
+type StartNodeData = WorkflowNodeDataBase & {
   label: string;
-  runStatus?: "idle" | "running" | "completed" | "error";
 };
 
 export default function StartNode({ data }: NodeProps<StartNodeData>) {
