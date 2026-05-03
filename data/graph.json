@@ -125,27 +125,32 @@
           "y": 159.01562099871956
         },
         "dragging": false,
-        "selected": true
+        "selected": false
       },
       {
         "id": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
         "type": "custom",
         "position": {
           "x": 422,
-          "y": 0
+          "y": -1.2586882265881059
         },
         "deletable": true,
         "data": {
           "type": "knowledgeRetrieval",
           "label": "Knowledge Retrieval",
-          "datasets": []
+          "datasets": [
+            {
+              "id": "dataset-econ-6ca08282",
+              "name": "Econ"
+            }
+          ]
         },
         "width": 240,
-        "height": 156,
-        "selected": false,
+        "height": 120,
+        "selected": true,
         "positionAbsolute": {
           "x": 422,
-          "y": 0
+          "y": -1.2586882265881059
         },
         "dragging": false
       }
@@ -209,9 +214,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": 65.08333333333326,
-      "y": 427.34406482698205,
-      "zoom": 0.427617170389838
+      "x": -62.76737211263355,
+      "y": 353.4591491758266,
+      "zoom": 0.7944779166725594
     }
   }
 }

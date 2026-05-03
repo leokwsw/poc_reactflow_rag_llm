@@ -63,8 +63,8 @@ function IconTrash({className}: {className?: string}) {
   );
 }
 
-const selectDarkClass =
-  "w-full rounded-lg border border-zinc-600 bg-zinc-900 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/40";
+const selectLightClass =
+  "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
 
 export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanelProps) {
   const data = (node.data ?? {}) as KnowledgeRetrievalNodeData;
@@ -160,29 +160,15 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{loadError}</p>
       ) : null}
 
-      <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-100 shadow-inner">
+      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
         <div ref={pickerWrapRef} className="relative">
-          <div className="flex items-center justify-between gap-2 border-b border-zinc-700 pb-2.5">
-            <div className="flex min-w-0 items-center gap-1 text-sm font-semibold tracking-wide text-zinc-100">
+          <div className="flex items-center justify-between gap-2 border-b border-gray-200 pb-2.5">
+            <div className="flex min-w-0 items-center gap-1 text-sm font-semibold tracking-wide text-gray-900">
               <span>知識庫</span>
-              <span className="text-red-500" title="必填">
-                *
-              </span>
             </div>
-            <div className="flex shrink-0 items-center gap-2 text-xs text-zinc-400">
+            <div className="flex shrink-0 items-center gap-2 text-xs text-gray-500">
               <button
-                className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition hover:bg-zinc-800 hover:text-zinc-200"
-                title="即將推出"
-                type="button"
-              >
-                <IconSliders className="h-4 w-4" />
-                <span>檢索設置</span>
-              </button>
-              <span className="text-zinc-600 select-none" aria-hidden>
-                |
-              </span>
-              <button
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-300 transition hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={selectOptions.length === 0}
                 title="新增知識庫"
                 type="button"
@@ -198,18 +184,18 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
 
           {pickerOpen ? (
             <div
-              className="absolute right-0 top-full z-20 mt-1 max-h-56 w-64 overflow-y-auto rounded-lg border border-zinc-600 bg-zinc-800 py-1 shadow-xl"
+              className="absolute right-0 top-full z-20 mt-1 max-h-56 w-64 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
               onMouseDown={(e) => e.stopPropagation()}
             >
               {availableToAdd.length === 0 ? (
-                <div className="px-3 py-2.5 text-center text-xs text-zinc-500">
+                <div className="px-3 py-2.5 text-center text-xs text-gray-500">
                   {selectOptions.length === 0 ? "尚無資料集，請先到 Datasets 建立。" : "已加入全部資料集。"}
                 </div>
               ) : (
                 availableToAdd.map((d) => (
                   <button
                     key={d.id}
-                    className="block w-full truncate px-3 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-700/80"
+                    className="block w-full truncate px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50"
                     type="button"
                     onClick={() => addDataset(d.id, d.title)}
                   >
@@ -223,17 +209,17 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
 
         <div className="mt-3 space-y-2">
           {datasets.length === 0 ? (
-            <div className="flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-zinc-600 bg-zinc-800/60 px-4 text-center text-xs leading-relaxed text-zinc-500">
+            <div className="flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 text-center text-xs leading-relaxed text-gray-500">
               點選「+」按鈕新增知識庫
             </div>
           ) : (
             datasets.map((dataset, index) => (
               <div
                 key={`${dataset.id || "new"}-${index}`}
-                className="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800/90 px-3 py-2.5"
+                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5"
               >
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100/15 text-base"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-base"
                   aria-hidden
                 >
                   🤖
@@ -242,7 +228,7 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
                   {editingIndex === index ? (
                     <select
                       autoFocus
-                      className={selectDarkClass}
+                      className={selectLightClass}
                       value={dataset.id}
                       onBlur={() => setEditingIndex(null)}
                       onChange={(event) => {
@@ -259,25 +245,14 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
                       ))}
                     </select>
                   ) : (
-                    <p className="truncate text-sm font-medium text-zinc-100" title={dataset.name || dataset.id}>
+                    <p className="truncate text-sm font-medium text-gray-700" title={dataset.name || dataset.id}>
                       {dataset.name || (dataset.id ? dataset.id : "未選擇")}
                     </p>
                   )}
                 </div>
-                <span className="inline-flex max-w-[7.5rem] shrink-0 truncate rounded-md border border-zinc-600 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
-                  高品質 · 語意
-                </span>
                 <div className="flex shrink-0 items-center gap-0.5">
                   <button
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-100"
-                    title="變更資料集"
-                    type="button"
-                    onClick={() => setEditingIndex((cur) => (cur === index ? null : index))}
-                  >
-                    <IconPencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition hover:bg-red-950/50 hover:text-red-400"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition hover:bg-red-50 hover:text-red-500"
                     title="移除"
                     type="button"
                     onClick={() => removeAt(index)}

@@ -427,11 +427,6 @@ export default function WorkflowPage() {
               <h2 className="text-base font-semibold text-zinc-900">Node Settings</h2>
               <p className="text-xs text-zinc-500">Configure the selected workflow block.</p>
             </div>
-            {selectedNode && (
-              <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm">
-                {selectedNode.id}
-              </div>
-            )}
           </div>
 
           {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
