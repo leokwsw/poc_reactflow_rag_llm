@@ -24,6 +24,9 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
   const resolvedQuery =
     interpolateTemplate(queryTemplate, context).trim() || context.input.query;
 
+  console.log("query", resolvedQuery)
+  console.log("query dataset", datasets.map((dataset) => dataset.id))
+
   const result = datasets.map((dataset) => ({
     dataset_id: dataset.id,
     dataset_name: dataset.name,

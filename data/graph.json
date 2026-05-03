@@ -23,7 +23,7 @@
           "type": "start",
           "title": "開始",
           "label": "開始",
-          "runStatus": "idle"
+          "runStatus": "completed"
         },
         "width": 242,
         "height": 73,
@@ -54,11 +54,12 @@
             },
             {
               "role": "user",
-              "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
+              "content": "{{#f05ce68c-8dbe-4bdc-8626-f0ae83866cfe.output#}}\n\n{{#sys.files#}}"
             }
           ],
           "context_variable": "",
-          "vision_enable": false
+          "vision_enable": false,
+          "runStatus": "completed"
         },
         "width": 240,
         "height": 120,
@@ -66,7 +67,8 @@
           "x": 842,
           "y": 0
         },
-        "dragging": false
+        "dragging": false,
+        "selected": false
       },
       {
         "id": "answer",
@@ -82,7 +84,8 @@
           "outputs": [
             "llm.text",
             "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
-          ]
+          ],
+          "runStatus": "completed"
         },
         "width": 260,
         "height": 220,
@@ -112,11 +115,12 @@
             },
             {
               "role": "user",
-              "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
+              "content": "{{#f05ce68c-8dbe-4bdc-8626-f0ae83866cfe.output#}}\n\n{{#sys.files#}}"
             }
           ],
           "context_variable": "",
-          "vision_enable": false
+          "vision_enable": false,
+          "runStatus": "completed"
         },
         "width": 240,
         "height": 120,
@@ -125,14 +129,14 @@
           "y": 159.01562099871956
         },
         "dragging": false,
-        "selected": false
+        "selected": true
       },
       {
         "id": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
         "type": "custom",
         "position": {
           "x": 422,
-          "y": -1.2586882265881059
+          "y": -1.258688226588106
         },
         "deletable": true,
         "data": {
@@ -143,14 +147,15 @@
               "id": "dataset-econ-6ca08282",
               "name": "Econ"
             }
-          ]
+          ],
+          "runStatus": "completed"
         },
         "width": 240,
         "height": 120,
-        "selected": true,
+        "selected": false,
         "positionAbsolute": {
           "x": 422,
-          "y": -1.2586882265881059
+          "y": -1.258688226588106
         },
         "dragging": false
       }
@@ -214,9 +219,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": -62.76737211263355,
-      "y": 353.4591491758266,
-      "zoom": 0.7944779166725594
+      "x": -77.19940660479642,
+      "y": 300.4324040482277,
+      "zoom": 0.9317914670665104
     }
   }
 }
