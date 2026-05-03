@@ -51,9 +51,9 @@ export default function DatasetsPage() {
                       <h2 className="truncate text-sm font-semibold text-zinc-950">{dataset.title}</h2>
                       <p className="mt-1 max-w-2xl text-sm text-zinc-600">{dataset.description}</p>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-zinc-500">
-                        <span>{dataset.embedding_config.model}</span>
-                        <span>Top {dataset.reranking_config.top_k}</span>
-                        <span>Score {dataset.reranking_config.score}</span>
+                        <div>Embedding Model {dataset.embedding_config.model}</div>
+                        <div>Top {dataset.reranking_config.top_k}</div>
+                        <div>Score {dataset.reranking_config.score}</div>
                       </div>
                     </div>
                     <div className="text-sm text-zinc-700">{dataset.stats.documentCount}</div>

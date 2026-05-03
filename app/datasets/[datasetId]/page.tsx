@@ -76,8 +76,6 @@ export default async function DatasetDetailsPage({params}: DatasetDetailsPagePro
                   >
                     <div className="min-w-0">
                       <h2 className="truncate text-sm font-semibold text-zinc-950">{document.file_name}</h2>
-                      <p className="mt-1 text-sm text-zinc-600">{document.mime_type || "Unknown MIME type"}</p>
-                      <p className="mt-1 text-xs text-zinc-500">{document.storage_page}</p>
                     </div>
                     <div className="text-sm text-zinc-700">{document.chunkCount}</div>
                     <div className="text-sm text-zinc-600">{formatFileSize(document.file_size)}</div>

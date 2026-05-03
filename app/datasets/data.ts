@@ -23,7 +23,7 @@ export type Dataset = {
     top_k: number;
     score: number;
   };
-  chunk_config?: ChunkConfig;
+  chunk_config: ChunkConfig;
 };
 
 export type DatasetDocument = {
