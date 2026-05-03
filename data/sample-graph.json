@@ -1,0 +1,279 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "data": {
+                    "selected": false,
+                    "title": "\u958b\u59cb",
+                    "type": "start",
+                    "variables": []
+                },
+                "height": 73,
+                "id": "1774371813752",
+                "position": {
+                    "x": 0,
+                    "y": 16
+                },
+                "positionAbsolute": {
+                    "x": 0,
+                    "y": 16
+                },
+                "selected": false,
+                "sourcePosition": "right",
+                "targetPosition": "left",
+                "type": "custom",
+                "width": 242
+            },
+            {
+                "data": {
+                    "context": {
+                        "enabled": false,
+                        "variable_selector": []
+                    },
+                    "memory": {
+                        "query_prompt_template": "{{#sys.query#}}\n\n{{#sys.files#}}",
+                        "role_prefix": {
+                            "assistant": "",
+                            "user": ""
+                        },
+                        "window": {
+                            "enabled": false,
+                            "size": 10
+                        }
+                    },
+                    "model": {
+                        "completion_params": {
+                            "temperature": 0.7
+                        },
+                        "mode": "chat",
+                        "name": "deepseek-chat",
+                        "provider": "langgenius\/deepseek\/deepseek"
+                    },
+                    "prompt_template": [
+                        {
+                            "id": "59c7ee16-4e69-4454-85dd-7ebd6884d5be",
+                            "role": "system",
+                            "text": "{{#sys.query#}}"
+                        }
+                    ],
+                    "selected": false,
+                    "title": "LLM",
+                    "type": "llm",
+                    "vision": {
+                        "enabled": false
+                    }
+                },
+                "height": 88,
+                "id": "llm",
+                "position": {
+                    "x": 704,
+                    "y": 0
+                },
+                "positionAbsolute": {
+                    "x": 704,
+                    "y": 0
+                },
+                "selected": false,
+                "sourcePosition": "right",
+                "targetPosition": "left",
+                "type": "custom",
+                "width": 242
+            },
+            {
+                "data": {
+                    "answer": "DeepSeek : \n{{#llm.text#}}\nQwen3 : \n{{#1774372170198.text#}}",
+                    "selected": false,
+                    "title": "\u76f4\u63a5\u56de\u8986",
+                    "type": "answer",
+                    "variables": []
+                },
+                "height": 122,
+                "id": "answer",
+                "position": {
+                    "x": 1066,
+                    "y": 4
+                },
+                "positionAbsolute": {
+                    "x": 1066,
+                    "y": 4
+                },
+                "selected": false,
+                "sourcePosition": "right",
+                "targetPosition": "left",
+                "type": "custom",
+                "width": 242
+            },
+            {
+                "data": {
+                    "context": {
+                        "enabled": false,
+                        "variable_selector": []
+                    },
+                    "model": {
+                        "completion_params": {
+                            "temperature": 0.7
+                        },
+                        "mode": "chat",
+                        "name": "qwen\/qwen3-14b",
+                        "provider": "langgenius\/openai_api_compatible\/openai_api_compatible"
+                    },
+                    "prompt_template": [
+                        {
+                            "id": "e3190439-d3dc-44f3-b1f3-448b36992d7e",
+                            "role": "system",
+                            "text": ""
+                        },
+                        {
+                            "role": "user",
+                            "text": "{{#sys.query#}}\n\n{{#sys.files#}}\n",
+                            "id": "dd8be2f5-d59a-4c50-8df0-d4b1fdd6967e"
+                        },
+                        {
+                            "role": "assistant",
+                            "text": "",
+                            "id": "4fcb8f1b-a60a-4e5a-a29a-f148e771b89a"
+                        }
+                    ],
+                    "selected": false,
+                    "title": "LLM 2",
+                    "type": "llm",
+                    "vision": {
+                        "enabled": false
+                    }
+                },
+                "height": 88,
+                "id": "1774372170198",
+                "position": {
+                    "x": 704,
+                    "y": 168
+                },
+                "positionAbsolute": {
+                    "x": 704,
+                    "y": 168
+                },
+                "selected": false,
+                "sourcePosition": "right",
+                "targetPosition": "left",
+                "type": "custom",
+                "width": 242
+            },
+            {
+                "id": "1777794886942",
+                "type": "custom",
+                "data": {
+                    "query_variable_selector": [
+                        "1774371813752",
+                        "sys.query"
+                    ],
+                    "query_attachment_selector": [],
+                    "dataset_ids": [
+                        "3ccc03a2-8b8c-4bdc-9972-a425d046f969"
+                    ],
+                    "retrieval_mode": "multiple",
+                    "multiple_retrieval_config": {
+                        "top_k": 4,
+                        "reranking_mode": "reranking_model",
+                        "reranking_model": {
+                            "provider": "langgenius\/xinference\/xinference",
+                            "model": "bge-reranker-v2-m3"
+                        },
+                        "reranking_enable": true
+                    },
+                    "type": "knowledge-retrieval",
+                    "title": "\u77e5\u8b58\u6aa2\u7d22",
+                    "selected": true
+                },
+                "position": {
+                    "x": 342,
+                    "y": 27
+                },
+                "targetPosition": "left",
+                "sourcePosition": "right",
+                "positionAbsolute": {
+                    "x": 342,
+                    "y": 27
+                },
+                "width": 242,
+                "height": 90,
+                "selected": true
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "sourceType": "llm",
+                    "targetType": "answer"
+                },
+                "id": "llm-answer",
+                "source": "llm",
+                "sourceHandle": "source",
+                "target": "answer",
+                "targetHandle": "target",
+                "type": "custom",
+                "selected": false
+            },
+            {
+                "data": {
+                    "isInLoop": false,
+                    "sourceType": "llm",
+                    "targetType": "answer"
+                },
+                "id": "1774372170198-source-answer-target",
+                "source": "1774372170198",
+                "sourceHandle": "source",
+                "target": "answer",
+                "targetHandle": "target",
+                "type": "custom",
+                "zIndex": 0,
+                "selected": false
+            },
+            {
+                "id": "1774371813752-source-1777794886942-target",
+                "type": "custom",
+                "source": "1774371813752",
+                "target": "1777794886942",
+                "sourceHandle": "source",
+                "targetHandle": "target",
+                "data": {
+                    "sourceType": "start",
+                    "targetType": "knowledge-retrieval",
+                    "isInLoop": false
+                },
+                "zIndex": 0
+            },
+            {
+                "id": "1777794886942-source-llm-target",
+                "type": "custom",
+                "source": "1777794886942",
+                "target": "llm",
+                "sourceHandle": "source",
+                "targetHandle": "target",
+                "data": {
+                    "sourceType": "knowledge-retrieval",
+                    "targetType": "llm",
+                    "isInLoop": false
+                },
+                "zIndex": 0
+            },
+            {
+                "id": "1777794886942-source-1774372170198-target",
+                "type": "custom",
+                "source": "1777794886942",
+                "target": "1774372170198",
+                "sourceHandle": "source",
+                "targetHandle": "target",
+                "data": {
+                    "sourceType": "knowledge-retrieval",
+                    "targetType": "llm",
+                    "isInLoop": false
+                },
+                "zIndex": 0
+            }
+        ],
+        "viewport": {
+            "x": 138,
+            "y": 186,
+            "zoom": 0.7
+        }
+    }
+}
