@@ -193,10 +193,10 @@ export default function WorkflowPage() {
       };
 
       while (true) {
-        const { value, done } = await reader.read();
+        const {value, done} = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, {stream: true});
 
         while (buffer.includes("\n\n")) {
           const boundaryIndex = buffer.indexOf("\n\n");
@@ -257,8 +257,10 @@ export default function WorkflowPage() {
           runNodeState={runNodeState}
         />
       </div>
-      <aside className="h-full min-h-0 w-[420px] shrink-0 overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
-        <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-zinc-200/80 bg-white/92 px-4 pb-4 pt-1 backdrop-blur">
+      <aside
+        className="h-full min-h-0 w-[420px] shrink-0 overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
+        <div
+          className="sticky top-0 z-10 -mx-4 mb-4 border-b border-zinc-200/80 bg-white/92 px-4 pb-4 pt-1 backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Workflow Studio</p>
@@ -266,7 +268,8 @@ export default function WorkflowPage() {
           </div>
         </div>
 
-        <section className="mb-6 rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-white p-4 shadow-sm">
+        <section
+          className="mb-6 rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-zinc-900">Run Workflow</h2>
@@ -332,7 +335,7 @@ export default function WorkflowPage() {
               <div className="rounded-2xl border border-zinc-200 bg-white p-3">
                 <p className="mb-1 text-xs font-medium text-zinc-700">Final Output</p>
                 {runResult?.output ? (
-                  <Markdown content={runResult.output} />
+                  <Markdown content={runResult.output}/>
                 ) : (
                   <pre className="whitespace-pre-wrap break-words text-sm text-zinc-800">
                     {isRunning ? "Running..." : ""}
@@ -421,29 +424,31 @@ export default function WorkflowPage() {
           )}
         </section>
 
-        <section className="rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-zinc-900">Node Settings</h2>
-              <p className="text-xs text-zinc-500">Configure the selected workflow block.</p>
+        {!selectedNode && (
+          <section className="rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-zinc-900">Node Settings</h2>
+                <p className="text-xs text-zinc-500">Configure the selected workflow block.</p>
+              </div>
             </div>
-          </div>
 
-          {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
+            {!selectedNode && <p className="text-sm text-zinc-500">Select a node to configure.</p>}
 
-          {selectedNode && SelectedNodePanel && (
-            <SelectedNodePanel
-              node={selectedNode}
-              patchNodeData={patchSelectedNodeData}
-              allNodes={data.nodes}
-              allEdges={data.edges}
-            />
-          )}
+            {selectedNode && SelectedNodePanel && (
+              <SelectedNodePanel
+                node={selectedNode}
+                patchNodeData={patchSelectedNodeData}
+                allNodes={data.nodes}
+                allEdges={data.edges}
+              />
+            )}
 
-          {selectedNode && !SelectedNodePanel && (
-            <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
-          )}
-        </section>
+            {selectedNode && !SelectedNodePanel && (
+              <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
+            )}
+          </section>
+        )}
 
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between gap-3">

@@ -38,7 +38,7 @@
         "id": "llm",
         "type": "custom",
         "position": {
-          "x": 842,
+          "x": 1262,
           "y": 0
         },
         "data": {
@@ -74,7 +74,7 @@
         "id": "answer",
         "type": "custom",
         "position": {
-          "x": 1262,
+          "x": 1682,
           "y": 0
         },
         "data": {
@@ -99,8 +99,8 @@
         "id": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "type": "custom",
         "position": {
-          "x": 842,
-          "y": 159.01562099871956
+          "x": 1262,
+          "y": 152
         },
         "data": {
           "type": "llm",
@@ -129,14 +129,14 @@
           "y": 159.01562099871956
         },
         "dragging": false,
-        "selected": true
+        "selected": false
       },
       {
         "id": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
         "type": "custom",
         "position": {
           "x": 422,
-          "y": -1.258688226588106
+          "y": 0
         },
         "deletable": true,
         "data": {
@@ -156,6 +156,41 @@
         "positionAbsolute": {
           "x": 422,
           "y": -1.258688226588106
+        },
+        "dragging": false
+      },
+      {
+        "id": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
+        "type": "custom",
+        "position": {
+          "x": 842,
+          "y": -24
+        },
+        "deletable": true,
+        "data": {
+          "type": "questionClassifier",
+          "label": "Question Classifier",
+          "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+          "apiKey": "octopusPass",
+          "model": "gpt-oss-120b-MXFP4-Q8",
+          "instruction": "Classify the query into exactly one class and return the class id only.",
+          "classes": [
+            {
+              "id": "sales",
+              "name": "Sales"
+            },
+            {
+              "id": "support",
+              "name": "Support"
+            }
+          ]
+        },
+        "width": 240,
+        "height": 236,
+        "selected": true,
+        "positionAbsolute": {
+          "x": 842,
+          "y": -24
         },
         "dragging": false
       }
@@ -197,31 +232,42 @@
       {
         "source": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
         "sourceHandle": null,
+        "target": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
+        "targetHandle": null,
+        "style": {
+          "opacity": 1,
+          "strokeWidth": 2
+        },
+        "id": "reactflow__edge-f05ce68c-8dbe-4bdc-8626-f0ae83866cfe-fde9c8ed-eae3-4b26-b997-f22f93ae58aa"
+      },
+      {
+        "source": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
+        "sourceHandle": "sales",
         "target": "llm",
         "targetHandle": null,
         "style": {
           "opacity": 1,
           "strokeWidth": 2
         },
-        "id": "reactflow__edge-f05ce68c-8dbe-4bdc-8626-f0ae83866cfe-llm"
+        "id": "reactflow__edge-fde9c8ed-eae3-4b26-b997-f22f93ae58aasales-llm"
       },
       {
-        "source": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
-        "sourceHandle": null,
+        "source": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
+        "sourceHandle": "support",
         "target": "45bbb912-6003-4bac-a45e-e8bffac4efd1",
         "targetHandle": null,
         "style": {
           "opacity": 1,
           "strokeWidth": 2
         },
-        "id": "reactflow__edge-f05ce68c-8dbe-4bdc-8626-f0ae83866cfe-45bbb912-6003-4bac-a45e-e8bffac4efd1"
+        "id": "reactflow__edge-fde9c8ed-eae3-4b26-b997-f22f93ae58aasupport-45bbb912-6003-4bac-a45e-e8bffac4efd1"
       }
     ],
     "readOnly": false,
     "viewport": {
-      "x": -77.19940660479642,
-      "y": 300.4324040482277,
-      "zoom": 0.9317914670665104
+      "x": 40.75,
+      "y": 418.5,
+      "zoom": 0.25
     }
   }
 }
