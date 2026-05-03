@@ -7,6 +7,7 @@ import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 
 type KnowledgeRetrievalNodeData = {
   label?: string;
+  runStatus?: "idle" | "running" | "completed" | "error";
   datasets?: Array<{
     id: string;
     name: string;
@@ -17,7 +18,13 @@ export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetr
   const datasets = data.datasets ?? [];
 
   return (
-    <BaseNode title={data.label || "Knowledge Retrieval"} tone="indigo" hasTarget hasSource>
+    <BaseNode
+      title={data.label || "Knowledge Retrieval"}
+      tone="indigo"
+      hasTarget
+      hasSource
+      runStatus={data.runStatus}
+    >
       <NodeSection label="Datasets">
         {datasets.length === 0 ? (
           <NodeToken muted>No datasets selected</NodeToken>
