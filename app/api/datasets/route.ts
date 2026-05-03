@@ -10,6 +10,13 @@ import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
 export const runtime = "nodejs";
 
+/** List datasets for workflow UI (e.g. Knowledge Retrieval picker). */
+export async function GET() {
+  return NextResponse.json({
+    datasets: getDatasets().map((d) => ({id: d.id, title: d.title})),
+  });
+}
+
 const safeFileName = (fileName: string) => fileName.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "upload";
 
 const toSlug = (value: string) =>

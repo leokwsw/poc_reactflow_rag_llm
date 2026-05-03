@@ -138,16 +138,7 @@
         "data": {
           "type": "knowledgeRetrieval",
           "label": "Knowledge Retrieval",
-          "datasets": [
-            {
-              "id": "kb-1",
-              "name": "Product Docs"
-            },
-            {
-              "id": "kb-2",
-              "name": "Support FAQ"
-            }
-          ]
+          "datasets": []
         },
         "width": 240,
         "height": 156,

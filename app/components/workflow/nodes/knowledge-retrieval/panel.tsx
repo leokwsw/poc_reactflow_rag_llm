@@ -1,7 +1,8 @@
 "use client";
 
-import { PanelButton, PanelCard, PanelField, PanelInlineActions, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
-import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import {useEffect, useMemo, useRef, useState} from "react";
+import {PanelField, PanelInput} from "@/app/components/workflow/nodes/_base/panel-form";
+import type {NodePanelProps} from "@/app/components/workflow/nodes/panel-types";
 
 type Dataset = {
   id: string;
@@ -13,47 +14,282 @@ type KnowledgeRetrievalNodeData = {
   datasets?: Dataset[];
 };
 
-export default function KnowledgeRetrievalPanel({ node, patchNodeData }: NodePanelProps) {
+type ApiDataset = {
+  id: string;
+  title: string;
+};
+
+function IconSliders({className}: {className?: string}) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 7h15M4.5 12h15M4.5 17h15M9 5v4m6-1v4M7 15v4m10-2v4"
+      />
+    </svg>
+  );
+}
+
+function IconPlus({className}: {className?: string}) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function IconPencil({className}: {className?: string}) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+      />
+    </svg>
+  );
+}
+
+function IconTrash({className}: {className?: string}) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+      />
+    </svg>
+  );
+}
+
+const selectDarkClass =
+  "w-full rounded-lg border border-zinc-600 bg-zinc-900 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/40";
+
+export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanelProps) {
   const data = (node.data ?? {}) as KnowledgeRetrievalNodeData;
-  const datasets = data.datasets ?? [];
+  const datasets = useMemo(
+    () => (Array.isArray(data.datasets) ? data.datasets : []),
+    [data.datasets],
+  );
+
+  const [apiDatasets, setApiDatasets] = useState<ApiDataset[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const pickerWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/datasets");
+        const payload = (await res.json().catch(() => ({}))) as {datasets?: ApiDataset[]; error?: string};
+        if (!res.ok) {
+          throw new Error(payload.error ?? `Failed to load datasets (${res.status})`);
+        }
+        if (!cancelled) {
+          setApiDatasets(Array.isArray(payload.datasets) ? payload.datasets : []);
+          setLoadError(null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setApiDatasets([]);
+          setLoadError(e instanceof Error ? e.message : "Could not load datasets.");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const el = pickerWrapRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [pickerOpen]);
+
+  const selectOptions = useMemo(() => {
+    const rows = Array.isArray(data.datasets) ? data.datasets : [];
+    const byId = new Map<string, ApiDataset>();
+    for (const d of apiDatasets) {
+      if (d.id) byId.set(d.id, d);
+    }
+    for (const row of rows) {
+      if (row.id && !byId.has(row.id)) {
+        byId.set(row.id, {id: row.id, title: row.name || `${row.id}（已不存在）`});
+      }
+    }
+    return Array.from(byId.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [apiDatasets, data.datasets]);
+
+  const selectedIds = useMemo(() => new Set(datasets.map((d) => d.id).filter(Boolean)), [datasets]);
+  const availableToAdd = useMemo(() => selectOptions.filter((d) => !selectedIds.has(d.id)), [selectOptions, selectedIds]);
+
+  const setDatasetAt = (index: number, id: string, name: string) => {
+    patchNodeData({
+      datasets: datasets.map((item, itemIndex) => (itemIndex === index ? {id, name} : item)),
+    });
+  };
+
+  const addDataset = (id: string, title: string) => {
+    patchNodeData({datasets: [...datasets, {id, name: title}]});
+    setPickerOpen(false);
+    setEditingIndex(null);
+  };
+
+  const removeAt = (index: number) => {
+    patchNodeData({datasets: datasets.filter((_, itemIndex) => itemIndex !== index)});
+    setEditingIndex((cur) => (cur === index ? null : cur != null && cur > index ? cur - 1 : cur));
+  };
 
   return (
     <div className="space-y-4">
       <PanelField label="Label">
-        <PanelInput value={data.label ?? "Knowledge Retrieval"} onChange={(event) => patchNodeData({ label: event.target.value })} />
+        <PanelInput value={data.label ?? "Knowledge Retrieval"} onChange={(event) => patchNodeData({label: event.target.value})} />
       </PanelField>
-      {datasets.map((dataset, index) => (
-        <PanelCard key={`${dataset.id}-${index}`}>
-          <PanelInlineActions>
-            <PanelButton
-              className="w-auto border-0 p-0"
-              danger
-              onClick={() => patchNodeData({ datasets: datasets.filter((_, itemIndex) => itemIndex !== index) })}
+
+      {loadError ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{loadError}</p>
+      ) : null}
+
+      <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-100 shadow-inner">
+        <div ref={pickerWrapRef} className="relative">
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-700 pb-2.5">
+            <div className="flex min-w-0 items-center gap-1 text-sm font-semibold tracking-wide text-zinc-100">
+              <span>知識庫</span>
+              <span className="text-red-500" title="必填">
+                *
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 text-xs text-zinc-400">
+              <button
+                className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 transition hover:bg-zinc-800 hover:text-zinc-200"
+                title="即將推出"
+                type="button"
+              >
+                <IconSliders className="h-4 w-4" />
+                <span>檢索設置</span>
+              </button>
+              <span className="text-zinc-600 select-none" aria-hidden>
+                |
+              </span>
+              <button
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-300 transition hover:bg-zinc-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={selectOptions.length === 0}
+                title="新增知識庫"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPickerOpen((o) => !o);
+                }}
+              >
+                <IconPlus className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {pickerOpen ? (
+            <div
+              className="absolute right-0 top-full z-20 mt-1 max-h-56 w-64 overflow-y-auto rounded-lg border border-zinc-600 bg-zinc-800 py-1 shadow-xl"
+              onMouseDown={(e) => e.stopPropagation()}
             >
-              Remove
-            </PanelButton>
-          </PanelInlineActions>
-          <PanelInput
-            placeholder="Dataset ID"
-            value={dataset.id}
-            onChange={(event) =>
-              patchNodeData({
-                datasets: datasets.map((item, itemIndex) => (itemIndex === index ? { ...item, id: event.target.value } : item)),
-              })
-            }
-          />
-          <PanelInput
-            placeholder="Dataset Name"
-            value={dataset.name}
-            onChange={(event) =>
-              patchNodeData({
-                datasets: datasets.map((item, itemIndex) => (itemIndex === index ? { ...item, name: event.target.value } : item)),
-              })
-            }
-          />
-        </PanelCard>
-      ))}
-      <PanelButton onClick={() => patchNodeData({ datasets: [...datasets, { id: "", name: "" }] })}>Add Dataset</PanelButton>
+              {availableToAdd.length === 0 ? (
+                <div className="px-3 py-2.5 text-center text-xs text-zinc-500">
+                  {selectOptions.length === 0 ? "尚無資料集，請先到 Datasets 建立。" : "已加入全部資料集。"}
+                </div>
+              ) : (
+                availableToAdd.map((d) => (
+                  <button
+                    key={d.id}
+                    className="block w-full truncate px-3 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-700/80"
+                    type="button"
+                    onClick={() => addDataset(d.id, d.title)}
+                  >
+                    {d.title}
+                  </button>
+                ))
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {datasets.length === 0 ? (
+            <div className="flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-zinc-600 bg-zinc-800/60 px-4 text-center text-xs leading-relaxed text-zinc-500">
+              點選「+」按鈕新增知識庫
+            </div>
+          ) : (
+            datasets.map((dataset, index) => (
+              <div
+                key={`${dataset.id || "new"}-${index}`}
+                className="flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800/90 px-3 py-2.5"
+              >
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100/15 text-base"
+                  aria-hidden
+                >
+                  🤖
+                </div>
+                <div className="min-w-0 flex-1">
+                  {editingIndex === index ? (
+                    <select
+                      autoFocus
+                      className={selectDarkClass}
+                      value={dataset.id}
+                      onBlur={() => setEditingIndex(null)}
+                      onChange={(event) => {
+                        const id = event.target.value;
+                        const picked = selectOptions.find((d) => d.id === id);
+                        setDatasetAt(index, id, picked?.title ?? "");
+                      }}
+                    >
+                      <option value="">選擇資料集…</option>
+                      {selectOptions.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="truncate text-sm font-medium text-zinc-100" title={dataset.name || dataset.id}>
+                      {dataset.name || (dataset.id ? dataset.id : "未選擇")}
+                    </p>
+                  )}
+                </div>
+                <span className="inline-flex max-w-[7.5rem] shrink-0 truncate rounded-md border border-zinc-600 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
+                  高品質 · 語意
+                </span>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <button
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-100"
+                    title="變更資料集"
+                    type="button"
+                    onClick={() => setEditingIndex((cur) => (cur === index ? null : index))}
+                  >
+                    <IconPencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition hover:bg-red-950/50 hover:text-red-400"
+                    title="移除"
+                    type="button"
+                    onClick={() => removeAt(index)}
+                  >
+                    <IconTrash className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

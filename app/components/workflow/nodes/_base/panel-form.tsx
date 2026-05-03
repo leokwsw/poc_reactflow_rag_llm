@@ -35,12 +35,18 @@ type PanelButtonProps = PropsWithChildren<{
   onClick?: () => void;
   danger?: boolean;
   className?: string;
+  disabled?: boolean;
 }>;
 
-export function PanelButton({ children, type = "button", onClick, danger = false, className }: PanelButtonProps) {
+export function PanelButton({children, type = "button", onClick, danger = false, className, disabled = false}: PanelButtonProps) {
   if (danger) {
     return (
-      <button className={`text-xs text-red-600 hover:text-red-700 ${className ?? ""}`.trim()} onClick={onClick} type={type}>
+      <button
+        className={`text-xs text-red-600 hover:text-red-700 ${className ?? ""}`.trim()}
+        disabled={disabled}
+        onClick={onClick}
+        type={type}
+      >
         {children}
       </button>
     );
@@ -48,7 +54,8 @@ export function PanelButton({ children, type = "button", onClick, danger = false
 
   return (
     <button
-      className={`w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 ${className ?? ""}`.trim()}
+      className={`w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 ${className ?? ""}`.trim()}
+      disabled={disabled}
       onClick={onClick}
       type={type}
     >

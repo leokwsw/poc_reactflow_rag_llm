@@ -158,10 +158,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "Knowledge Retrieval",
-      datasets: [
-        { id: "kb-1", name: "Product Docs" },
-        { id: "kb-2", name: "Support FAQ" },
-      ],
+      datasets: [],
     };
   } else {
     data = {...data, label: "Node", description: ""};
