@@ -12,7 +12,7 @@ export default function AppNavigation() {
   const pathname = usePathname();
 
   return (
-    <header className="flex h-14 shrink-0 items-center border-b border-zinc-200/80 bg-white/95 px-5 shadow-sm backdrop-blur">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center border-b border-zinc-200/80 bg-white/95 px-5 shadow-sm backdrop-blur">
       <div className="flex w-full items-center justify-between gap-4">
         <Link className="text-sm font-semibold text-zinc-950" href="/workflow">
           RAG Workflow

@@ -277,7 +277,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
   return (
     <main
       ref={wrapperRef}
-      className="relative h-screen w-full bg-zinc-50"
+      className="relative h-full min-h-0 w-full bg-zinc-50"
       onClick={closeContextMenu}
     >
       <div

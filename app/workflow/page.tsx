@@ -246,8 +246,8 @@ export default function WorkflowPage() {
   }, [liveTrace, runResult?.trace]);
 
   return (
-    <div className="flex h-full w-full bg-[#f5f7fb]">
-      <div className="min-w-0 flex-1">
+    <div className="flex h-full min-h-0 w-full bg-[#f5f7fb]">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         <Workflow
           initData={data}
           onNodeSelect={setSelectedNode}
@@ -257,7 +257,7 @@ export default function WorkflowPage() {
           runNodeState={runNodeState}
         />
       </div>
-      <aside className="w-[420px] overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
+      <aside className="h-full min-h-0 w-[420px] shrink-0 overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
         <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-zinc-200/80 bg-white/92 px-4 pb-4 pt-1 backdrop-blur">
           <div className="flex items-center justify-between">
             <div>

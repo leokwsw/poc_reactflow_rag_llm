@@ -14,9 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-screen flex-col">
+      <body className="flex h-full min-h-0 flex-col">
         <AppNavigation />
-        <main className="min-h-0 flex-1">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       </body>
     </html>
   );
