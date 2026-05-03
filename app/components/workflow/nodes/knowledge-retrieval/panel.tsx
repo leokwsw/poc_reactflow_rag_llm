@@ -3,6 +3,7 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {PanelField, PanelInput} from "@/app/components/workflow/nodes/_base/panel-form";
 import type {NodePanelProps} from "@/app/components/workflow/nodes/panel-types";
+import {getContextOptions} from "@/app/components/workflow/nodes/prompt-variable-options";
 
 type Dataset = {
   id: string;
@@ -11,6 +12,7 @@ type Dataset = {
 
 type KnowledgeRetrievalNodeData = {
   label?: string;
+  query?: string;
   datasets?: Dataset[];
 };
 
@@ -19,34 +21,10 @@ type ApiDataset = {
   title: string;
 };
 
-function IconSliders({className}: {className?: string}) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4.5 7h15M4.5 12h15M4.5 17h15M9 5v4m6-1v4M7 15v4m10-2v4"
-      />
-    </svg>
-  );
-}
-
 function IconPlus({className}: {className?: string}) {
   return (
     <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
       <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
-function IconPencil({className}: {className?: string}) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-      />
     </svg>
   );
 }
@@ -66,7 +44,20 @@ function IconTrash({className}: {className?: string}) {
 const selectLightClass =
   "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
 
-export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanelProps) {
+/** 從節點資料讀出單一變數運算式（僅支援 `{{#a.b#}}` 或純 `a.b`）。 */
+function parseQueryVariableExpression(template: string | undefined): string {
+  const t = (template ?? "").trim();
+  const wrapped = t.match(/^\{\{#\s*([^#}]+?)\s*#\}\}\s*$/);
+  if (wrapped) {
+    return wrapped[1].trim();
+  }
+  if (/^[\w.-]+$/.test(t) && !/\s/.test(t)) {
+    return t;
+  }
+  return "";
+}
+
+export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, allEdges}: NodePanelProps) {
   const data = (node.data ?? {}) as KnowledgeRetrievalNodeData;
   const datasets = useMemo(
     () => (Array.isArray(data.datasets) ? data.datasets : []),
@@ -133,6 +124,28 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
   const selectedIds = useMemo(() => new Set(datasets.map((d) => d.id).filter(Boolean)), [datasets]);
   const availableToAdd = useMemo(() => selectOptions.filter((d) => !selectedIds.has(d.id)), [selectOptions, selectedIds]);
 
+  const queryVariableOptions = useMemo(() => {
+    const upstream = getContextOptions(allNodes, allEdges, node.id);
+    const builtIn = [{value: "sys.query", label: "使用者輸入 (sys.query)"}];
+    const seen = new Set<string>(builtIn.map((o) => o.value));
+    const merged = [...builtIn];
+    for (const o of upstream) {
+      if (!seen.has(o.value)) {
+        seen.add(o.value);
+        merged.push({value: o.value, label: o.label});
+      }
+    }
+    return merged;
+  }, [allNodes, allEdges, node.id]);
+
+  const selectedQueryExpr = useMemo(() => {
+    const expr = parseQueryVariableExpression(data.query);
+    return expr || "sys.query";
+  }, [data.query]);
+
+  const queryOptionKeys = useMemo(() => new Set(queryVariableOptions.map((o) => o.value)), [queryVariableOptions]);
+  const showOrphanQueryOption = Boolean(selectedQueryExpr && !queryOptionKeys.has(selectedQueryExpr));
+
   const setDatasetAt = (index: number, id: string, name: string) => {
     patchNodeData({
       datasets: datasets.map((item, itemIndex) => (itemIndex === index ? {id, name} : item)),
@@ -159,6 +172,31 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData}: NodePanel
       {loadError ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{loadError}</p>
       ) : null}
+
+      <div className="space-y-1">
+        <PanelField label="Query">
+          <select
+            className={selectLightClass}
+            value={selectedQueryExpr}
+            onChange={(event) => {
+              const v = event.target.value;
+              patchNodeData({query: v ? `{{#${v}#}}` : "{{#sys.query#}}"});
+            }}
+          >
+            {showOrphanQueryOption ? (
+              <option value={selectedQueryExpr}>
+                （已斷線或舊格式）{selectedQueryExpr}
+              </option>
+            ) : null}
+            {queryVariableOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </PanelField>
+        <p className="text-xs text-gray-500">僅能從清單選擇一個變數作為查詢來源，無法輸入自訂文字。</p>
+      </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
         <div ref={pickerWrapRef} className="relative">

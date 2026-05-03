@@ -158,6 +158,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "Knowledge Retrieval",
+      query: "{{#sys.query#}}",
       datasets: [],
     };
   } else {
