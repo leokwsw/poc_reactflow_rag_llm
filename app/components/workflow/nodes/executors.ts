@@ -11,8 +11,6 @@ import { executeHumanInputNode } from "@/app/components/workflow/nodes/human-inp
 import { executeIfElseNode } from "@/app/components/workflow/nodes/if-else/execution";
 import { executeIterationStartNode } from "@/app/components/workflow/nodes/iteration-start/execution";
 import { executeIterationNode } from "@/app/components/workflow/nodes/iteration/execution";
-import { executeKnowledgeBaseNode } from "@/app/components/workflow/nodes/knowledge-base/execution";
-import { executeKnowledgeIndexNode } from "@/app/components/workflow/nodes/knowledge-index/execution";
 import { executeKnowledgeRetrievalNode } from "@/app/components/workflow/nodes/knowledge-retrieval/execution";
 import { executeListOperatorNode } from "@/app/components/workflow/nodes/list-operator/execution";
 import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
@@ -47,8 +45,6 @@ export const nodeExecutors: Record<string, NodeExecutor> = {
   ifElse: executeIfElseNode,
   iteration: executeIterationNode,
   iterationStart: executeIterationStartNode,
-  knowledgeBase: executeKnowledgeBaseNode,
-  knowledgeIndex: executeKnowledgeIndexNode,
   knowledgeRetrieval: executeKnowledgeRetrievalNode,
   listOperator: executeListOperatorNode,
   questionClassifier: executeQuestionClassifierNode,

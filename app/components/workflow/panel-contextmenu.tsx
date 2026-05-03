@@ -73,8 +73,6 @@ export default function PanelContextMenu({
         { type: "iterationStart", label: "Iteration Start" },
         { type: "loopStart", label: "Loop Start" },
         { type: "loopEnd", label: "Loop End" },
-        { type: "knowledgeIndex", label: "Knowledge Index" },
-        { type: "knowledgeBase", label: "Knowledge Base" },
         { type: "tool", label: "Tool" },
         { type: "simple", label: "Simple" },
       ],

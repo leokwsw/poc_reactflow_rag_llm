@@ -13,8 +13,6 @@ import HumanInputPanel from "@/app/components/workflow/nodes/human-input/panel";
 import IfElsePanel from "@/app/components/workflow/nodes/if-else/panel";
 import IterationStartPanel from "@/app/components/workflow/nodes/iteration-start/panel";
 import IterationPanel from "@/app/components/workflow/nodes/iteration/panel";
-import KnowledgeBasePanel from "@/app/components/workflow/nodes/knowledge-base/panel";
-import KnowledgeIndexPanel from "@/app/components/workflow/nodes/knowledge-index/panel";
 import KnowledgeRetrievalPanel from "@/app/components/workflow/nodes/knowledge-retrieval/panel";
 import ListOperatorPanel from "@/app/components/workflow/nodes/list-operator/panel";
 import LlmPanel from "@/app/components/workflow/nodes/llm/panel";
@@ -50,7 +48,6 @@ export const nodeSettingsPanelMap: Record<string, ComponentType<NodePanelProps>>
   http: HttpPanel,
   iteration: IterationPanel,
   iterationStart: IterationStartPanel,
-  knowledgeIndex: KnowledgeIndexPanel,
   listOperator: ListOperatorPanel,
   end: EndPanel,
   loop: LoopPanel,
@@ -64,6 +61,5 @@ export const nodeSettingsPanelMap: Record<string, ComponentType<NodePanelProps>>
   triggerWebhook: TriggerWebhookPanel,
   variableAggregator: VariableAggregatorPanel,
   variableAssigner: VariableAssignerPanel,
-  knowledgeBase: KnowledgeBasePanel,
   knowledgeRetrieval: KnowledgeRetrievalPanel,
 };

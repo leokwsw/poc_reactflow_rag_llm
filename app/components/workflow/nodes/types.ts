@@ -11,8 +11,6 @@ import IfElseNode from "@/app/components/workflow/nodes/if-else/ui";
 import HttpNode from "@/app/components/workflow/nodes/http/ui";
 import IterationStartNode from "@/app/components/workflow/nodes/iteration-start/ui";
 import IterationNode from "@/app/components/workflow/nodes/iteration/ui";
-import KnowledgeBaseNode from "@/app/components/workflow/nodes/knowledge-base/ui";
-import KnowledgeIndexNode from "@/app/components/workflow/nodes/knowledge-index/ui";
 import KnowledgeRetrievalNode from "@/app/components/workflow/nodes/knowledge-retrieval/ui";
 import ListOperatorNode from "@/app/components/workflow/nodes/list-operator/ui";
 import LlmNode from "@/app/components/workflow/nodes/llm/ui";
@@ -46,7 +44,6 @@ export type CustomNodeType =
   | "http"
   | "iteration"
   | "iterationStart"
-  | "knowledgeIndex"
   | "listOperator"
   | "llm"
   | "loop"
@@ -60,7 +57,6 @@ export type CustomNodeType =
   | "end"
   | "ifElse"
   | "simple"
-  | "knowledgeBase"
   | "knowledgeRetrieval"
   | "triggerSchedule"
   | "triggerWebhook"
@@ -83,7 +79,6 @@ export const NodeComponentMap: Record<string, ComponentType<Partial<NodeProps>>>
   http: HttpNode as ComponentType<Partial<NodeProps>>,
   iteration: IterationNode as ComponentType<Partial<NodeProps>>,
   iterationStart: IterationStartNode as ComponentType<Partial<NodeProps>>,
-  knowledgeIndex: KnowledgeIndexNode as ComponentType<Partial<NodeProps>>,
   listOperator: ListOperatorNode as ComponentType<Partial<NodeProps>>,
   llm: LlmNode as ComponentType<Partial<NodeProps>>,
   loop: LoopNode as ComponentType<Partial<NodeProps>>,
@@ -97,7 +92,6 @@ export const NodeComponentMap: Record<string, ComponentType<Partial<NodeProps>>>
   end: EndNode as ComponentType<Partial<NodeProps>>,
   ifElse: IfElseNode as ComponentType<Partial<NodeProps>>,
   simple: SimpleNode as ComponentType<Partial<NodeProps>>,
-  knowledgeBase: KnowledgeBaseNode as ComponentType<Partial<NodeProps>>,
   knowledgeRetrieval: KnowledgeRetrievalNode as ComponentType<Partial<NodeProps>>,
   triggerSchedule: TriggerScheduleNode as ComponentType<Partial<NodeProps>>,
   triggerWebhook: TriggerWebhookNode as ComponentType<Partial<NodeProps>>,

@@ -137,8 +137,8 @@ function mapNodeType(type?: string) {
       return "documentExtractor";
     case "human-input":
       return "humanInput";
-    case "knowledge-index":
-      return "knowledgeIndex";
+    case "knowledge-retrieval":
+      return "knowledgeRetrieval";
     case "trigger-schedule":
       return "triggerSchedule";
     case "trigger-webhook":

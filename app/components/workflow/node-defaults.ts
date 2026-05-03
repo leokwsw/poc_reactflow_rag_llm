@@ -54,8 +54,6 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = { ...data, label: "Iteration", iterator: "items", itemName: "item" };
   } else if (type === "iterationStart") {
     data = { ...data, label: "Iteration Start", scopeName: "iteration_scope" };
-  } else if (type === "knowledgeIndex") {
-    data = { ...data, label: "Knowledge Index", indexingTechnique: "high_quality", retrievalSearchMethod: "semantic_search" };
   } else if (type === "listOperator") {
     data = { ...data, label: "List Operator", operation: "map", targetList: "items" };
   } else if (type === "llm") {
@@ -156,9 +154,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     };
   } else if (type === "variableAssigner") {
     data = { ...data, label: "Variable Assigner", variables: [{ name: "result", expression: "{{#sys.query#}}" }] };
-  } else if (type === "knowledgeBase") {
-    data = { ...data, label: "Knowledge Base", indexingTechnique: "high_quality", retrievalSearchMethod: "semantic_search" };
-  } else {
+  } else if (type === "knowledgeRetrieval") {
     data = {
       ...data,
       label: "Knowledge Retrieval",
@@ -167,6 +163,8 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
         { id: "kb-2", name: "Support FAQ" },
       ],
     };
+  } else {
+    data = {...data, label: "Node", description: ""};
   }
 
   return data;
