@@ -42,7 +42,7 @@ const defaultModelBase = (): ModelConfigJson =>
     model: "local-deterministic",
   });
 
-const mergeModelConfig = (raw: unknown): ModelConfigJson => {
+export const mergeModelConfig = (raw: unknown): ModelConfigJson => {
   const base = defaultModelBase();
   if (!raw || typeof raw !== "object") {
     return base;
@@ -55,7 +55,7 @@ const mergeModelConfig = (raw: unknown): ModelConfigJson => {
   };
 };
 
-const mergeRerankingConfig = (raw: unknown): ModelConfigJson & {top_k: number; score: number} => {
+export const mergeRerankingConfig = (raw: unknown): ModelConfigJson & {top_k: number; score: number} => {
   const merged = mergeModelConfig(raw);
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const top_k = typeof o.top_k === "number" && Number.isFinite(o.top_k) ? Math.max(1, Math.floor(o.top_k)) : 3;

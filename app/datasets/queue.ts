@@ -126,7 +126,7 @@ const deterministicEmbedding = (text: string) => {
   return Array.from({length: 32}, (_, index) => Number(((hash[index % hash.length] / 255) * 2 - 1).toFixed(6)));
 };
 
-const embedText = async (text: string, config: EmbeddingConfig): Promise<{provider: "api" | "local"; vector: number[]}> => {
+export const embedText = async (text: string, config: EmbeddingConfig): Promise<{provider: "api" | "local"; vector: number[]}> => {
   try {
     const response = await fetch(`${config.apiBaseUrl.replace(/\/$/, "")}/embeddings`, {
       method: "POST",
