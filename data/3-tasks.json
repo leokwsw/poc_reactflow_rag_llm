@@ -1,21 +1,3 @@
 {
-  "tasks": [
-    {
-      "id": "task-3462ca0a-e49d-4b4b-98de-582c41c84062",
-      "dataset_id": "dataset-econ-6ca08282",
-      "document_ids": [
-        "file-a17e8283-05f0-4412-94b0-391b7be2b12a",
-        "file-37e4e32f-697f-45d3-8e3d-e17909eaa249",
-        "file-dea59503-960a-46e0-911f-73254e244444"
-      ],
-      "file_paths": [
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-6ca08282/file-a17e8283-05f0-4412-94b0-391b7be2b12a-Ch8-The-Growth-of-Firm-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-6ca08282/file-37e4e32f-697f-45d3-8e3d-e17909eaa249-Ch10-Consumer-Surplus-and-Producer-Surplus-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-6ca08282/file-dea59503-960a-46e0-911f-73254e244444-Ch12-Equity-NOTE-CHECKED-.docx"
-      ],
-      "status": "ready",
-      "created_at": "2026-05-02T23:37:23.998Z",
-      "updated_at": "2026-05-02T23:37:39.450Z"
-    }
-  ]
+  "tasks": []
 }
