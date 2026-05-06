@@ -23,7 +23,7 @@
           "type": "start",
           "title": "開始",
           "label": "開始",
-          "runStatus": "completed"
+          "runStatus": "idle"
         },
         "width": 242,
         "height": 73,
@@ -58,13 +58,12 @@
             }
           ],
           "context_variable": "",
-          "vision_enable": false,
-          "runStatus": "completed"
+          "vision_enable": false
         },
         "width": 240,
         "height": 120,
         "positionAbsolute": {
-          "x": 842,
+          "x": 1262,
           "y": 0
         },
         "dragging": false,
@@ -84,13 +83,12 @@
           "outputs": [
             "llm.text",
             "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
-          ],
-          "runStatus": "completed"
+          ]
         },
         "width": 260,
         "height": 220,
         "positionAbsolute": {
-          "x": 1262,
+          "x": 1682,
           "y": 0
         },
         "dragging": false
@@ -119,14 +117,13 @@
             }
           ],
           "context_variable": "",
-          "vision_enable": false,
-          "runStatus": "completed"
+          "vision_enable": false
         },
         "width": 240,
         "height": 120,
         "positionAbsolute": {
-          "x": 842,
-          "y": 159.01562099871956
+          "x": 1262,
+          "y": 152
         },
         "dragging": false,
         "selected": false
@@ -148,14 +145,14 @@
               "name": "Econ"
             }
           ],
-          "runStatus": "completed"
+          "runStatus": "idle"
         },
         "width": 240,
         "height": 120,
         "selected": false,
         "positionAbsolute": {
           "x": 422,
-          "y": -1.258688226588106
+          "y": 0
         },
         "dragging": false
       },
@@ -164,16 +161,14 @@
         "type": "custom",
         "position": {
           "x": 842,
-          "y": -24
+          "y": 0
         },
         "deletable": true,
         "data": {
           "type": "questionClassifier",
           "label": "Question Classifier",
-          "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
-          "apiKey": "octopusPass",
           "model": "gpt-oss-120b-MXFP4-Q8",
-          "instruction": "Classify the query into exactly one class and return the class id only.",
+          "instruction": "",
           "classes": [
             {
               "id": "sales",
@@ -183,7 +178,8 @@
               "id": "support",
               "name": "Support"
             }
-          ]
+          ],
+          "queryVariableSelector": []
         },
         "width": 240,
         "height": 236,
@@ -265,9 +261,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": 40.75,
-      "y": 418.5,
-      "zoom": 0.25
+      "x": -1849.9306143133736,
+      "y": -150.8784474028232,
+      "zoom": 2
     }
   }
 }

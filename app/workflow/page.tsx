@@ -1,7 +1,7 @@
 "use client";
 
 import {useCallback, useRef, useState} from "react";
-import Markdown from "@/app/components/base/markdown";
+import Markdown from "../components/markdown";
 import {nodeSettingsPanelMap} from "@/app/components/workflow/nodes/panels";
 import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
