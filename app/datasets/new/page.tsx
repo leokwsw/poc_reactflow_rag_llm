@@ -33,13 +33,13 @@ export default function NewDatasetPage() {
   const [chunkSizeWords, setChunkSizeWords] = useState(120);
   const [overlapWords, setOverlapWords] = useState(20);
 
-  const [embedApiBaseUrl, setEmbedApiBaseUrl] = useState("");
-  const [embedApiKey, setEmbedApiKey] = useState("");
-  const [embedModel, setEmbedModel] = useState("local-deterministic");
+  const [embedApiBaseUrl, setEmbedApiBaseUrl] = useState("https://omlx-server.octopus-tech.com/v1");
+  const [embedApiKey, setEmbedApiKey] = useState("octopusPass");
+  const [embedModel, setEmbedModel] = useState("bge-mn3-mlx-fp16");
 
-  const [rerankApiBaseUrl, setRerankApiBaseUrl] = useState("");
-  const [rerankApiKey, setRerankApiKey] = useState("");
-  const [rerankModel, setRerankModel] = useState("local-deterministic");
+  const [rerankApiBaseUrl, setRerankApiBaseUrl] = useState("https://omlx-server.octopus-tech.com/v1");
+  const [rerankApiKey, setRerankApiKey] = useState("octopusPass");
+  const [rerankModel, setRerankModel] = useState("Qwen3-Reranker-0.5B-mxfp8");
   const [rerankTopK, setRerankTopK] = useState(3);
   const [rerankScore, setRerankScore] = useState(0.5);
 
