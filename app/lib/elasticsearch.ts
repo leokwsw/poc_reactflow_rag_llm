@@ -1,5 +1,70 @@
 import {Client} from "@elastic/elasticsearch";
 
+export const RAG_CHUNKS_INDEX = "rag_chunks";
+
+const resourceAlreadyExists = (error: unknown): boolean => {
+  if (!error || typeof error !== "object" || !("meta" in error)) {
+    return false;
+  }
+  const meta = (error as {meta?: {statusCode?: number; body?: {error?: {type?: string}}}}).meta;
+  return meta?.body?.error?.type === "resource_already_exists_exception";
+};
+
+/**
+ * Creates `rag_chunks` with `vector` as indexed `dense_vector` (required for top-level `knn`).
+ * Safe to call repeatedly. If the index already exists (any mapping), this no-ops — delete the index
+ * and re-index if mapping was created by dynamic templates without `dense_vector`.
+ */
+export const ensureRagChunksIndex = async (client: Client, vectorDims: number) => {
+  if (!Number.isFinite(vectorDims) || vectorDims < 1) {
+    throw new Error("ensureRagChunksIndex: vectorDims must be a positive number.");
+  }
+
+  const exists = await client.indices.exists({index: RAG_CHUNKS_INDEX});
+  if (exists) {
+    return;
+  }
+
+  try {
+    await client.indices.create({
+      index: RAG_CHUNKS_INDEX,
+      mappings: {
+        properties: {
+          text: {type: "text"},
+          vector: {
+            type: "dense_vector",
+            dims: vectorDims,
+            index: true,
+            similarity: "cosine",
+          },
+          enabled: {type: "boolean"},
+          deleted: {type: "boolean"},
+          metadata: {
+            type: "object",
+            properties: {
+              file_id: {type: "keyword"},
+              chunk_id: {type: "keyword"},
+              dataset_id: {type: "keyword"},
+              es_document_id: {type: "keyword"},
+              position: {type: "integer"},
+              page: {type: "integer"},
+              section: {type: "keyword"},
+              source: {
+                type: "text",
+                fields: {keyword: {type: "keyword", ignore_above: 256}},
+              },
+            },
+          },
+        },
+      },
+    });
+  } catch (error) {
+    if (!resourceAlreadyExists(error)) {
+      throw error;
+    }
+  }
+};
+
 type ElasticsearchConfig = {
   node: string;
   username: string;

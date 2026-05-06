@@ -3,7 +3,7 @@ import {createHash, randomUUID} from "node:crypto";
 import type {DatasetDocument, DocumentChunk} from "@/app/datasets/data";
 import {dataPath, getChunks, getDatasetById, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
-import {getElasticsearchClient} from "@/app/lib/elasticsearch";
+import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
 
 type DatasetTask = {
   id: string;
@@ -163,12 +163,24 @@ const saveEmbeddingToElasticsearch = async (embedding: EmbeddingRecord, chunk: D
   }
 
   try {
+    await ensureRagChunksIndex(client, embedding.vector.length);
+    const metadata = {
+      file_id: chunk.file_id,
+      chunk_id: chunk.id,
+      dataset_id: embedding.dataset_id,
+      position: chunk.position,
+      es_document_id: chunk.es_document_id,
+      ...chunk.metadata,
+    };
     const response = await client.index({
-      index: "rag_chunks",
+      index: RAG_CHUNKS_INDEX,
       id: embedding.id,
       document: {
-        chunk,
-        embedding: embedding.vector,
+        text: chunk.text,
+        metadata,
+        vector: embedding.vector,
+        enabled: chunk.enabled,
+        deleted: false,
       },
     });
     return response.result === "created" || response.result === "updated";

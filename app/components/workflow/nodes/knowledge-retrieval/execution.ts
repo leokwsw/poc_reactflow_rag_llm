@@ -1,8 +1,10 @@
 import { interpolateTemplate } from "@/app/components/workflow/nodes/_base/execution-helpers";
 import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
-import {getDatasetById} from "@/app/datasets/data";
+import {getDatasetById, getDocuments} from "@/app/datasets/data";
 import {mergeModelConfig, mergeRerankingConfig} from "@/app/api/datasets/route";
 import {embedText} from "@/app/datasets/queue";
+import {generateRagElasticsearchQuery} from "@/app/components/workflow/nodes/knowledge-retrieval/generate-es-query";
+import {getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
 
 type Dataset = {
   id: string;
@@ -34,14 +36,40 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
   // TODO: 2. vector search in ElasticSearch
   // TODO: 3. return File Info, Chunk Info
 
+  const esQueries: Record<string, Record<string, unknown>> = {};
+
   for (const dataset of datasets) {
-    const o = getDatasetById(dataset.id)
-    if(o){
+    const o = getDatasetById(dataset.id);
+    if (o) {
       const embedding_config = mergeModelConfig(o.embedding_config);
       const embedded = await embedText(resolvedQuery, embedding_config);
+      const rerankCfg = mergeRerankingConfig(o.reranking_config);
+      const k = Math.max(10, rerankCfg.top_k);
+      const allowedFileIds = getDocuments()
+        .filter(
+          (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
+        )
+        .map((doc) => doc.id);
 
+      esQueries[dataset.id] = generateRagElasticsearchQuery({
+        question: resolvedQuery,
+        queryVector: embedded.vector,
+        allowedFileIds,
+        k,
+        numCandidates: Math.max(k * 10, 100),
+      });
     }
+  }
 
+  const client = getElasticsearchClient();
+  if (client && Object.keys(esQueries).length > 0) {
+    for (const [datasetId, body] of Object.entries(esQueries)) {
+      const esResult = await client.search({
+        index: RAG_CHUNKS_INDEX,
+        ...body,
+      });
+      console.log("esResult", datasetId, esResult);
+    }
   }
 
   const result = datasets.map((dataset) => ({
@@ -54,6 +82,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
     output: {
       result,
       query: resolvedQuery,
+      ...(Object.keys(esQueries).length > 0 ? {es_queries: esQueries} : {}),
     },
     detail: `datasets=${datasets.length}`,
   };

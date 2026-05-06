@@ -60,7 +60,7 @@ export default function WorkflowPage() {
   );
 
   const [data, setData] = useState(defaultData);
-  const [runQuery, setRunQuery] = useState("I am AI Developer. Can you guide me step by step to learn about Mac MLX ASR. Make this interactive and prompt me as we learn");
+  const [runQuery, setRunQuery] = useState("What is Econ?");
   const [runFiles, setRunFiles] = useState<File[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<WorkflowRunResponse["result"] | null>(null);
