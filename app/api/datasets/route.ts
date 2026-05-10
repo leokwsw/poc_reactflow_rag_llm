@@ -6,7 +6,6 @@ import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
 import {dataPath, getDatasets, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
-import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
 export const runtime = "nodejs";
 
@@ -83,6 +82,13 @@ const parseChunkConfig = (raw: unknown): {chunk_size_words: number; overlap_word
     return null;
   }
   return {chunk_size_words, overlap_words};
+};
+
+export type UploadFileRef = {
+  id: string;
+  file_name: string;
+  file_size: number;
+  mime: string;
 };
 
 const isUploadFileRef = (value: unknown): value is UploadFileRef => {

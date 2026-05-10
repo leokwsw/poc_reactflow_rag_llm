@@ -11,13 +11,20 @@ type Dataset = {
   name: string;
 };
 
-type KnowledgeRetrievalNodeData = {
+type KnowledgeRetrievalInputData = {
   datasets?: Dataset[];
   query?: string;
 };
 
+type KnowledgeRetrievalOutputChunk = {
+  content: string;
+  title: string;
+  url: string
+  icon: string
+}
+
 export async function executeKnowledgeRetrievalNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
-  const data = (context.node.data ?? {}) as KnowledgeRetrievalNodeData;
+  const data = (context.node.data ?? {}) as KnowledgeRetrievalInputData;
   const datasets = data.datasets ?? [];
   const rawQuery = (data.query ?? "").trim();
   const wrapped = rawQuery.match(/^\{\{#\s*([^#}]+?)\s*#\}\}\s*$/);
@@ -78,9 +85,12 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
     content: `Retrieved context for "${resolvedQuery}" from ${dataset.name}.`,
   }));
 
+  const objResult:KnowledgeRetrievalOutputChunk[] = []
+
   return {
     output: {
-      result,
+      result: objResult,
+      //
       query: resolvedQuery,
       ...(Object.keys(esQueries).length > 0 ? {es_queries: esQueries} : {}),
     },

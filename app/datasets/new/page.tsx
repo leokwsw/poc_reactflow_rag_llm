@@ -4,7 +4,6 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent} from "react";
 import {allowedExtensions, maxFileSize} from "@/app/api/file/upload-limits";
-import type {UploadFileRef} from "@/app/datasets/upload-file-ref";
 
 const acceptedFileTypes = ".pdf,.txt,.rtx,.rtf,.html,.csv,.xls,.xlsx,.doc,.docx,.ppt,.pptx";
 
@@ -22,6 +21,14 @@ const formatBytes = (n: number) => {
 };
 
 type Step = 1 | 2 | 3;
+
+export type UploadFileRef = {
+  id: string;
+  file_name: string;
+  file_size: number;
+  mime: string;
+};
+
 
 export default function NewDatasetPage() {
   const router = useRouter();
