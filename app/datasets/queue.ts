@@ -1,9 +1,9 @@
-import path from "node:path";
 import {createHash, randomUUID} from "node:crypto";
-import type {DatasetDocument, DocumentChunk} from "@/app/datasets/data";
+import {DatasetDocument, DocumentChunk, ModelConfig} from "@/app/datasets/data";
 import {dataPath, getChunks, getDatasetById, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
-import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {createTextSplitter} from "@/app/lib/text-splitter";
 
 type DatasetTask = {
   id: string;
@@ -35,12 +35,6 @@ type EmbeddingsJson = {
   embeddings: EmbeddingRecord[];
 };
 
-type EmbeddingConfig = {
-  apiBaseUrl: string;
-  apiKey: string;
-  model: string;
-};
-
 const readTasks = () => readJsonFile<TasksJson>("3-tasks.json", {tasks: []});
 const writeTasks = (value: TasksJson) => writeJsonFile("3-tasks.json", value);
 const readEmbeddings = () => readJsonFile<EmbeddingsJson>("4-embeddings.json", {embeddings: []});
@@ -54,10 +48,10 @@ const updateTask = (taskId: string, patch: Partial<DatasetTask>) => {
     tasks: tasksJson.tasks.map((task) =>
       task.id === taskId
         ? {
-            ...task,
-            ...patch,
-            updated_at: now(),
-          }
+          ...task,
+          ...patch,
+          updated_at: now(),
+        }
         : task,
     ),
   });
@@ -69,10 +63,10 @@ const updateDocument = (documentId: string, patch: Partial<DatasetDocument>) => 
     documents: documents.map((document) =>
       document.id === documentId
         ? {
-            ...document,
-            ...patch,
-            updated_time: now(),
-          }
+          ...document,
+          ...patch,
+          updated_time: now(),
+        }
         : document,
     ),
   });
@@ -97,41 +91,20 @@ const appendEmbeddings = (nextEmbeddings: EmbeddingRecord[]) => {
   });
 };
 
-const normalizeText = (text: string) =>
-  text
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-const splitTextIntoChunks = (text: string, chunkSizeWords: number, overlapWords: number) => {
-  const chunkSize = Math.max(1, Math.floor(chunkSizeWords));
-  const overlap = Math.min(Math.max(0, Math.floor(overlapWords)), chunkSize - 1);
-  const words = text.split(/\s+/).filter(Boolean);
-  const chunks: string[] = [];
-
-  for (let start = 0; start < words.length; start += chunkSize - overlap) {
-    const chunk = words.slice(start, start + chunkSize).join(" ").trim();
-    if (chunk) {
-      chunks.push(chunk);
-    }
-  }
-
-  return chunks.length > 0 ? chunks : ["No extractable text was found in this file."];
-};
-
 const deterministicEmbedding = (text: string) => {
   const hash = createHash("sha256").update(text).digest();
   return Array.from({length: 32}, (_, index) => Number(((hash[index % hash.length] / 255) * 2 - 1).toFixed(6)));
 };
 
-export const embedText = async (text: string, config: EmbeddingConfig): Promise<{provider: "api" | "local"; vector: number[]}> => {
+export const embedText = async (text: string, config: ModelConfig): Promise<{
+  provider: "api" | "local";
+  vector: number[]
+}> => {
   try {
-    const response = await fetch(`${config.apiBaseUrl.replace(/\/$/, "")}/embeddings`, {
+    const response = await fetch(`${config.api_base_url.replace(/\/$/, "")}/embeddings`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${config.apiKey}`,
+        Authorization: `Bearer ${config.api_key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -144,7 +117,7 @@ export const embedText = async (text: string, config: EmbeddingConfig): Promise<
       throw new Error(`Embedding API returned ${response.status}`);
     }
 
-    const payload = (await response.json()) as {data?: Array<{embedding?: number[]}>};
+    const payload = (await response.json()) as { data?: Array<{ embedding?: number[] }> };
     const vector = payload.data?.[0]?.embedding;
     if (!vector?.length) {
       throw new Error("Embedding API response did not include a vector.");
@@ -156,39 +129,6 @@ export const embedText = async (text: string, config: EmbeddingConfig): Promise<
   }
 };
 
-const saveEmbeddingToElasticsearch = async (embedding: EmbeddingRecord, chunk: DocumentChunk) => {
-  const client = getElasticsearchClient();
-  if (!client) {
-    return false;
-  }
-
-  try {
-    await ensureRagChunksIndex(client, embedding.vector.length);
-    const metadata = {
-      file_id: chunk.file_id,
-      chunk_id: chunk.id,
-      dataset_id: embedding.dataset_id,
-      position: chunk.position,
-      es_document_id: chunk.es_document_id,
-      ...chunk.metadata,
-    };
-    const response = await client.index({
-      index: RAG_CHUNKS_INDEX,
-      id: embedding.id,
-      document: {
-        text: chunk.text,
-        metadata,
-        vector: embedding.vector,
-        enabled: chunk.enabled,
-        deleted: false,
-      },
-    });
-    return response.result === "created" || response.result === "updated";
-  } catch {
-    return false;
-  }
-};
-
 const processTask = async (taskId: string) => {
   const task = readTasks().tasks.find((item) => item.id === taskId);
   if (!task) return;
@@ -196,15 +136,24 @@ const processTask = async (taskId: string) => {
   updateTask(task.id, {status: "processing"});
 
   try {
-    const fallbackConfig = readJsonFile<EmbeddingConfig>("model-base.json", {
-      apiBaseUrl: "",
-      apiKey: "",
+    const fallbackConfig = readJsonFile<ModelConfig>("model-base.json", {
+      api_base_url: "",
+      api_key: "",
       model: "local-deterministic",
     });
     const dataset = getDatasetById(task.dataset_id);
-    const embeddingCfg = dataset?.embedding_config ?? fallbackConfig;
-    const chunkSizeWords = dataset?.chunk_config?.chunk_size_words ?? 120;
-    const overlapWords = dataset?.chunk_config?.overlap_words ?? 20;
+    const embeddingConfig = dataset?.embedding_config ?? fallbackConfig;
+    const chunkSize = dataset?.chunk_config?.chunk_size ?? 120;
+    const chunkOverlap = dataset?.chunk_config?.chunk_overlap ?? 20;
+    const languageHint = dataset?.language_hint ?? "chinese"
+    const separators = dataset?.separators ?? "\n\n"
+    const keepSeparators = dataset?.keep_separators ?? true
+
+    const client = getElasticsearchClient();
+
+    if (!client) {
+      return false;
+    }
 
     for (const documentId of task.document_ids) {
       const document = getDocuments().find((item) => item.id === documentId);
@@ -212,42 +161,76 @@ const processTask = async (taskId: string) => {
 
       updateDocument(document.id, {status: "processing"});
 
-      const raw = await extractFileToText(dataPath(document.storage_page));
-      const text = normalizeText(raw) || `Uploaded file ${path.basename(document.storage_page)} had no extractable text.`;
-      const chunkTexts = splitTextIntoChunks(text, chunkSizeWords, overlapWords);
-      const createdAt = now();
+      const raw = await extractFileToText(dataPath(document.storage_page)); // TODO : To Each Page string array
+      const texts = raw.replace("\r\n", "")
+      const textSplitter = createTextSplitter(
+        texts,
+        chunkSize,
+        chunkOverlap,
+        languageHint,
+        [separators],
+        keepSeparators,
+      );
+      const docs = await textSplitter.createDocuments([texts])
+
       const nextChunks: DocumentChunk[] = [];
       const nextEmbeddings: EmbeddingRecord[] = [];
 
-      for (const [position, chunkText] of chunkTexts.entries()) {
-        const chunkId = `chunk-${document.id}-${position + 1}`;
-        const esDocumentId = `es-${document.id}-${position + 1}`;
+      for (const [i, doc] of docs.entries()) {
+
+        const createdAt = now();
+        const chunkId = `chunk-${document.id}-${i + 1}`;
+
+        const chunkMetaData = doc.metadata
+        chunkMetaData["chunk_index"] = i + 1
+
+        const embeddedVector = await embedText(doc.pageContent, embeddingConfig);
+
+        const extra_metadata = {...chunkMetaData}
+
+        extra_metadata["file_id"] = documentId
+        extra_metadata["file_name"] = document.file_name
+        // extra_metadata["file_url"] = "File Access Url"
+        // extra_metadata["file_category"] = "File Category"
+
+        const esBody = {
+          "text": doc.pageContent,
+          "metadata": extra_metadata,
+          "vector": embeddedVector.vector,
+          "enabled": true,
+          "deleted": false,
+        }
+
+        const esResponse = await client.index({
+          index: RAG_CHUNKS_INDEX,
+          document: esBody,
+        })
+
         const chunk: DocumentChunk = {
           id: chunkId,
           file_id: document.id,
-          text: chunkText,
-          position,
+          text: doc.pageContent,
+          position: i,
           metadata: {
-            page: position + 1,
+            page: i + 1,
             section: "Uploaded content",
             source: document.file_name,
           },
-          es_document_id: esDocumentId,
+          es_document_id: esResponse._id,
           enabled: true,
         };
-        const embedded = await embedText(chunkText, embeddingCfg);
+
         const embedding: EmbeddingRecord = {
-          id: esDocumentId,
+          id: esResponse._id,
           chunk_id: chunkId,
           dataset_id: task.dataset_id,
           file_id: document.id,
-          vector: embedded.vector,
-          provider: embedded.provider,
-          elasticsearch_saved: false,
+          vector: embeddedVector.vector,
+          provider: embeddedVector.provider,
+          elasticsearch_saved: true,
           created_at: createdAt,
         };
 
-        embedding.elasticsearch_saved = await saveEmbeddingToElasticsearch(embedding, chunk);
         nextChunks.push(chunk);
         nextEmbeddings.push(embedding);
       }

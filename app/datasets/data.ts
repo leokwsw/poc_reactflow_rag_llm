@@ -1,15 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-type ModelConfig = {
-  apiBaseUrl: string;
-  apiKey: string;
+export type ModelConfig = {
+  api_base_url: string;
+  api_key: string;
   model: string;
 };
 
 export type ChunkConfig = {
-  chunk_size_words: number;
-  overlap_words: number;
+  chunk_size: number;
+  chunk_overlap: number;
 };
 
 export type Dataset = {
@@ -24,6 +24,9 @@ export type Dataset = {
     score: number;
   };
   chunk_config: ChunkConfig;
+  language_hint: string;
+  separators: string;
+  keep_separators: boolean
 };
 
 export type DatasetDocument = {

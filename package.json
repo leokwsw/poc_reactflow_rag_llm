@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "9.3.4",
+    "@langchain/core": "^1.1.45",
+    "@langchain/textsplitters": "^1.0.1",
     "@lexical/react": "^0.43.0",
     "@lexical/rich-text": "^0.43.0",
     "@lexical/utils": "^0.43.0",
