@@ -1,35 +1,3 @@
 {
-  "tasks": [
-    {
-      "id": "task-a3babb28-e0ed-465d-a538-3d9a56bfbc94",
-      "dataset_id": "dataset-econ-51a79d8a",
-      "document_ids": [
-        "file-923860cb-437d-4ef4-9397-1f931f5cebb5",
-        "file-b4ed6b8a-37f0-466f-b769-f368e04290f8",
-        "file-454e764d-cb81-42bf-89d5-aff3d52e1100",
-        "file-cd366fa2-b5e9-4195-8a56-2eea2825c475",
-        "file-622e7cb5-e753-4012-a19b-d221ea69b38c",
-        "file-9f0d55d4-87ef-4439-99af-77d855320f6b",
-        "file-9a8487c9-e38c-4bda-aa87-8a53363c7d8f",
-        "file-9f2e6a0b-22a1-466e-bd24-4699012f0840",
-        "file-05aeb4b8-df08-4809-b0ed-aa3cafd7b855",
-        "file-6253b8f3-85c1-4874-bfb4-f63cab7e9738"
-      ],
-      "file_paths": [
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-923860cb-437d-4ef4-9397-1f931f5cebb5-Ch4-Market-Intervention-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-b4ed6b8a-37f0-466f-b769-f368e04290f8-Ch8-The-Growth-of-Firm-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-454e764d-cb81-42bf-89d5-aff3d52e1100-Ch10-Consumer-Surplus-and-Producer-Surplus-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-cd366fa2-b5e9-4195-8a56-2eea2825c475-Ch12-Equity-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-622e7cb5-e753-4012-a19b-d221ea69b38c-Ch12-Equity-QB-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-9f0d55d4-87ef-4439-99af-77d855320f6b-Ch14-Unempoloyment-QB-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-9a8487c9-e38c-4bda-aa87-8a53363c7d8f-Ch16-Fiscal-Policy-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-9f2e6a0b-22a1-466e-bd24-4699012f0840-Ch20-Monetary-Policy-and-QTM-NOTE-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-05aeb4b8-df08-4809-b0ed-aa3cafd7b855-Ch20-Monetary-Policy-QB-CHECKED-.docx",
-        "/Users/leowu/self/poc_reactflow_rag_llm/data/uploads/dataset-econ-51a79d8a/file-6253b8f3-85c1-4874-bfb4-f63cab7e9738-Ch22-Exchange-Rate-NOTE-CHECKED-.docx"
-      ],
-      "status": "ready",
-      "created_at": "2026-05-06T06:06:30.684Z",
-      "updated_at": "2026-05-06T06:06:58.227Z"
-    }
-  ]
+  "tasks": []
 }
