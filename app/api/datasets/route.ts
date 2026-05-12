@@ -190,7 +190,7 @@ export async function POST(request: Request) {
       "chunk_config must include chunk_size_words (10–50000) and overlap_words (0 ≤ overlap < chunk_size).",
     );
   }
-  const chunk_config = chunkParsed ?? {chunk_size_words: 120, overlap_words: 20};
+  const chunk_config = chunkParsed ?? {chunk_size_words: 1024, overlap_words: 50};
 
   const documents = getDocuments();
   const documentIds: string[] = [];

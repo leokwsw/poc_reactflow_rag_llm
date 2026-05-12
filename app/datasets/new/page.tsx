@@ -37,8 +37,8 @@ export default function NewDatasetPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const [chunkSizeWords, setChunkSizeWords] = useState(120);
-  const [overlapWords, setOverlapWords] = useState(20);
+  const [chunkSizeWords, setChunkSizeWords] = useState(1024);
+  const [overlapWords, setOverlapWords] = useState(50);
 
   const [embedApiBaseUrl, setEmbedApiBaseUrl] = useState("https://omlx-server.octopus-tech.com/v1");
   const [embedApiKey, setEmbedApiKey] = useState("octopusPass");
@@ -434,7 +434,7 @@ export default function NewDatasetPage() {
                     />
                   </label>
                 </div>
-                <p className="text-xs text-zinc-500">Overlap must be smaller than chunk size. Defaults match the previous single-step flow (120 / 20).</p>
+                <p className="text-xs text-zinc-500">Overlap must be smaller than chunk size. Defaults match the previous single-step flow (1024 / 50).</p>
               </fieldset>
 
               <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">

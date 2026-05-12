@@ -143,8 +143,8 @@ const processTask = async (taskId: string) => {
     });
     const dataset = getDatasetById(task.dataset_id);
     const embeddingConfig = dataset?.embedding_config ?? fallbackConfig;
-    const chunkSize = dataset?.chunk_config?.chunk_size ?? 120;
-    const chunkOverlap = dataset?.chunk_config?.chunk_overlap ?? 20;
+    const chunkSize = dataset?.chunk_config?.chunk_size ?? 1024;
+    const chunkOverlap = dataset?.chunk_config?.chunk_overlap ?? 50;
     const languageHint = dataset?.language_hint ?? "chinese"
     const separators = dataset?.separators ?? "\n\n"
     const keepSeparators = dataset?.keep_separators ?? true
