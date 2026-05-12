@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {randomUUID} from "node:crypto";
 
-const UPLOAD_ROOT = path.join(process.cwd(), "data", "file-uploads");
+const UPLOAD_ROOT = path.join(process.cwd(), "data", "uploads");
 
 export type StoredFileMeta = {
   id: string;
