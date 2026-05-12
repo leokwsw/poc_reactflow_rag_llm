@@ -2,7 +2,7 @@ import {createHash, randomUUID} from "node:crypto";
 import {DatasetDocument, DocumentChunk, ModelConfig} from "@/app/datasets/data";
 import {dataPath, getChunks, getDatasetById, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
-import {getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
 import {createTextSplitter} from "@/app/lib/text-splitter";
 
 type DatasetTask = {
@@ -185,6 +185,12 @@ const processTask = async (taskId: string) => {
         chunkMetaData["chunk_index"] = i + 1
 
         const embeddedVector = await embedText(doc.pageContent, embeddingConfig);
+        const indexStatus = await ensureRagChunksIndex(client, embeddedVector.vector.length);
+        if (!indexStatus.isDenseVector) {
+          throw new Error(
+            `${indexStatus.reason} Recreate the Elasticsearch index and re-run dataset ingestion.`,
+          );
+        }
 
         const extra_metadata = {...chunkMetaData}
 

@@ -1,6 +1,7 @@
 import {Client} from "@elastic/elasticsearch";
 
 export const RAG_CHUNKS_INDEX = "rag_chunks";
+export const RAG_VECTOR_FIELD = "vector";
 
 type ElasticsearchConfig = {
   node: string;
@@ -97,3 +98,74 @@ export const getElasticsearchClient = () => {
   return client;
 };
 
+type RagVectorFieldStatus = {
+  isDenseVector: boolean;
+  reason?: string;
+};
+
+const getVectorFieldMapping = async (esClient: Client) => {
+  const mapping = await esClient.indices.getMapping({index: RAG_CHUNKS_INDEX});
+  const indexMapping = mapping[RAG_CHUNKS_INDEX]?.mappings;
+  const properties = indexMapping?.properties as Record<string, {type?: string}> | undefined;
+  return properties?.[RAG_VECTOR_FIELD];
+};
+
+export const ensureRagChunksIndex = async (
+  esClient: Client,
+  vectorDimensions: number,
+): Promise<RagVectorFieldStatus> => {
+  const exists = await esClient.indices.exists({index: RAG_CHUNKS_INDEX});
+
+  if (!exists) {
+    await esClient.indices.create({
+      index: RAG_CHUNKS_INDEX,
+      mappings: {
+        properties: {
+          text: {type: "text"},
+          metadata: {
+            properties: {
+              file_id: {type: "keyword"},
+              file_name: {type: "text"},
+            },
+          },
+          [RAG_VECTOR_FIELD]: {
+            type: "dense_vector",
+            dims: vectorDimensions,
+            index: true,
+            similarity: "cosine",
+          },
+          enabled: {type: "boolean"},
+          deleted: {type: "boolean"},
+        },
+      },
+    });
+
+    return {isDenseVector: true};
+  }
+
+  const vectorField = await getVectorFieldMapping(esClient);
+  if (!vectorField) {
+    await esClient.indices.putMapping({
+      index: RAG_CHUNKS_INDEX,
+      properties: {
+        [RAG_VECTOR_FIELD]: {
+          type: "dense_vector",
+          dims: vectorDimensions,
+          index: true,
+          similarity: "cosine",
+        },
+      },
+    });
+
+    return {isDenseVector: true};
+  }
+
+  if (vectorField.type !== "dense_vector") {
+    return {
+      isDenseVector: false,
+      reason: `${RAG_CHUNKS_INDEX}.${RAG_VECTOR_FIELD} is mapped as ${vectorField.type ?? "unknown"} instead of dense_vector.`,
+    };
+  }
+
+  return {isDenseVector: true};
+};
