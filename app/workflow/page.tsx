@@ -27,6 +27,110 @@ type StartNodeData = {
   variables?: StartVariable[];
 };
 
+function TraceCard({
+  item,
+  onFocus,
+}: {
+  item: WorkflowTraceItem;
+  onFocus: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      className={`rounded-2xl px-3 py-3 text-xs transition ${
+        item.status === "running"
+          ? "bg-sky-50 text-sky-700"
+          : item.status === "error"
+            ? "bg-red-50 text-red-700"
+            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-800"
+      }`}
+    >
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-2 text-left"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold">
+            {item.nodeType} ({item.nodeId})
+          </div>
+          <div className="mt-1 text-[11px] opacity-80">
+            {item.status}
+            {item.detail ? ` - ${item.detail}` : ""}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700"
+            title="Focus node"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFocus();
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-3.5 w-3.5"
+            >
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+              <path
+                fillRule="evenodd"
+                d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 grid max-h-64 gap-2 overflow-y-auto">
+          <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              Input
+            </div>
+            <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+              {JSON.stringify(item.input, null, 2)}
+            </pre>
+          </div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              Process Data
+            </div>
+            <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+              {JSON.stringify(item.processData, null, 2)}
+            </pre>
+          </div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+              Output
+            </div>
+            <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
+              {JSON.stringify(item.output, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WorkflowPage() {
   const runStreamAbortRef = useRef<AbortController | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -60,7 +164,7 @@ export default function WorkflowPage() {
   );
 
   const [data, setData] = useState(defaultData);
-  const [runQuery, setRunQuery] = useState("What is Econ?");
+  const [runQuery, setRunQuery] = useState("一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。");
   const [runFiles, setRunFiles] = useState<File[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<WorkflowRunResponse["result"] | null>(null);
@@ -346,62 +450,17 @@ export default function WorkflowPage() {
                 <p className="mb-1 text-xs font-medium text-zinc-700">Trace</p>
                 <div className="space-y-1">
                   {(runResult?.trace ?? liveTrace).map((item) => (
-                    <button
+                    <TraceCard
                       key={`${item.nodeId}-${item.status}`}
-                      className={`block w-full rounded-2xl px-3 py-3 text-left text-xs transition hover:bg-zinc-100 hover:text-zinc-800 ${
-                        item.status === "running"
-                          ? "bg-sky-50 text-sky-700"
-                          : item.status === "error"
-                            ? "bg-red-50 text-red-700"
-                            : "text-zinc-600"
-                      }`}
-                      type="button"
-                      onClick={() => {
+                      item={item}
+                      onFocus={() => {
                         setSelectedNode(item.node);
                         setFocusNodeRequest({
                           id: item.nodeId,
                           nonce: Date.now(),
                         });
                       }}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-semibold">
-                            {item.nodeType} ({item.nodeId})
-                          </div>
-                          <div className="mt-1 text-[11px] opacity-80">
-                            {item.status}
-                            {item.detail ? ` - ${item.detail}` : ""}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid gap-2">
-                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
-                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                            Input
-                          </div>
-                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
-                            {JSON.stringify(item.input, null, 2)}
-                          </pre>
-                        </div>
-                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
-                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                            Process Data
-                          </div>
-                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
-                            {JSON.stringify(item.processData, null, 2)}
-                          </pre>
-                        </div>
-                        <div className="rounded-xl border border-zinc-200/70 bg-white/80 p-2">
-                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                            Output
-                          </div>
-                          <pre className="whitespace-pre-wrap break-words text-[11px] text-zinc-700">
-                            {JSON.stringify(item.output, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    </button>
+                    />
                   ))}
                 </div>
                 <div className="mt-6">
