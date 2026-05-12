@@ -2,12 +2,12 @@
   {
     "input": {
       "files": [],
-      "query": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。"
+      "query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
     },
     "processData": {},
     "output": {
       "sys.files": [],
-      "sys.query": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。"
+      "sys.query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
     },
     "nodeId": "sys",
     "nodeType": "start",
@@ -50,468 +50,107 @@
   },
   {
     "input": {
-      "query": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。",
-      "files": []
+      "query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
     },
     "processData": {
-      "datasets": [
+      "model_mode": "chat",
+      "prompts": [
         {
-          "id": "dataset-econ-d1c07ed8",
-          "name": "Econ"
+          "role": "system",
+          "text": "\n### Job Description',\nYou are a text classification engine that analyzes text data and assigns categories based on user input or automatically determined categories.\n### Task\nYour task is to assign one categories ONLY to the input text and only one category may be assigned returned in the output. Additionally, you need to extract the key words from the text that are related to the classification.\n### Format\nThe input text is in the variable input_text. Categories are specified as a category list with two filed category_id and category_name in the variable categories. Classification instructions may be included to improve the classification accuracy.\n### Constraint\nDO NOT include anything other than the JSON array in your response.\n### Memory\nHere are the chat histories between human and assistant, inside <histories></histories> XML tags.\n<histories>\n\n</histories>\n",
+          "files": []
+        },
+        {
+          "role": "user",
+          "text": "\n    {\"input_text\": [\"I recently had a great experience with your company. The service was prompt and the staff was very friendly.\"],\n    \"categories\": [{\"category_id\":\"f5660049-284f-41a7-b301-fd24176a711c\",\"category_name\":\"Customer Service\"},{\"category_id\":\"8d007d06-f2c9-4be5-8ff6-cd4381c13c60\",\"category_name\":\"Satisfaction\"},{\"category_id\":\"5fbbbb18-9843-466d-9b8e-b9bfbb9482c8\",\"category_name\":\"Sales\"},{\"category_id\":\"23623c75-7184-4a2e-8226-466c2e4631e4\",\"category_name\":\"Product\"}],\n    \"classification_instructions\": [\"classify the text based on the feedback provided by customer\"]}\n",
+          "files": []
+        },
+        {
+          "role": "assistant",
+          "text": "\n```json\n    {\"keywords\": [\"recently\", \"great experience\", \"company\", \"service\", \"prompt\", \"staff\", \"friendly\"],\n    \"category_id\": \"f5660049-284f-41a7-b301-fd24176a711c\",\n    \"category_name\": \"Customer Service\"}\n```\n",
+          "files": []
+        },
+        {
+          "role": "user",
+          "text": "\n    {\"input_text\": [\"bad service, slow to bring the food\"],\n    \"categories\": [{\"category_id\":\"80fb86a0-4454-4bf5-924c-f253fdd83c02\",\"category_name\":\"Food Quality\"},{\"category_id\":\"f6ff5bc3-aca0-4e4a-8627-e760d0aca78f\",\"category_name\":\"Experience\"},{\"category_id\":\"cc771f63-74e7-4c61-882e-3eda9d8ba5d7\",\"category_name\":\"Price\"}],\n    \"classification_instructions\": []}\n",
+          "files": []
+        },
+        {
+          "role": "assistant",
+          "text": "\n```json\n    {\"keywords\": [\"bad service\", \"slow\", \"food\", \"tip\", \"terrible\", \"waitresses\"],\n    \"category_id\": \"f6ff5bc3-aca0-4e4a-8627-e760d0aca78f\",\n    \"category_name\": \"Experience\"}\n```\n",
+          "files": []
+        },
+        {
+          "role": "user",
+          "text": "\n    {\"input_text\":[\"一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。\"],\"categories\":[{\"category_id\":\"support\",\"category_name\":\"Math\"},{\"category_id\":\"class_1778600927716\",\"category_name\":\"Econ\"}],\"classification_instructions\":[\"The Question is Which Subject?\"]}\n",
+          "files": []
         }
-      ]
+      ],
+      "usage": {
+        "prompt_tokens": 0,
+        "prompt_unit_price": "0",
+        "prompt_price_unit": "0",
+        "prompt_price": "0",
+        "completion_tokens": 0,
+        "completion_unit_price": "0",
+        "completion_price_unit": "0",
+        "completion_price": "0",
+        "total_tokens": 0,
+        "total_price": "0",
+        "currency": "USD",
+        "latency": 0,
+        "time_to_first_token": 0,
+        "time_to_generate": 0
+      },
+      "finish_reason": "heuristic",
+      "model_provider": null,
+      "model_name": "gpt-oss-120b-MXFP4-Q8"
     },
     "output": {
-      "result": [
-        {
-          "text": "債權人)來說，利息是延遲當前消費的回報 / 補償 / 溢價 \n利息既是成本又是回報，取決於是借款人或貸款人 \n利率上升  借貸成本增加  借貸減少（反之亦然） \n例子：\nRex 沒有足夠的錢在中環買一間屋。他以3%的利率向匯豐銀行借貸置業。 \n對Rex（借方）來說，3%的利息是提前拿到物業的成本。 \n對HSBC（貸方）來說，3%的利息是延遲使用該筆款項的回報。 \n人們願意為早期消費付出代價，因為:\n早用勝於遲用\n現在商品的價值 > 未來相同商品的價值 \n當前消費勝於未來消費 \n人們缺乏耐性 \n今天的一元比明天的一元更值錢 \n重要提示：\n利息可以在沒有貨幣 / 在以物易物經濟下存在 \n人們缺乏耐性，他們會為了更早享用物品付出溢價 \n要在當前消費和未來消費之間做出選擇，就會產生利息 \n即使沒有貨幣，利息亦可以用物品來表達\n例如，你借了 10 支鉛筆，然後歸還12 支鉛筆\n1.9The Three Basic Economic Problems三個基本經濟學問題\n***MIND THE KEY WORDS***\nWhat to produce? 生產甚麼？\nThe choice of the type and quantities goods and services to produce\nE.g.The Apple decides to produce Ipod, Iphone, Ipad, Iwatch, Airpod, Apple TV… (type)\nE.g.The Apple store decides to produce more IPhone 8 and cut the amount of IPhone X (quantity)\n選擇要生產的物品和服務的類型和數量 \nE.g. Apple 決定生產 Ipod、Iphone、Ipad、Iwatch、Airpod、Apple TV……（類型） \nE.g. Apple 決定增產iPhone 8並減產iPhone X的數量（數量）\nHow to produce? 如何生產？\nThe choice of production methods \nusually the least costly\n選擇生產方式\n通常成本最低\nE.g. Handmade method 手工製 vs Machine method 機械製 \nImported labor 外勞    vs D",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 511,
-                "to": 545
-              }
-            },
-            "chunk_index": 18,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 52.3911,
-          "rank": 1,
-          "score_ratio": 1,
-          "quality_tier": "high"
-        },
-        {
-          "text": "cost of chosen option changes.\nOpportunity cost will NOT change when \ncost of highest-valued option forgone changes.\nvalue of chosen option changes \n沉沒成本只是過去的支出 \n過去花費的資源是不可挽回的，不應影響決策，我們不會計算過去付出的成本 \n例子： \n假設 Ronson 於2018年5月16日以$5,000購買黃子華棟篤笑的門票 \n現在有3個人分別想買$500、$2,000和$3,000的票。 \n由於先前購買的價格不是目前可以選擇的選項，只是過去的支出。 \n機會成本是放棄的價值最高的選項，即 $3,000 。 \nTips： \n***重要提示： \n如果沒有任何其他選擇，成本將為零。因為在做出選擇時沒有放棄任何東西。 \n即使世界上只有一個人，機會成本依然存在。 \n金錢和時間本身不是機會成本，只有金錢和時間中最高價值替代用途才是機會成本。 \n結論： \n機會成本會改變，如果：\n價值最高的放棄選項改變了價值。\n所選選項的金錢 / 時間 / 非金錢成本改變。\n機會成本不會改變，如果：\n價值最高的放棄選項的成本改變 \n所選選項的價值改變\n1.8More About Interest and Opportunity Cost 利息 & 機會成本\nDefinition:\nTo borrower, interest is the cost of earlier availability of resources\nTo lender, interest is the return / compensation / premium for postponing current consumption\nInterest is both cost and return, depends on the borrower or lender\nInterest rate increase  cost of borrowing increase  borrowing decrease (vice versa)\nExample:\nRex does not have enough money to buy a flat in central. He borrows money from HSBC ba",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 464,
-                "to": 494
-              }
-            },
-            "chunk_index": 16,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 49.737877,
-          "rank": 2,
-          "score_ratio": 0.9494,
-          "quality_tier": "high"
-        },
-        {
-          "text": "。如果湯美選擇模型太空船，他的機會成本是什麼？A. 一架耳筒收音機B. 一架耳筒收音機和一件外套\nC. 一艘模型太空船的價錢          D. 沒有機會成本，因為這是一份禮物\nExample Question 2 CE1991MCQ2\nSusan is choosing between two jobs: being a teacher and being a singer. If she chooses to be a singer, her opportunity cost will include\nA. the income from being a teacher B. the income from being a singer\nC. the tuition fee she paid for her training as a teacher D. the tuition fee she paid for her training as a singer\n蘇珊想在教書工作和歌唱事業兩者選擇其一。如果她選擇歌唱事業，她的機會成本包括\nA. 作為教師的收入。B. 作為歌手的收入。\nC. 她已經支付的受訓做教師的學費。D. 她已經支付的受訓做歌手的學費。\nExample Question 3 CE1992MCQ3\nWhich of the following are opportunity costs of attending school?\n(1) school fee\n(2) income forgone\n(3) poor examination results\n(4) expenditure on dinners\nA. (1) and (2) B. (1) and (3) C. (2) and (4) D. (3) and (4)\n以下哪幾項是上學讀書的機會成本？\n(1) 學費\n(2) 所放棄的收入\n(3) 差劣的考試成績\n(4) 晚餐的開支\nA. (1) 、(2)     B. (1)、(3) C. (2)、(4) D. (3)、(4)\nExample Question 4 CE1993MCQ2\nMr. Wong could spend two hours at a concert or tutoring a student at $60 per hour. He could use the t",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 431,
-                "to": 454
-              }
-            },
-            "chunk_index": 21,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 49.18747,
-          "rank": 3,
-          "score_ratio": 0.9389,
-          "quality_tier": "high"
-        },
-        {
-          "text": "Market economy\nMost resources are privately owned\nThe three problems are mainly tackled by the price mechanism / price signal \nWithout the private property right system, market price cannot be used to tackle the three problems  \nPrivate property rights \nExclusive right to use\nExclusive right to receive income\nRight to transfer\nIf there is no clear definition of private property right, no one will be willing to buy the product since even he buys it, the public may still use it. \nMixed Economy\nNo society is ONLY a traditional, planned or market economy \nIn reality, all economies are mixed economies\n1. 傳統經濟\n這三個問題主要靠社會習俗和傳統來解決 \nEg. 只有最年長的男性才有權建造村屋 \n2. 計劃經濟 / 指令經濟\n大多數資源歸政府所有 \n三大問題主要由政府中央決策部署解決 \nE.g. 政策是根據政府實施的 \n3. 市場經濟 \n大部分資源為私人所有 \n三大問題主要通過價格機制 / 價格信號來解決\n如沒有私有產權制度，市場價格無法解決這三個問題 \n私有產權 \n獨有使用權\n獨有收入權\n轉讓權\n如果沒有明確的私有產權定義，就沒有人願意購買這個產品，因為即使他購買了，公眾所有人仍然可以使用它。 \n4. 混合經濟 \n沒有一個社會僅僅是傳統、計劃或市場經濟 \n現實中，所有經濟體系都是混合經濟\n1.11Economy Activities經濟活動\nConsumption\nThe process of utilizing resources to directly satisfy human wants\nE.g.Ken buys",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 566,
-                "to": 600
-              }
-            },
-            "chunk_index": 20,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 49.10543,
-          "rank": 4,
-          "score_ratio": 0.9373,
-          "quality_tier": "high"
-        },
-        {
-          "text": "ides to increase the salaries of its secretaries\nD. Firm Z decides to increase the bonuses for its sale representative\n芬妮可在三份工作中選擇其一。她的選擇偏好如下：首選：在X學校當教師\n次選：在Y公司當秘書\n第三選擇：在Z廠商當營業代表\n假設芬妮的選擇偏好次序不變，下列哪一種情況會增加她在X學校當教師的機會成本？\nA. X學校的學生變得更頑劣。\nB. Y公司要求增加它的秘書工作時間。\nC. Y公司決定增加它的秘書的薪金。\nD. Z廠商決定增加它作為營業代表的年終獎金。\nExample Question 8 CE1996MCQ1\nJohn live in his own apartment which is worth $1million. He can sell the apartment and put the money in a bank at an interest rate of 5% per year. He can also rent out the apartment at $5000 per month. What is the opportunity cost to John if he decides to live in the apartment?\nA. $1 millionB. $5000 a yearC. $5000 a month\nD. There is no opportunity cost because he lives in his own apartment\n大強居住於自己擁有的住宅單位，該單位價值一百萬元。他可以出售該單位，將所獲金錢存於銀行，以年息率5%來收息。他亦可以將該單位出租，每月收取租金$5000。對大強來說，他決定在該單位自住的機會成本是？\nA. 一百萬元。B. 每年$50,000。C. 每月$5,000。\nD. 沒有機會成本，因為他用來自住。\nAnswer Question 9 and 10 by referring to the following information: \nMax Department Store has launched a promotion campaign. For every purchase of $10",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 482,
-                "to": 500
-              }
-            },
-            "chunk_index": 24,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 48.614063,
-          "rank": 5,
-          "score_ratio": 0.9279,
-          "quality_tier": "high"
-        },
-        {
-          "text": "ring a student at $60 per hour. He could use the time on painting instead and earn a total of $150. If the price of the concert ticket is $300, what is his opportunity cost of his choice of going to the concert?\nA. $150 B. $300 C. $420 D. $450\n黃先生可以花兩小時出席一場音樂會；或替學生補習，收費每小時$60。他又可用這段時間來繪畫，賺取$150。若音樂會的票價為$300，他選擇出席該音樂會的機會成本是多少？\nA. $150 B. $300 C. $420 D. $450\nExample Question 5 CE1994MCQ2\nIn a lottery, Peter wins a transferable air ticket to Japan. Which of the following statements is correct? \nA. The ticket is a free good\nB. Peter will not lose anything if he loses his ticket\nC. The opportunity cost to Peter of using the ticket is zero\nD. The opportunity cost to Peter of using the ticket increase if the price of the ticket increases\n在一次抽獎中，彼得贏得一張可轉讓予他人的機票前往日本。下列哪一項正確？\nA. 這機票是「免費物品」。\nB. 彼得若遺失這機票，也沒有任何損失。\nC. 彼得使用這機票的機會成本是零。\nD. 如果這機票的價格上升，彼得使用這機票的機會成本增加。\nExample Question 6 CE1994MCQ3\nMr. Lee own a photographic studio. Previously he received $30000 per month by letting it out. He now does not let it, but instead h",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 454,
-                "to": 470
-              }
-            },
-            "chunk_index": 22,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 44.139893,
-          "rank": 6,
-          "score_ratio": 0.8425,
-          "quality_tier": "high"
-        },
-        {
-          "text": "越第二選項的價值的水平。所以選擇任職政務主任的成本可能從第二選項的價值（即在會計師樓任職實習生）變為第三選項的價值（即繼續找工作而沒有接受任何工作並亨有失業援助金）。                         (2)\n2015DSE LQ1ai, ii, b\nMore and more famous universities offer “massive open online courses” (MOOC) to students from various backgrounds for systematic learning. Most of the teaching materials in MOOC can be accessed online by anyone free of charge. Explain whether these materials are\n(a)free goods;(2)\n(b)public goods.(3)\n(c)Some people prefer to take free MOOC while others prefer to take paid courses conducted on the university campus. If the courses are with the same contents and number of teaching hours, will the cost for a person to take a free MOOC be necessarily lower than the cost for another person to take a paid on-campus course? Explain.(3)\n越來越多的著名大學開辦「大規模開放線上課程」（MOOC）向不同背景的學生提供有系統的學習機會。\n仼何人都可以在網上免費取用大部分「大規模開放線上課程」的教材。解釋這些教材是否\n(a)免費物品；                                                           (2)\n(b)共用品。                                                            (3)\n(c)有些人較喜歡報讀免費「大規模開放線上課程」，",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 1218,
-                "to": 1228
-              }
-            },
-            "chunk_index": 72,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.903976,
-          "rank": 7,
-          "score_ratio": 0.838,
-          "quality_tier": "high"
-        },
-        {
-          "text": "elling price.\nA. (1) and (2) only B. (1) and (3) only C. (2) and (3) only D. (1), (2) and (3)\n皇家馬德里足球隊訪港時，很多人為購買球賽門券排隊多天。部分人投訴說即使他們願意付出主辦單位定立的票價,還是買不到門券。這意味著\n(1) 購買門券只有價格競爭。\n(2) 主辦單位定立的票價低於市場清銷價格。\n(3) 獲得一張門券的機會成本高於主辦單位定立的售價。\nA. 只有(1)、(2)B. 只有(1)、(3)C. 只有(2)、(3)D. (1)、(2) 及 (3)\nExample Question 24 CE2005MCQ3\nDavid is choosing between two ways of spending his summer vacation : to take a summer job or join an exchange programme of the United Kingdom. Which of the following will increase his opportunity cost of taking the summer job?\nA. The fee for the exchange programme increases B. The summer job pays a higher salary\nC. A valuable course is added to the exchange programme D. Less training for the summer job is provided\n大衛可選擇以下兩種方式之一度過他的暑假：做暑期工或參加一項前往英國的交流計劃。下列哪一項會增加他做暑期工的機會成本？\nA. 該交流計劃的費用增加了。B. 該暑期工的工資提高了。\nC. 該交流計劃多提供一項有價值的課程。D. 從該暑期工中獲得的培訓減少了。\nExample Question 25 CE2007MCQ2\nA resident of Mainland China is choosing between a tour to HK and a tour to Macau organized by a travel agent. His opportunity cost of cho",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 639,
-                "to": 654
-              }
-            },
-            "chunk_index": 33,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.706367,
-          "rank": 8,
-          "score_ratio": 0.8342,
-          "quality_tier": "high"
-        },
-        {
-          "text": "y cost is correct?\nA. Opportunity cost still exists even when there are no choices.\nB. Opportunity cost does not exist in a planned economy.\nC. When the value of an option decreases, the opportunity cost of choosing that option does not change.\nD. When the value of the highest-valued option increases, the opportunity cost of choosing that option will decrease.\n下列哪一項關於機會成本概念的陳述是正確的？\nA. 即使沒有選擇，還是有機會成本。\nB. 在計劃經濟中並沒有機會成本。\nC. 當某選擇的價值下降時，揀選該選擇的機會成本不會改變。\nD. 當「價值最高的選擇」的價值增加時，揀選該項選擇的機會成本會下降。\nExample Question 23 CE2004MCQ13\nWhen the Real Madrid football team visited Hong Kong, many people queued up for days for the tickets to watch the game. Some people complained that they were unable to buy a ticket even they were willing to pay the official ticket price. This implies that\n(1)there was only price competition for the ticket.\n(2)the official ticket price was set below the market clearing level.\n(3)the opportunity cost of obtaining a ticket was higher that its official selling price.\nA. (1) and (2) only B. (1) and (3) o",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 625,
-                "to": 640
-              }
-            },
-            "chunk_index": 32,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.16949,
-          "rank": 9,
-          "score_ratio": 0.824,
-          "quality_tier": "high"
-        },
-        {
-          "text": "sons.\n由於新冠肺炎，學校的日常教學受到干擾，大部分學校使用視訊軟件（例如Zoom和Google Meet）進行網上授課。假設校園重新開放，並准許面對面授課。下列哪項是教師選擇網上授課還是面對面授課時最不重要的因素？\nA. 網上授課會減低教師感染新冠肺炎的風險。\nB. 教師不知道網上授課時學生正在做什麼，因為學生可能關掉鏡頭。\nC. 教師已經花費很多時間學習使用視訊軟件進行網上授課。\nD. 頻密使用視訊軟件進行網上授課可導致教師的視力受損。\nType 4 (Interest)\nExample Question 1 DSEPPMCQ3\nWhich of the following statements about interest are correct?\n(1) Interest is a premium received for postponing current consumption.\n(2) An interest rate does not exist in a barter economy.\n(3) A fall in the interest rate increases present consumption.\nA. (1) and (2) onlyB. (1) and (3) onlyC. (2) and (3) onlyD. (1), (2) and (3)\n下列哪些有關利息的陳述是正確的？ \n(1) 利息是就延遲當時消費所收取的一個溢價。\n(2) 在以物易物經濟中，利率並不存在。\n(3) 利率下降會增加現時的消費。 \nA. 只有 (1)、(2)     B. 只有 (1)、(3)      C. 只有 (2)、(3)      D. (1)、 (2)及(3)\nExample Question 2 DSE2012MCQ3\nWhich of the following statements about interest is correct?\nA. People will reduce current consumption when the interest rate drops.B. The interest rate will be zero if there is no inflation.\nC. Interest does not exist in a planned econo",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 789,
-                "to": 810
-              }
-            },
-            "chunk_index": 44,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 42.509426,
-          "rank": 10,
-          "score_ratio": 0.8114,
-          "quality_tier": "high"
-        }
-      ],
-      "query": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。"
-    },
-    "nodeId": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
-    "nodeType": "knowledgeRetrieval",
-    "status": "completed",
-    "detail": "datasets=1",
-    "node": {
-      "id": "f05ce68c-8dbe-4bdc-8626-f0ae83866cfe",
-      "type": "custom",
-      "position": {
-        "x": 420.1435610890775,
-        "y": 16.707950198302242
-      },
-      "deletable": true,
-      "data": {
-        "type": "knowledgeRetrieval",
-        "label": "Knowledge Retrieval",
-        "datasets": [
-          {
-            "id": "dataset-econ-d1c07ed8",
-            "name": "Econ"
-          }
-        ],
-        "runStatus": "completed"
-      },
-      "width": 240,
-      "height": 120,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 420.1435610890775,
-        "y": 16.707950198302242
-      },
-      "dragging": false
-    }
-  },
-  {
-    "input": {
-      "result": [
-        {
-          "text": "債權人)來說，利息是延遲當前消費的回報 / 補償 / 溢價 \n利息既是成本又是回報，取決於是借款人或貸款人 \n利率上升  借貸成本增加  借貸減少（反之亦然） \n例子：\nRex 沒有足夠的錢在中環買一間屋。他以3%的利率向匯豐銀行借貸置業。 \n對Rex（借方）來說，3%的利息是提前拿到物業的成本。 \n對HSBC（貸方）來說，3%的利息是延遲使用該筆款項的回報。 \n人們願意為早期消費付出代價，因為:\n早用勝於遲用\n現在商品的價值 > 未來相同商品的價值 \n當前消費勝於未來消費 \n人們缺乏耐性 \n今天的一元比明天的一元更值錢 \n重要提示：\n利息可以在沒有貨幣 / 在以物易物經濟下存在 \n人們缺乏耐性，他們會為了更早享用物品付出溢價 \n要在當前消費和未來消費之間做出選擇，就會產生利息 \n即使沒有貨幣，利息亦可以用物品來表達\n例如，你借了 10 支鉛筆，然後歸還12 支鉛筆\n1.9The Three Basic Economic Problems三個基本經濟學問題\n***MIND THE KEY WORDS***\nWhat to produce? 生產甚麼？\nThe choice of the type and quantities goods and services to produce\nE.g.The Apple decides to produce Ipod, Iphone, Ipad, Iwatch, Airpod, Apple TV… (type)\nE.g.The Apple store decides to produce more IPhone 8 and cut the amount of IPhone X (quantity)\n選擇要生產的物品和服務的類型和數量 \nE.g. Apple 決定生產 Ipod、Iphone、Ipad、Iwatch、Airpod、Apple TV……（類型） \nE.g. Apple 決定增產iPhone 8並減產iPhone X的數量（數量）\nHow to produce? 如何生產？\nThe choice of production methods \nusually the least costly\n選擇生產方式\n通常成本最低\nE.g. Handmade method 手工製 vs Machine method 機械製 \nImported labor 外勞    vs D",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 511,
-                "to": 545
-              }
-            },
-            "chunk_index": 18,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 52.3911,
-          "rank": 1,
-          "score_ratio": 1,
-          "quality_tier": "high"
-        },
-        {
-          "text": "cost of chosen option changes.\nOpportunity cost will NOT change when \ncost of highest-valued option forgone changes.\nvalue of chosen option changes \n沉沒成本只是過去的支出 \n過去花費的資源是不可挽回的，不應影響決策，我們不會計算過去付出的成本 \n例子： \n假設 Ronson 於2018年5月16日以$5,000購買黃子華棟篤笑的門票 \n現在有3個人分別想買$500、$2,000和$3,000的票。 \n由於先前購買的價格不是目前可以選擇的選項，只是過去的支出。 \n機會成本是放棄的價值最高的選項，即 $3,000 。 \nTips： \n***重要提示： \n如果沒有任何其他選擇，成本將為零。因為在做出選擇時沒有放棄任何東西。 \n即使世界上只有一個人，機會成本依然存在。 \n金錢和時間本身不是機會成本，只有金錢和時間中最高價值替代用途才是機會成本。 \n結論： \n機會成本會改變，如果：\n價值最高的放棄選項改變了價值。\n所選選項的金錢 / 時間 / 非金錢成本改變。\n機會成本不會改變，如果：\n價值最高的放棄選項的成本改變 \n所選選項的價值改變\n1.8More About Interest and Opportunity Cost 利息 & 機會成本\nDefinition:\nTo borrower, interest is the cost of earlier availability of resources\nTo lender, interest is the return / compensation / premium for postponing current consumption\nInterest is both cost and return, depends on the borrower or lender\nInterest rate increase  cost of borrowing increase  borrowing decrease (vice versa)\nExample:\nRex does not have enough money to buy a flat in central. He borrows money from HSBC ba",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 464,
-                "to": 494
-              }
-            },
-            "chunk_index": 16,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 49.737877,
-          "rank": 2,
-          "score_ratio": 0.9494,
-          "quality_tier": "high"
-        },
-        {
-          "text": "。如果湯美選擇模型太空船，他的機會成本是什麼？A. 一架耳筒收音機B. 一架耳筒收音機和一件外套\nC. 一艘模型太空船的價錢          D. 沒有機會成本，因為這是一份禮物\nExample Question 2 CE1991MCQ2\nSusan is choosing between two jobs: being a teacher and being a singer. If she chooses to be a singer, her opportunity cost will include\nA. the income from being a teacher B. the income from being a singer\nC. the tuition fee she paid for her training as a teacher D. the tuition fee she paid for her training as a singer\n蘇珊想在教書工作和歌唱事業兩者選擇其一。如果她選擇歌唱事業，她的機會成本包括\nA. 作為教師的收入。B. 作為歌手的收入。\nC. 她已經支付的受訓做教師的學費。D. 她已經支付的受訓做歌手的學費。\nExample Question 3 CE1992MCQ3\nWhich of the following are opportunity costs of attending school?\n(1) school fee\n(2) income forgone\n(3) poor examination results\n(4) expenditure on dinners\nA. (1) and (2) B. (1) and (3) C. (2) and (4) D. (3) and (4)\n以下哪幾項是上學讀書的機會成本？\n(1) 學費\n(2) 所放棄的收入\n(3) 差劣的考試成績\n(4) 晚餐的開支\nA. (1) 、(2)     B. (1)、(3) C. (2)、(4) D. (3)、(4)\nExample Question 4 CE1993MCQ2\nMr. Wong could spend two hours at a concert or tutoring a student at $60 per hour. He could use the t",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 431,
-                "to": 454
-              }
-            },
-            "chunk_index": 21,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 49.18747,
-          "rank": 3,
-          "score_ratio": 0.9389,
-          "quality_tier": "high"
-        },
-        {
-          "text": "Market economy\nMost resources are privately owned\nThe three problems are mainly tackled by the price mechanism / price signal \nWithout the private property right system, market price cannot be used to tackle the three problems  \nPrivate property rights \nExclusive right to use\nExclusive right to receive income\nRight to transfer\nIf there is no clear definition of private property right, no one will be willing to buy the product since even he buys it, the public may still use it. \nMixed Economy\nNo society is ONLY a traditional, planned or market economy \nIn reality, all economies are mixed economies\n1. 傳統經濟\n這三個問題主要靠社會習俗和傳統來解決 \nEg. 只有最年長的男性才有權建造村屋 \n2. 計劃經濟 / 指令經濟\n大多數資源歸政府所有 \n三大問題主要由政府中央決策部署解決 \nE.g. 政策是根據政府實施的 \n3. 市場經濟 \n大部分資源為私人所有 \n三大問題主要通過價格機制 / 價格信號來解決\n如沒有私有產權制度，市場價格無法解決這三個問題 \n私有產權 \n獨有使用權\n獨有收入權\n轉讓權\n如果沒有明確的私有產權定義，就沒有人願意購買這個產品，因為即使他購買了，公眾所有人仍然可以使用它。 \n4. 混合經濟 \n沒有一個社會僅僅是傳統、計劃或市場經濟 \n現實中，所有經濟體系都是混合經濟\n1.11Economy Activities經濟活動\nConsumption\nThe process of utilizing resources to directly satisfy human wants\nE.g.Ken buys",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 566,
-                "to": 600
-              }
-            },
-            "chunk_index": 20,
-            "file_id": "file-8c491585-783f-4e5c-9efb-57f995ddef2a",
-            "file_name": "Ch1 Basic Economy Concept NOTE (CHECKED).docx"
-          },
-          "score": 49.10543,
-          "rank": 4,
-          "score_ratio": 0.9373,
-          "quality_tier": "high"
-        },
-        {
-          "text": "ides to increase the salaries of its secretaries\nD. Firm Z decides to increase the bonuses for its sale representative\n芬妮可在三份工作中選擇其一。她的選擇偏好如下：首選：在X學校當教師\n次選：在Y公司當秘書\n第三選擇：在Z廠商當營業代表\n假設芬妮的選擇偏好次序不變，下列哪一種情況會增加她在X學校當教師的機會成本？\nA. X學校的學生變得更頑劣。\nB. Y公司要求增加它的秘書工作時間。\nC. Y公司決定增加它的秘書的薪金。\nD. Z廠商決定增加它作為營業代表的年終獎金。\nExample Question 8 CE1996MCQ1\nJohn live in his own apartment which is worth $1million. He can sell the apartment and put the money in a bank at an interest rate of 5% per year. He can also rent out the apartment at $5000 per month. What is the opportunity cost to John if he decides to live in the apartment?\nA. $1 millionB. $5000 a yearC. $5000 a month\nD. There is no opportunity cost because he lives in his own apartment\n大強居住於自己擁有的住宅單位，該單位價值一百萬元。他可以出售該單位，將所獲金錢存於銀行，以年息率5%來收息。他亦可以將該單位出租，每月收取租金$5000。對大強來說，他決定在該單位自住的機會成本是？\nA. 一百萬元。B. 每年$50,000。C. 每月$5,000。\nD. 沒有機會成本，因為他用來自住。\nAnswer Question 9 and 10 by referring to the following information: \nMax Department Store has launched a promotion campaign. For every purchase of $10",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 482,
-                "to": 500
-              }
-            },
-            "chunk_index": 24,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 48.614063,
-          "rank": 5,
-          "score_ratio": 0.9279,
-          "quality_tier": "high"
-        },
-        {
-          "text": "ring a student at $60 per hour. He could use the time on painting instead and earn a total of $150. If the price of the concert ticket is $300, what is his opportunity cost of his choice of going to the concert?\nA. $150 B. $300 C. $420 D. $450\n黃先生可以花兩小時出席一場音樂會；或替學生補習，收費每小時$60。他又可用這段時間來繪畫，賺取$150。若音樂會的票價為$300，他選擇出席該音樂會的機會成本是多少？\nA. $150 B. $300 C. $420 D. $450\nExample Question 5 CE1994MCQ2\nIn a lottery, Peter wins a transferable air ticket to Japan. Which of the following statements is correct? \nA. The ticket is a free good\nB. Peter will not lose anything if he loses his ticket\nC. The opportunity cost to Peter of using the ticket is zero\nD. The opportunity cost to Peter of using the ticket increase if the price of the ticket increases\n在一次抽獎中，彼得贏得一張可轉讓予他人的機票前往日本。下列哪一項正確？\nA. 這機票是「免費物品」。\nB. 彼得若遺失這機票，也沒有任何損失。\nC. 彼得使用這機票的機會成本是零。\nD. 如果這機票的價格上升，彼得使用這機票的機會成本增加。\nExample Question 6 CE1994MCQ3\nMr. Lee own a photographic studio. Previously he received $30000 per month by letting it out. He now does not let it, but instead h",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 454,
-                "to": 470
-              }
-            },
-            "chunk_index": 22,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 44.139893,
-          "rank": 6,
-          "score_ratio": 0.8425,
-          "quality_tier": "high"
-        },
-        {
-          "text": "越第二選項的價值的水平。所以選擇任職政務主任的成本可能從第二選項的價值（即在會計師樓任職實習生）變為第三選項的價值（即繼續找工作而沒有接受任何工作並亨有失業援助金）。                         (2)\n2015DSE LQ1ai, ii, b\nMore and more famous universities offer “massive open online courses” (MOOC) to students from various backgrounds for systematic learning. Most of the teaching materials in MOOC can be accessed online by anyone free of charge. Explain whether these materials are\n(a)free goods;(2)\n(b)public goods.(3)\n(c)Some people prefer to take free MOOC while others prefer to take paid courses conducted on the university campus. If the courses are with the same contents and number of teaching hours, will the cost for a person to take a free MOOC be necessarily lower than the cost for another person to take a paid on-campus course? Explain.(3)\n越來越多的著名大學開辦「大規模開放線上課程」（MOOC）向不同背景的學生提供有系統的學習機會。\n仼何人都可以在網上免費取用大部分「大規模開放線上課程」的教材。解釋這些教材是否\n(a)免費物品；                                                           (2)\n(b)共用品。                                                            (3)\n(c)有些人較喜歡報讀免費「大規模開放線上課程」，",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 1218,
-                "to": 1228
-              }
-            },
-            "chunk_index": 72,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.903976,
-          "rank": 7,
-          "score_ratio": 0.838,
-          "quality_tier": "high"
-        },
-        {
-          "text": "elling price.\nA. (1) and (2) only B. (1) and (3) only C. (2) and (3) only D. (1), (2) and (3)\n皇家馬德里足球隊訪港時，很多人為購買球賽門券排隊多天。部分人投訴說即使他們願意付出主辦單位定立的票價,還是買不到門券。這意味著\n(1) 購買門券只有價格競爭。\n(2) 主辦單位定立的票價低於市場清銷價格。\n(3) 獲得一張門券的機會成本高於主辦單位定立的售價。\nA. 只有(1)、(2)B. 只有(1)、(3)C. 只有(2)、(3)D. (1)、(2) 及 (3)\nExample Question 24 CE2005MCQ3\nDavid is choosing between two ways of spending his summer vacation : to take a summer job or join an exchange programme of the United Kingdom. Which of the following will increase his opportunity cost of taking the summer job?\nA. The fee for the exchange programme increases B. The summer job pays a higher salary\nC. A valuable course is added to the exchange programme D. Less training for the summer job is provided\n大衛可選擇以下兩種方式之一度過他的暑假：做暑期工或參加一項前往英國的交流計劃。下列哪一項會增加他做暑期工的機會成本？\nA. 該交流計劃的費用增加了。B. 該暑期工的工資提高了。\nC. 該交流計劃多提供一項有價值的課程。D. 從該暑期工中獲得的培訓減少了。\nExample Question 25 CE2007MCQ2\nA resident of Mainland China is choosing between a tour to HK and a tour to Macau organized by a travel agent. His opportunity cost of cho",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 639,
-                "to": 654
-              }
-            },
-            "chunk_index": 33,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.706367,
-          "rank": 8,
-          "score_ratio": 0.8342,
-          "quality_tier": "high"
-        },
-        {
-          "text": "y cost is correct?\nA. Opportunity cost still exists even when there are no choices.\nB. Opportunity cost does not exist in a planned economy.\nC. When the value of an option decreases, the opportunity cost of choosing that option does not change.\nD. When the value of the highest-valued option increases, the opportunity cost of choosing that option will decrease.\n下列哪一項關於機會成本概念的陳述是正確的？\nA. 即使沒有選擇，還是有機會成本。\nB. 在計劃經濟中並沒有機會成本。\nC. 當某選擇的價值下降時，揀選該選擇的機會成本不會改變。\nD. 當「價值最高的選擇」的價值增加時，揀選該項選擇的機會成本會下降。\nExample Question 23 CE2004MCQ13\nWhen the Real Madrid football team visited Hong Kong, many people queued up for days for the tickets to watch the game. Some people complained that they were unable to buy a ticket even they were willing to pay the official ticket price. This implies that\n(1)there was only price competition for the ticket.\n(2)the official ticket price was set below the market clearing level.\n(3)the opportunity cost of obtaining a ticket was higher that its official selling price.\nA. (1) and (2) only B. (1) and (3) o",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 625,
-                "to": 640
-              }
-            },
-            "chunk_index": 32,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 43.16949,
-          "rank": 9,
-          "score_ratio": 0.824,
-          "quality_tier": "high"
-        },
-        {
-          "text": "sons.\n由於新冠肺炎，學校的日常教學受到干擾，大部分學校使用視訊軟件（例如Zoom和Google Meet）進行網上授課。假設校園重新開放，並准許面對面授課。下列哪項是教師選擇網上授課還是面對面授課時最不重要的因素？\nA. 網上授課會減低教師感染新冠肺炎的風險。\nB. 教師不知道網上授課時學生正在做什麼，因為學生可能關掉鏡頭。\nC. 教師已經花費很多時間學習使用視訊軟件進行網上授課。\nD. 頻密使用視訊軟件進行網上授課可導致教師的視力受損。\nType 4 (Interest)\nExample Question 1 DSEPPMCQ3\nWhich of the following statements about interest are correct?\n(1) Interest is a premium received for postponing current consumption.\n(2) An interest rate does not exist in a barter economy.\n(3) A fall in the interest rate increases present consumption.\nA. (1) and (2) onlyB. (1) and (3) onlyC. (2) and (3) onlyD. (1), (2) and (3)\n下列哪些有關利息的陳述是正確的？ \n(1) 利息是就延遲當時消費所收取的一個溢價。\n(2) 在以物易物經濟中，利率並不存在。\n(3) 利率下降會增加現時的消費。 \nA. 只有 (1)、(2)     B. 只有 (1)、(3)      C. 只有 (2)、(3)      D. (1)、 (2)及(3)\nExample Question 2 DSE2012MCQ3\nWhich of the following statements about interest is correct?\nA. People will reduce current consumption when the interest rate drops.B. The interest rate will be zero if there is no inflation.\nC. Interest does not exist in a planned econo",
-          "metadata": {
-            "loc": {
-              "lines": {
-                "from": 789,
-                "to": 810
-              }
-            },
-            "chunk_index": 44,
-            "file_id": "file-80f99dc8-2f0c-481f-b289-8b7c91b2900e",
-            "file_name": "Ch1 Basic Economy Concept QB (CHECKED).docx"
-          },
-          "score": 42.509426,
-          "rank": 10,
-          "score_ratio": 0.8114,
-          "quality_tier": "high"
-        }
-      ],
-      "query": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。"
-    },
-    "processData": {
-      "model": "gpt-oss-120b-MXFP4-Q8",
-      "instruction": "",
-      "classes": [
-        {
-          "id": "sales",
-          "name": "Sales"
-        },
-        {
-          "id": "support",
-          "name": "Support"
-        }
-      ],
-      "queryVariableSelector": []
-    },
-    "output": {
-      "class_id": "sales",
-      "class_name": "Sales",
-      "keywords": [],
-      "usage": {},
-      "model": "gpt-oss-120b-MXFP4-Q8"
+      "class_name": "Math",
+      "class_id": "support",
+      "usage": {
+        "prompt_tokens": 0,
+        "prompt_unit_price": "0",
+        "prompt_price_unit": "0",
+        "prompt_price": "0",
+        "completion_tokens": 0,
+        "completion_unit_price": "0",
+        "completion_price_unit": "0",
+        "completion_price": "0",
+        "total_tokens": 0,
+        "total_price": "0",
+        "currency": "USD",
+        "latency": 0,
+        "time_to_first_token": 0,
+        "time_to_generate": 0
+      }
     },
     "nodeId": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
     "nodeType": "questionClassifier",
     "status": "completed",
-    "detail": "class=Sales",
+    "detail": "class=Math",
     "node": {
       "id": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
       "type": "custom",
       "position": {
-        "x": 838.2871221781552,
-        "y": -12.995072376457315
+        "x": 520.2210146231396,
+        "y": -107.87274650508417
       },
       "deletable": true,
       "data": {
         "type": "questionClassifier",
         "label": "Question Classifier",
         "model": "gpt-oss-120b-MXFP4-Q8",
-        "instruction": "",
+        "instruction": "The Question is Which Subject?",
         "classes": [
           {
-            "id": "sales",
-            "name": "Sales"
+            "id": "support",
+            "name": "Math"
           },
           {
-            "id": "support",
-            "name": "Support"
+            "id": "class_1778600927716",
+            "name": "Econ"
           }
         ],
         "queryVariableSelector": [],
@@ -519,114 +158,19 @@
       },
       "width": 240,
       "height": 236,
-      "selected": false,
+      "selected": true,
       "positionAbsolute": {
-        "x": 838.2871221781552,
-        "y": -12.995072376457315
+        "x": 520.2210146231396,
+        "y": -107.87274650508417
       },
       "dragging": false
     }
   },
   {
     "input": {},
-    "processData": {
-      "model_mode": "chat",
-      "prompts": [
-        {
-          "files": [],
-          "role": "system",
-          "text": "u are a helpful assistant\n\n"
-        },
-        {
-          "files": [],
-          "role": "user",
-          "text": "某學生只有 $200，可以選擇買經濟補習書或買演唱會門票。最後他選擇買補習書。\r\n解釋這個決定涉及哪些經濟概念。\n\n"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 129,
-        "completion_tokens": 2663,
-        "total_tokens": 2792,
-        "input_tokens": 129,
-        "output_tokens": 2663,
-        "cached_tokens": null,
-        "model_load_duration": null,
-        "time_to_first_token": null,
-        "total_time": null,
-        "prompt_eval_duration": null,
-        "generation_duration": null,
-        "prompt_tokens_per_second": null,
-        "generation_tokens_per_second": null
-      },
-      "finish_reason": "stop",
-      "model_name": "gpt-oss-120b-MXFP4-Q8"
-    },
-    "output": {
-      "text": "在這個「只有 200 元、在補習書與演唱會門票之間做選擇」的情境裡，涉及到多個核心的經濟概念。下面依序說明每個概念、它們如何在此決策中發揮作用，並舉例說明。\n\n---\n\n## 1. 稀缺性（Scarcity）\n\n**概念**  \n- 稀缺性是經濟學的根本前提：資源（金錢、時間、商品）是有限的，而人們的需求卻是無窮的。  \n- 因此必須在有限資源下做出選擇。\n\n**在此情境的體現**  \n- 這位學生只有 200 元，這是一筆有限的「財務資源」。  \n- 補習書與演唱會門票都需要花費這 200 元（或接近），所以他無法同時購買兩樣東西，只能挑一樣。\n\n---\n\n## 2. 預算限制（Budget Constraint）\n\n**概念**  \n- 預算限制描述了在給定收入（或資金）與商品價格下，消費者能夠組合購買的所有可能方案。  \n- 形式化：\\(p_1 q_1 + p_2 q_2 \\le M\\)，其中 \\(p_i\\) 為商品價格，\\(q_i\\) 為購買數量，\\(M\\) 為可支配收入。\n\n**在此情境的體現**  \n- \\(M = 200\\) 元。  \n- 若補習書價格 \\(p_{書}=200\\) 元、演唱會門票價格 \\(p_{票}=200\\) 元（或類似），則預算線只有兩個端點：\\( (q_{書}=1, q_{票}=0) \\) 或 \\( (q_{書}=0, q_{票}=1) \\)。  \n- 任何其他組合（如半本書、半張票）在現實中不可行，因為商品不可分割。\n\n---\n\n## 3. 交易成本（Transaction Costs）與可得性（Availability）\n\n**概念**  \n- 交易成本包括尋找資訊、購買、運送等額外支出。  \n- 商品的可得性（是否立即可購、是否需要排隊）也會影響選擇。\n\n**在此情境的體現**  \n- 補習書可能在校園書店直接可買，取得成本低；  \n- 演唱會門票可能需要排隊或在網路上額外支付手續費，提升總支出或時間成本。  \n- 這些隱形成本會被納入「總成本」的考量。\n\n---\n\n## 4. 機會成本（Opportunity Cost）\n\n**概念**  \n- 機會成本是指為取得某一選項而放棄的「下一最佳」選項的價值。  \n- 它不僅包括金錢上的支出，還包括時間、效用、未來收益等。\n\n**在此情境的體現**  \n- 若選擇買補習書，機會成本是「無法參加演唱會」所失去的娛樂、社交、情感滿足等。  \n- 若選擇買門票，機會成本是「無法提升經濟知識」而可能影響期末考成績或未來學習效率。  \n- 學生在做決策時會比較兩者的機會成本，選擇「機會成本較低」的方案。\n\n---\n\n## 5. 邊際效用（Marginal Utility）與效用最大化（Utility Maximization）\n\n**概念**  \n- 邊際效用是指額外消費一單位商品所帶來的額外滿足感。  \n- 理性消費者會把預算分配到使每一單位貨幣的邊際效用相等的商品上，從而達到效用最大化。\n\n**在此情境的體現**  \n- 補習書的邊際效用可能是「提升考試成績、增加未來獎學金或升學機會」的價值。  \n- 演唱會門票的邊際效用可能是「即時的快樂、放鬆、社交互動」的價值。  \n- 因為預算只能支出一次，學生會比較「每花 1 元所得到的效用」；若補習書的邊際效用／元 > 演唱會門票的邊際效用／元，則選擇補習書。\n\n---\n\n## 6. 偏好與需求曲線（Preferences & Demand）\n\n**概念**  \n- 偏好描述消費者對不同商品組合的相對喜好，通常以無差異曲線表示。  \n- 需求曲線則是偏好與預算限制交互作用的結果，顯示在不同價格下消費者願意購買的數量。\n\n**在此情境的體現**  \n- 學生的偏好可能偏向「長期學習收益」大於「短期娛樂」。  \n- 這種偏好在無差異曲線上會把「一本補習書」放在「一張門票」之上，使得在預算線上唯一的接觸點是「補習書」。\n\n---\n\n## 7. 理性選擇理論（Rational Choice Theory）\n\n**概念**  \n- 理性選擇假設個體在資訊充分、目標清晰的情況下，會選擇能使自身效用最大化的行動。  \n- 「理性」不等於「自私」或「無情」，而是指有條理、能比較選項的決策過程。\n\n**在此情境的體現**  \n- 學生根據自己的目標（例如期末考高分、未來升學）與可得資源（200 元）進行比較，最終選擇對自己效用最大化的補習書。  \n- 這是一個典型的理性消費者行為示例。\n\n---\n\n## 8. 時間偏好與折現（Time Preference & Discounting）\n\n**概念**  \n- 時間偏好指人們對當前收益與未來收益的相對重視程度。  \n- 折現則是把未來收益「折算」成現在的價值，以便比較。\n\n**在此情境的體現**  \n- 補習書的效用多在未來（考試、學期成績）才能顯現；演唱會的效用則是即時的。  \n- 如果學生的時間偏好較強（更重視現在的快樂），他可能會選擇門票。相反，若他更看重未來收益（低折現率），則會選擇補習書。  \n- 他最終選擇補習書，暗示他對未來的收益給予較高權重。\n\n---\n\n## 9. 風險與不確定性（Risk & Uncertainty）\n\n**概念**  \n- 不確定性指未來結果的未知性。  \n- 風險則是可以以概率衡量的不確定性。\n\n**在此情境的體現**  \n- 補習書的效用（成績提升）有一定的成功機率，但並非保證。  \n- 演唱會門票的效用（娛樂）相對較確定，只要去現場就能得到快樂。  \n- 學生在考慮風險時，可能認為「即使有風險，長期收益仍高於即時快樂」而選擇補習書。\n\n---\n\n## 10. 需求彈性（Price Elasticity of Demand）\n\n**概念**  \n- 需求彈性衡量價格變動對需求量的影響。  \n- 若商品是必需品或替代品少，需求較缺乏彈性；若是奢侈品或有多種替代，需求較具彈性。\n\n**在此情境的體現**  \n- 對於大多數學生而言，補習書屬於「學習必需品」或「投資未來」的商品，需求彈性較低。  \n- 演唱會門票則屬於「可有可無的娛樂」商品，需求彈性較高。  \n- 在預算緊張的情況下，彈性較大的商品（門票）更容易被削減，因而被放棄。\n\n---\n\n## 11. 社會與心理因素（Social & Psychological Influences）\n\n**概念**  \n- 除了純粹的經濟考量，社會規範、同儕壓力、個人身份認同等也會影響決策。  \n- 例如「學業成績好是自我形象」或「參加演唱會是社交需求」。\n\n**在此情境的體現**  \n- 學生可能感受到父母或老師對學業的期待，形成「學業優先」的社會壓力。  \n- 這種非金錢的「心理成本」會被內化為效用的一部份，進一步推動他選擇補習書。\n\n---\n\n## 整合圖示（概念之間的關係）\n\n```\n[稀缺性] → 形成 → [預算限制] → 受 → [價格/交易成本] 影響\n           ↓\n      產生 → [選擇集合]（補習書 vs 演唱會門票）\n           ↓\n   透過比較 → [邊際效用]、[機會成本]、[時間偏好]、[風險/不確定性]\n           ↓\n   再結合 → [偏好]、[需求彈性]、[社會心理因素]\n           ↓\n   作出 → [理性選擇] → 產生 → [效用最大化] 的結果（買補習書）\n```\n\n---\n\n### 小結\n\n- **稀缺性** + **預算限制** → 必須在兩個互斥選項中挑一個。  \n- **機會成本**、**邊際效用**、**時間偏好**、**風險**等概念幫助學生衡量「現在的快樂」與「未來的收益」。  \n- **理性選擇理論**假設學生會選擇讓自己效用最高的方案，這裡是「買補習書」。  \n- **需求彈性**、**交易成本**、**社會心理因素**則提供了更細緻的解釋，說明為何在相同金額下，補習書更可能被選擇。\n\n透過這些經濟概念，我們不僅能理解個人消費決策的內在邏輯，也能將其延伸至更廣泛的市場行為與政策分析。祝學習順利！",
-      "reasoning_content": "",
-      "usage": {
-        "prompt_tokens": 129,
-        "completion_tokens": 2663,
-        "total_tokens": 2792,
-        "input_tokens": 129,
-        "output_tokens": 2663,
-        "cached_tokens": null,
-        "model_load_duration": null,
-        "time_to_first_token": null,
-        "total_time": null,
-        "prompt_eval_duration": null,
-        "generation_duration": null,
-        "prompt_tokens_per_second": null,
-        "generation_tokens_per_second": null
-      },
-      "finish_reason": "stop"
-    },
-    "nodeId": "llm",
-    "nodeType": "llm",
-    "status": "completed",
-    "detail": "model=gpt-oss-120b-MXFP4-Q8",
-    "node": {
-      "id": "llm",
-      "type": "custom",
-      "position": {
-        "x": 1262,
-        "y": -0.8152682178578772
-      },
-      "data": {
-        "type": "llm",
-        "label": "llm 1",
-        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
-        "apiKey": "octopusPass",
-        "model": "gpt-oss-120b-MXFP4-Q8",
-        "messages": [
-          {
-            "role": "system",
-            "content": "u are a helpful assistant\n\n{{#f05ce68c-8dbe-4bdc-8626-f0ae83866cfe.output#}}"
-          },
-          {
-            "role": "user",
-            "content": "{{#sys.query#}}\n\n{{#sys.files#}}"
-          }
-        ],
-        "context_variable": "",
-        "vision_enable": false,
-        "runStatus": "completed"
-      },
-      "width": 240,
-      "height": 120,
-      "positionAbsolute": {
-        "x": 1262,
-        "y": -0.8152682178578772
-      },
-      "dragging": false,
-      "selected": false
-    }
-  },
-  {
-    "input": {},
     "processData": {},
     "output": {
-      "answer": "LLM 1 :\n在這個「只有 200 元、在補習書與演唱會門票之間做選擇」的情境裡，涉及到多個核心的經濟概念。下面依序說明每個概念、它們如何在此決策中發揮作用，並舉例說明。\n\n---\n\n## 1. 稀缺性（Scarcity）\n\n**概念**  \n- 稀缺性是經濟學的根本前提：資源（金錢、時間、商品）是有限的，而人們的需求卻是無窮的。  \n- 因此必須在有限資源下做出選擇。\n\n**在此情境的體現**  \n- 這位學生只有 200 元，這是一筆有限的「財務資源」。  \n- 補習書與演唱會門票都需要花費這 200 元（或接近），所以他無法同時購買兩樣東西，只能挑一樣。\n\n---\n\n## 2. 預算限制（Budget Constraint）\n\n**概念**  \n- 預算限制描述了在給定收入（或資金）與商品價格下，消費者能夠組合購買的所有可能方案。  \n- 形式化：\\(p_1 q_1 + p_2 q_2 \\le M\\)，其中 \\(p_i\\) 為商品價格，\\(q_i\\) 為購買數量，\\(M\\) 為可支配收入。\n\n**在此情境的體現**  \n- \\(M = 200\\) 元。  \n- 若補習書價格 \\(p_{書}=200\\) 元、演唱會門票價格 \\(p_{票}=200\\) 元（或類似），則預算線只有兩個端點：\\( (q_{書}=1, q_{票}=0) \\) 或 \\( (q_{書}=0, q_{票}=1) \\)。  \n- 任何其他組合（如半本書、半張票）在現實中不可行，因為商品不可分割。\n\n---\n\n## 3. 交易成本（Transaction Costs）與可得性（Availability）\n\n**概念**  \n- 交易成本包括尋找資訊、購買、運送等額外支出。  \n- 商品的可得性（是否立即可購、是否需要排隊）也會影響選擇。\n\n**在此情境的體現**  \n- 補習書可能在校園書店直接可買，取得成本低；  \n- 演唱會門票可能需要排隊或在網路上額外支付手續費，提升總支出或時間成本。  \n- 這些隱形成本會被納入「總成本」的考量。\n\n---\n\n## 4. 機會成本（Opportunity Cost）\n\n**概念**  \n- 機會成本是指為取得某一選項而放棄的「下一最佳」選項的價值。  \n- 它不僅包括金錢上的支出，還包括時間、效用、未來收益等。\n\n**在此情境的體現**  \n- 若選擇買補習書，機會成本是「無法參加演唱會」所失去的娛樂、社交、情感滿足等。  \n- 若選擇買門票，機會成本是「無法提升經濟知識」而可能影響期末考成績或未來學習效率。  \n- 學生在做決策時會比較兩者的機會成本，選擇「機會成本較低」的方案。\n\n---\n\n## 5. 邊際效用（Marginal Utility）與效用最大化（Utility Maximization）\n\n**概念**  \n- 邊際效用是指額外消費一單位商品所帶來的額外滿足感。  \n- 理性消費者會把預算分配到使每一單位貨幣的邊際效用相等的商品上，從而達到效用最大化。\n\n**在此情境的體現**  \n- 補習書的邊際效用可能是「提升考試成績、增加未來獎學金或升學機會」的價值。  \n- 演唱會門票的邊際效用可能是「即時的快樂、放鬆、社交互動」的價值。  \n- 因為預算只能支出一次，學生會比較「每花 1 元所得到的效用」；若補習書的邊際效用／元 > 演唱會門票的邊際效用／元，則選擇補習書。\n\n---\n\n## 6. 偏好與需求曲線（Preferences & Demand）\n\n**概念**  \n- 偏好描述消費者對不同商品組合的相對喜好，通常以無差異曲線表示。  \n- 需求曲線則是偏好與預算限制交互作用的結果，顯示在不同價格下消費者願意購買的數量。\n\n**在此情境的體現**  \n- 學生的偏好可能偏向「長期學習收益」大於「短期娛樂」。  \n- 這種偏好在無差異曲線上會把「一本補習書」放在「一張門票」之上，使得在預算線上唯一的接觸點是「補習書」。\n\n---\n\n## 7. 理性選擇理論（Rational Choice Theory）\n\n**概念**  \n- 理性選擇假設個體在資訊充分、目標清晰的情況下，會選擇能使自身效用最大化的行動。  \n- 「理性」不等於「自私」或「無情」，而是指有條理、能比較選項的決策過程。\n\n**在此情境的體現**  \n- 學生根據自己的目標（例如期末考高分、未來升學）與可得資源（200 元）進行比較，最終選擇對自己效用最大化的補習書。  \n- 這是一個典型的理性消費者行為示例。\n\n---\n\n## 8. 時間偏好與折現（Time Preference & Discounting）\n\n**概念**  \n- 時間偏好指人們對當前收益與未來收益的相對重視程度。  \n- 折現則是把未來收益「折算」成現在的價值，以便比較。\n\n**在此情境的體現**  \n- 補習書的效用多在未來（考試、學期成績）才能顯現；演唱會的效用則是即時的。  \n- 如果學生的時間偏好較強（更重視現在的快樂），他可能會選擇門票。相反，若他更看重未來收益（低折現率），則會選擇補習書。  \n- 他最終選擇補習書，暗示他對未來的收益給予較高權重。\n\n---\n\n## 9. 風險與不確定性（Risk & Uncertainty）\n\n**概念**  \n- 不確定性指未來結果的未知性。  \n- 風險則是可以以概率衡量的不確定性。\n\n**在此情境的體現**  \n- 補習書的效用（成績提升）有一定的成功機率，但並非保證。  \n- 演唱會門票的效用（娛樂）相對較確定，只要去現場就能得到快樂。  \n- 學生在考慮風險時，可能認為「即使有風險，長期收益仍高於即時快樂」而選擇補習書。\n\n---\n\n## 10. 需求彈性（Price Elasticity of Demand）\n\n**概念**  \n- 需求彈性衡量價格變動對需求量的影響。  \n- 若商品是必需品或替代品少，需求較缺乏彈性；若是奢侈品或有多種替代，需求較具彈性。\n\n**在此情境的體現**  \n- 對於大多數學生而言，補習書屬於「學習必需品」或「投資未來」的商品，需求彈性較低。  \n- 演唱會門票則屬於「可有可無的娛樂」商品，需求彈性較高。  \n- 在預算緊張的情況下，彈性較大的商品（門票）更容易被削減，因而被放棄。\n\n---\n\n## 11. 社會與心理因素（Social & Psychological Influences）\n\n**概念**  \n- 除了純粹的經濟考量，社會規範、同儕壓力、個人身份認同等也會影響決策。  \n- 例如「學業成績好是自我形象」或「參加演唱會是社交需求」。\n\n**在此情境的體現**  \n- 學生可能感受到父母或老師對學業的期待，形成「學業優先」的社會壓力。  \n- 這種非金錢的「心理成本」會被內化為效用的一部份，進一步推動他選擇補習書。\n\n---\n\n## 整合圖示（概念之間的關係）\n\n```\n[稀缺性] → 形成 → [預算限制] → 受 → [價格/交易成本] 影響\n           ↓\n      產生 → [選擇集合]（補習書 vs 演唱會門票）\n           ↓\n   透過比較 → [邊際效用]、[機會成本]、[時間偏好]、[風險/不確定性]\n           ↓\n   再結合 → [偏好]、[需求彈性]、[社會心理因素]\n           ↓\n   作出 → [理性選擇] → 產生 → [效用最大化] 的結果（買補習書）\n```\n\n---\n\n### 小結\n\n- **稀缺性** + **預算限制** → 必須在兩個互斥選項中挑一個。  \n- **機會成本**、**邊際效用**、**時間偏好**、**風險**等概念幫助學生衡量「現在的快樂」與「未來的收益」。  \n- **理性選擇理論**假設學生會選擇讓自己效用最高的方案，這裡是「買補習書」。  \n- **需求彈性**、**交易成本**、**社會心理因素**則提供了更細緻的解釋，說明為何在相同金額下，補習書更可能被選擇。\n\n透過這些經濟概念，我們不僅能理解個人消費決策的內在邏輯，也能將其延伸至更廣泛的市場行為與政策分析。祝學習順利！\n-----\nLLM 2 : \n",
+      "answer": "Math",
       "files": []
     },
     "nodeId": "answer",
@@ -637,24 +181,23 @@
       "id": "answer",
       "type": "custom",
       "position": {
-        "x": 1682,
-        "y": 0
+        "x": 896.7742969735548,
+        "y": -17.168341032799162
       },
       "data": {
         "type": "answer",
         "label": "Answer",
-        "answer": "LLM 1 :\n{{#llm.text#}}\n-----\nLLM 2 : \n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
+        "answer": "{{#fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name#}}",
         "outputs": [
-          "llm.text",
-          "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
+          "fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name"
         ],
         "runStatus": "completed"
       },
       "width": 260,
-      "height": 220,
+      "height": 134,
       "positionAbsolute": {
-        "x": 1682,
-        "y": 0
+        "x": 896.7742969735548,
+        "y": -17.168341032799162
       },
       "dragging": false,
       "selected": false

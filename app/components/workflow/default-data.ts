@@ -1,4 +1,4 @@
-import sampleGraph from "@/data/graph.json";
+import sampleGraph from "@/data/graph3.json";
 import { WorkflowDataType } from "@/app/components/workflow/types";
 
 type GraphNode = {
