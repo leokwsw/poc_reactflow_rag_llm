@@ -40,25 +40,24 @@
         "type": "custom",
         "position": {
           "x": 836.3965455006227,
-          "y": -22.27284701817316
+          "y": -22.97470710627914
         },
         "data": {
           "type": "answer",
           "label": "Answer",
-          "answer": "LLM 1 :\n{{#llm.text#}}\n-----\nLLM 2 : \n{{#45bbb912-6003-4bac-a45e-e8bffac4efd1.text#}}",
+          "answer": "{{#fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name#}}",
           "outputs": [
-            "llm.text",
-            "45bbb912-6003-4bac-a45e-e8bffac4efd1.text"
+            "fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name"
           ]
         },
         "width": 260,
-        "height": 240,
+        "height": 134,
         "positionAbsolute": {
           "x": 836.3965455006227,
-          "y": -22.27284701817316
+          "y": -22.97470710627914
         },
         "dragging": false,
-        "selected": false
+        "selected": true
       },
       {
         "id": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
@@ -72,7 +71,7 @@
           "type": "questionClassifier",
           "label": "Question Classifier",
           "model": "gpt-oss-120b-MXFP4-Q8",
-          "instruction": "Which Subject for?",
+          "instruction": "",
           "classes": [
             {
               "id": "class_1778601156403",
@@ -83,13 +82,11 @@
               "name": "Econ"
             }
           ],
-          "queryVariableSelector": [],
-          "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
-          "apiKey": "octopusPass"
+          "queryVariableSelector": []
         },
         "width": 240,
         "height": 236,
-        "selected": true,
+        "selected": false,
         "positionAbsolute": {
           "x": 441.77972184300256,
           "y": -23.743766963856046
@@ -134,8 +131,8 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": -512.2501773847525,
-      "y": 400.8233804113931,
+      "x": -191.25017738475253,
+      "y": 383.8233804113931,
       "zoom": 1.4247853909154369
     }
   }
