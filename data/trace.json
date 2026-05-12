@@ -2,23 +2,23 @@
   {
     "input": {
       "files": [],
-      "query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
+      "query": "某袋子內有9罐蘋果汁及4 罐提子汁,若從該袋子中隨機同時取出 6 罐,求取出 至多3 罐提子汁的概率。"
     },
     "processData": {},
     "output": {
       "sys.files": [],
-      "sys.query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
+      "sys.query": "某袋子內有9罐蘋果汁及4 罐提子汁,若從該袋子中隨機同時取出 6 罐,求取出 至多3 罐提子汁的概率。"
     },
     "nodeId": "sys",
     "nodeType": "start",
     "status": "completed",
-    "detail": "query=56 chars, files=0",
+    "detail": "query=51 chars, files=0",
     "node": {
       "id": "sys",
       "type": "custom",
       "position": {
         "x": 57.853148885294274,
-        "y": 38.60945150691185
+        "y": 37.415152108312014
       },
       "data": {
         "variables": [
@@ -41,7 +41,7 @@
       "height": 73,
       "positionAbsolute": {
         "x": 57.853148885294274,
-        "y": 38.60945150691185
+        "y": 37.415152108312014
       },
       "dragging": false,
       "deletable": false,
@@ -50,7 +50,7 @@
   },
   {
     "input": {
-      "query": "一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。"
+      "query": "某袋子內有9罐蘋果汁及4 罐提子汁,若從該袋子中隨機同時取出 6 罐,求取出 至多3 罐提子汁的概率。"
     },
     "processData": {
       "model_mode": "chat",
@@ -82,47 +82,47 @@
         },
         {
           "role": "user",
-          "text": "\n    {\"input_text\":[\"一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。\"],\"categories\":[{\"category_id\":\"support\",\"category_name\":\"Math\"},{\"category_id\":\"class_1778600927716\",\"category_name\":\"Econ\"}],\"classification_instructions\":[\"The Question is Which Subject?\"]}\n",
+          "text": "\n    {\"input_text\":[\"某袋子內有9罐蘋果汁及4 罐提子汁,若從該袋子中隨機同時取出 6 罐,求取出 至多3 罐提子汁的概率。\"],\"categories\":[{\"category_id\":\"class_1778601156403\",\"category_name\":\"Math\"},{\"category_id\":\"class_1778601158062\",\"category_name\":\"Econ\"}],\"classification_instructions\":[\"Which Subject for?\"]}\n",
           "files": []
         }
       ],
       "usage": {
-        "prompt_tokens": 0,
+        "prompt_tokens": 820,
         "prompt_unit_price": "0",
         "prompt_price_unit": "0",
         "prompt_price": "0",
-        "completion_tokens": 0,
+        "completion_tokens": 438,
         "completion_unit_price": "0",
         "completion_price_unit": "0",
         "completion_price": "0",
-        "total_tokens": 0,
+        "total_tokens": 1258,
         "total_price": "0",
         "currency": "USD",
-        "latency": 0,
-        "time_to_first_token": 0,
+        "latency": 6.103,
+        "time_to_first_token": 6.103,
         "time_to_generate": 0
       },
-      "finish_reason": "heuristic",
-      "model_provider": null,
+      "finish_reason": "stop",
+      "model_provider": "https://omlx-server.octopus-tech.com/v1",
       "model_name": "gpt-oss-120b-MXFP4-Q8"
     },
     "output": {
       "class_name": "Math",
-      "class_id": "support",
+      "class_id": "class_1778601156403",
       "usage": {
-        "prompt_tokens": 0,
+        "prompt_tokens": 820,
         "prompt_unit_price": "0",
         "prompt_price_unit": "0",
         "prompt_price": "0",
-        "completion_tokens": 0,
+        "completion_tokens": 438,
         "completion_unit_price": "0",
         "completion_price_unit": "0",
         "completion_price": "0",
-        "total_tokens": 0,
+        "total_tokens": 1258,
         "total_price": "0",
         "currency": "USD",
-        "latency": 0,
-        "time_to_first_token": 0,
+        "latency": 6.103,
+        "time_to_first_token": 6.103,
         "time_to_generate": 0
       }
     },
@@ -134,34 +134,36 @@
       "id": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
       "type": "custom",
       "position": {
-        "x": 520.2210146231396,
-        "y": -107.87274650508417
+        "x": 441.77972184300256,
+        "y": -23.743766963856046
       },
       "deletable": true,
       "data": {
         "type": "questionClassifier",
         "label": "Question Classifier",
         "model": "gpt-oss-120b-MXFP4-Q8",
-        "instruction": "The Question is Which Subject?",
+        "instruction": "Which Subject for?",
         "classes": [
           {
-            "id": "support",
+            "id": "class_1778601156403",
             "name": "Math"
           },
           {
-            "id": "class_1778600927716",
+            "id": "class_1778601158062",
             "name": "Econ"
           }
         ],
         "queryVariableSelector": [],
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
         "runStatus": "completed"
       },
       "width": 240,
       "height": 236,
-      "selected": true,
+      "selected": false,
       "positionAbsolute": {
-        "x": 520.2210146231396,
-        "y": -107.87274650508417
+        "x": 441.77972184300256,
+        "y": -23.743766963856046
       },
       "dragging": false
     }
@@ -181,8 +183,8 @@
       "id": "answer",
       "type": "custom",
       "position": {
-        "x": 896.7742969735548,
-        "y": -17.168341032799162
+        "x": 836.3965455006227,
+        "y": -22.27284701817316
       },
       "data": {
         "type": "answer",
@@ -196,11 +198,11 @@
       "width": 260,
       "height": 134,
       "positionAbsolute": {
-        "x": 896.7742969735548,
-        "y": -17.168341032799162
+        "x": 836.3965455006227,
+        "y": -22.27284701817316
       },
       "dragging": false,
-      "selected": false
+      "selected": true
     }
   }
 ]
