@@ -1,3 +1,27 @@
 {
-  "datasets": []
+  "datasets": [
+    {
+      "id": "dataset-econ-fdebce85",
+      "title": "Econ",
+      "description": "",
+      "created_at": "2026-05-12T04:17:01.244Z",
+      "updated_at": "2026-05-12T04:17:01.244Z",
+      "embedding_config": {
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "model": "bge-mn3-mlx-fp16"
+      },
+      "reranking_config": {
+        "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+        "apiKey": "octopusPass",
+        "model": "Qwen3-Reranker-0.5B-mxfp8",
+        "top_k": 3,
+        "score": 0.5
+      },
+      "chunk_config": {
+        "chunk_size_words": 120,
+        "overlap_words": 20
+      }
+    }
+  ]
 }

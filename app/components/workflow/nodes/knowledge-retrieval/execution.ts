@@ -68,22 +68,18 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
     }
   }
 
-  const client = getElasticsearchClient();
-  if (client && Object.keys(esQueries).length > 0) {
-    for (const [datasetId, body] of Object.entries(esQueries)) {
-      const esResult = await client.search({
-        index: RAG_CHUNKS_INDEX,
-        ...body,
-      });
-      console.log("esResult", datasetId, esResult);
-    }
-  }
+  // const client = getElasticsearchClient();
+  // if (client && Object.keys(esQueries).length > 0) {
+  //   for (const [datasetId, body] of Object.entries(esQueries)) {
+  //     const esResult = await client.search({
+  //       index: RAG_CHUNKS_INDEX,
+  //       ...body,
+  //     });
+  //     console.log("esResult", datasetId, esResult);
+  //   }
+  // }
 
-  const result = datasets.map((dataset) => ({
-    dataset_id: dataset.id,
-    dataset_name: dataset.name,
-    content: `Retrieved context for "${resolvedQuery}" from ${dataset.name}.`,
-  }));
+  console.log("esQueries", JSON.stringify(esQueries, null, 2))
 
   const objResult:KnowledgeRetrievalOutputChunk[] = []
 

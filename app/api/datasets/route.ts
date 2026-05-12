@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
-import {dataPath, getDatasets, getDocuments, readJsonFile, writeJsonFile} from "@/app/datasets/data";
+import {dataPath, getDatasets, getDocuments, ModelConfig, readJsonFile, writeJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
 
 export const runtime = "nodejs";
@@ -28,33 +28,27 @@ const toSlug = (value: string) =>
 
 const badRequest = (message: string) => NextResponse.json({error: message}, {status: 400});
 
-type ModelConfigJson = {
-  apiBaseUrl: string;
-  apiKey: string;
-  model: string;
-};
-
-const defaultModelBase = (): ModelConfigJson =>
-  readJsonFile<ModelConfigJson>("model-base.json", {
-    apiBaseUrl: "",
-    apiKey: "",
+const defaultModelBase = (): ModelConfig =>
+  readJsonFile<ModelConfig>("model-base.json", {
+    api_base_url: "",
+    api_key: "",
     model: "local-deterministic",
   });
 
-export const mergeModelConfig = (raw: unknown): ModelConfigJson => {
+export const mergeModelConfig = (raw: unknown): ModelConfig => {
   const base = defaultModelBase();
   if (!raw || typeof raw !== "object") {
     return base;
   }
   const o = raw as Record<string, unknown>;
   return {
-    apiBaseUrl: typeof o.apiBaseUrl === "string" ? o.apiBaseUrl.trim() : base.apiBaseUrl,
-    apiKey: typeof o.apiKey === "string" ? o.apiKey.trim() : base.apiKey,
+    api_base_url: typeof o.apiBaseUrl === "string" ? o.apiBaseUrl.trim() : base.api_base_url,
+    api_key: typeof o.apiKey === "string" ? o.apiKey.trim() : base.api_key,
     model: typeof o.model === "string" ? o.model.trim() : base.model,
   };
 };
 
-export const mergeRerankingConfig = (raw: unknown): ModelConfigJson & {top_k: number; score: number} => {
+export const mergeRerankingConfig = (raw: unknown): ModelConfig & {top_k: number; score: number} => {
   const merged = mergeModelConfig(raw);
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const top_k = typeof o.top_k === "number" && Number.isFinite(o.top_k) ? Math.max(1, Math.floor(o.top_k)) : 3;

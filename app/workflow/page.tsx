@@ -258,7 +258,7 @@ export default function WorkflowPage() {
         />
       </div>
       <aside
-        className="h-full min-h-0 w-[420px] shrink-0 overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
+        className="h-full min-h-0 w-[500px] shrink-0 overflow-y-auto border-l border-zinc-200/80 bg-white/96 px-4 py-5 shadow-[-20px_0_40px_-32px_rgba(15,23,42,0.25)] backdrop-blur">
         <div
           className="sticky top-0 z-10 -mx-4 mb-4 border-b border-zinc-200/80 bg-white/92 px-4 pb-4 pt-1 backdrop-blur">
           <div className="flex items-center justify-between">
@@ -424,7 +424,6 @@ export default function WorkflowPage() {
           )}
         </section>
 
-        {!selectedNode && (
           <section className="rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -448,7 +447,6 @@ export default function WorkflowPage() {
               <p className="text-sm text-zinc-500">No configurable fields for this node type yet.</p>
             )}
           </section>
-        )}
 
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between gap-3">
