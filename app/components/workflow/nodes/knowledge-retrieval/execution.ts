@@ -144,8 +144,6 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
     output: {
       result: objResult,
       query: resolvedQuery,
-      // hits_total: hitsTotal,
-      // hits_max_score: hitsMaxScore,
     },
     detail: `datasets=${datasets.length}`,
   };
