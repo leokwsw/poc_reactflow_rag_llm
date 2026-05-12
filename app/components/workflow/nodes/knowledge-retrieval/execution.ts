@@ -94,6 +94,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
   const objResult: KnowledgeRetrievalOutputChunk[] = []
   let hitsTotal = 0;
   let hitsMaxScore = 1.0;
+  const scoreStats: Record<string, {min_score: number; avg_score: number; score_gap: number}> = {};
 
   if (client && Object.keys(esQueries).length > 0) {
     for (const [datasetId, body] of Object.entries(esQueries)) {
@@ -123,6 +124,11 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
         ? scores.reduce((sum, score) => sum + score, 0) / scores.length
         : 0;
       const scoreGap = scores.length > 0 ? Math.max(...scores) - minScore : 0;
+      scoreStats[datasetId] = {
+        min_score: minScore,
+        avg_score: avgScore,
+        score_gap: scoreGap,
+      };
 
       for (const [index, hit] of hitsList.entries()) {
         const score = hit._score ?? 0;
@@ -144,6 +150,9 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
     output: {
       result: objResult,
       query: resolvedQuery,
+      hits_total: hitsTotal,
+      hits_max_score: hitsMaxScore,
+      score_stats: scoreStats,
     },
     detail: `datasets=${datasets.length}`,
   };
