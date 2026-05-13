@@ -23,7 +23,7 @@
           "type": "start",
           "title": "開始",
           "label": "開始",
-          "runStatus": "idle"
+          "runStatus": "completed"
         },
         "width": 242,
         "height": 73,
@@ -48,7 +48,8 @@
           "answer": "{{#fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name#}}",
           "outputs": [
             "fde9c8ed-eae3-4b26-b997-f22f93ae58aa.class_name"
-          ]
+          ],
+          "runStatus": "completed"
         },
         "width": 260,
         "height": 134,
@@ -57,7 +58,7 @@
           "y": -22.97470710627914
         },
         "dragging": false,
-        "selected": true
+        "selected": false
       },
       {
         "id": "fde9c8ed-eae3-4b26-b997-f22f93ae58aa",
@@ -82,11 +83,14 @@
               "name": "Econ"
             }
           ],
-          "queryVariableSelector": []
+          "queryVariableSelector": [],
+          "runStatus": "completed",
+          "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
+          "apiKey": "octopusPass"
         },
         "width": 240,
         "height": 236,
-        "selected": false,
+        "selected": true,
         "positionAbsolute": {
           "x": 441.77972184300256,
           "y": -23.743766963856046
@@ -131,9 +135,9 @@
     ],
     "readOnly": false,
     "viewport": {
-      "x": -191.25017738475253,
-      "y": 383.8233804113931,
-      "zoom": 1.4247853909154369
+      "x": 601.6519659912738,
+      "y": 351.17907881276875,
+      "zoom": 0.4366818702520065
     }
   }
 }
