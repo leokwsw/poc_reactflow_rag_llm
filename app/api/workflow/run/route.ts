@@ -1,5 +1,7 @@
 import type { WorkflowDataType } from "@/app/components/workflow/types";
+import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
 import { runWorkflow } from "@/app/lib/workflow-runner";
+import {saveWorkflowRun, updateWorkflowGraph} from "@/app/workflow/data";
 
 export async function POST(request: Request) {
   const encoder = new TextEncoder();
@@ -9,10 +11,25 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let workflowId = "";
+      let query = "";
+      let startedAt = new Date().toISOString();
+      let latestTrace: WorkflowTraceItem[] = [];
+      let runInput: Record<string, unknown> = {};
       try {
         const formData = await request.formData();
+        workflowId = String(formData.get("workflow_id") ?? "");
         const workflowRaw = formData.get("workflow");
-        const query = String(formData.get("query") ?? "");
+        query = String(formData.get("query") ?? "");
+
+        if (!workflowId) {
+          sendEvent(controller, "workflow_error", {
+            success: false,
+            error: "Missing workflow_id.",
+          });
+          controller.close();
+          return;
+        }
 
         if (typeof workflowRaw !== "string") {
           sendEvent(controller, "workflow_error", {
@@ -24,6 +41,15 @@ export async function POST(request: Request) {
         }
 
         const workflow = JSON.parse(workflowRaw) as WorkflowDataType;
+        const savedWorkflow = await updateWorkflowGraph(workflowId, workflow);
+        if (!savedWorkflow) {
+          sendEvent(controller, "workflow_error", {
+            success: false,
+            error: "Workflow not found.",
+          });
+          controller.close();
+          return;
+        }
         const files = await Promise.all(
           formData
             .getAll("files")
@@ -43,8 +69,17 @@ export async function POST(request: Request) {
         );
 
         sendEvent(controller, "workflow_started", { success: true });
+        startedAt = new Date().toISOString();
+        runInput = {
+          query,
+          files: files.map((file) => ({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          })),
+        };
 
-        await runWorkflow(
+        const result = await runWorkflow(
           workflow,
           {
             query,
@@ -52,6 +87,13 @@ export async function POST(request: Request) {
           },
           {
             onEvent(event) {
+              if ("traceItem" in event) {
+                const index = latestTrace.findIndex((item) => item.nodeId === event.traceItem.nodeId);
+                latestTrace = index >= 0
+                  ? latestTrace.map((item, itemIndex) => itemIndex === index ? event.traceItem : item)
+                  : [...latestTrace, event.traceItem];
+              }
+
               if (event.type === "workflow_completed") {
                 sendEvent(controller, "workflow_completed", {
                   success: true,
@@ -68,8 +110,32 @@ export async function POST(request: Request) {
           },
         );
 
+        await saveWorkflowRun({
+          workflow_id: workflowId,
+          status: "completed",
+          query,
+          input: runInput,
+          result: result as unknown as Record<string, unknown>,
+          trace: result.trace,
+          started_at: startedAt,
+          finished_at: new Date().toISOString(),
+        });
+
         controller.close();
       } catch (error) {
+        if (workflowId) {
+          await saveWorkflowRun({
+            workflow_id: workflowId,
+            status: "failed",
+            query,
+            input: runInput,
+            result: null,
+            trace: latestTrace,
+            error: error instanceof Error ? error.message : "Workflow execution failed.",
+            started_at: startedAt,
+            finished_at: new Date().toISOString(),
+          }).catch(() => {});
+        }
         sendEvent(controller, "workflow_error", {
           success: false,
           error: error instanceof Error ? error.message : "Workflow execution failed.",
