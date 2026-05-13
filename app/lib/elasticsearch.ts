@@ -1,6 +1,8 @@
 import {Client} from "@elastic/elasticsearch";
 
-export const RAG_CHUNKS_INDEX = "rag_chunks";
+const trimEnv = (name: string) => process.env[name]?.trim() || "";
+
+export const RAG_CHUNKS_INDEX = trimEnv("ELASTICSEARCH_RAG_CHUNKS_INDEX") || "rag_chunks";
 export const RAG_VECTOR_FIELD = "vector";
 
 type ElasticsearchConfig = {
@@ -8,8 +10,6 @@ type ElasticsearchConfig = {
   username: string;
   password: string;
 };
-
-const trimEnv = (name: string) => process.env[name]?.trim() || "";
 
 let client: Client | null = null;
 let clientNode = "";

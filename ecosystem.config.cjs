@@ -13,11 +13,13 @@ module.exports = {
                 ELASTICSEARCH_USERNAME:"elastic",
                 ELASTICSEARCH_PASSWORD:"password",
                 ELASTICSEARCH_PROTOCOL:"http",
+                ELASTICSEARCH_RAG_CHUNKS_INDEX:"rag_chunks",
                 POSTGRES_HOST:"10.0.0.209",
                 POSTGRES_PORT:5432,
                 POSTGRES_USER:"postgres",
                 POSTGRES_PASSWORD:"password",
-                POSTGRES_DATABASE:"postgres"
+                POSTGRES_DATABASE:"postgres",
+                POSTGRES_SCHEMA:"public"
             },
         },
     ],

@@ -135,6 +135,17 @@ const pool = new Pool({
 
 let schemaReady: Promise<void> | null = null;
 
+const quoteIdentifier = (value: string) => {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
+    throw new Error(`${value} is not a valid PostgreSQL identifier.`);
+  }
+  return `"${value}"`;
+};
+
+const postgresSchema = quoteIdentifier((process.env.POSTGRES_SCHEMA ?? "public").trim() || "public");
+const tableName = (name: "datasets" | "documents" | "chunks" | "tasks" | "embeddings") =>
+  `${postgresSchema}.${quoteIdentifier(name)}`;
+
 const toIso = (value: unknown) => {
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "string") return new Date(value).toISOString();
@@ -205,7 +216,7 @@ const taskFromRow = (row: Record<string, unknown>): DatasetTask => ({
 });
 
 const migrateJsonIfEmpty = async () => {
-  const {rows} = await pool.query<{count: string}>("SELECT COUNT(*)::text AS count FROM datasets");
+  const {rows} = await pool.query<{count: string}>(`SELECT COUNT(*)::text AS count FROM ${tableName("datasets")}`);
   if (Number(rows[0]?.count ?? 0) > 0) return;
 
   const datasets = readJsonFile<DatasetsJson>("0-datasets.json", {datasets: []}).datasets;
@@ -219,7 +230,7 @@ const migrateJsonIfEmpty = async () => {
     await client.query("BEGIN");
     for (const dataset of datasets) {
       await client.query(
-        `INSERT INTO datasets
+        `INSERT INTO ${tableName("datasets")}
           (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          ON CONFLICT (id) DO NOTHING`,
@@ -240,7 +251,7 @@ const migrateJsonIfEmpty = async () => {
     }
     for (const document of documents) {
       await client.query(
-        `INSERT INTO documents
+        `INSERT INTO ${tableName("documents")}
           (id, file_name, dataset_id, file_size, created_at, updated_time, uploaded_time, deleted, deleted_at, upload_source, mime_type, ext, storage_page, status, enabled)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          ON CONFLICT (id) DO NOTHING`,
@@ -265,7 +276,7 @@ const migrateJsonIfEmpty = async () => {
     }
     for (const chunk of chunks) {
       await client.query(
-        `INSERT INTO chunks (id, file_id, text, position, metadata, es_document_id, enabled)
+        `INSERT INTO ${tableName("chunks")} (id, file_id, text, position, metadata, es_document_id, enabled)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET text = EXCLUDED.text, metadata = EXCLUDED.metadata, es_document_id = EXCLUDED.es_document_id`,
         [chunk.id, chunk.file_id, chunk.text, chunk.position, JSON.stringify(chunk.metadata), chunk.es_document_id, chunk.enabled],
@@ -273,7 +284,7 @@ const migrateJsonIfEmpty = async () => {
     }
     for (const task of tasks) {
       await client.query(
-        `INSERT INTO tasks (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
+        `INSERT INTO ${tableName("tasks")} (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO NOTHING`,
         [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
@@ -281,7 +292,7 @@ const migrateJsonIfEmpty = async () => {
     }
     for (const embedding of embeddings) {
       await client.query(
-        `INSERT INTO embeddings (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
+        `INSERT INTO ${tableName("embeddings")} (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO UPDATE SET vector = EXCLUDED.vector, elasticsearch_saved = EXCLUDED.elasticsearch_saved`,
         [
@@ -307,8 +318,9 @@ const migrateJsonIfEmpty = async () => {
 
 export const ensureDatasetSchema = async () => {
   schemaReady ??= (async () => {
+    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS datasets (
+      CREATE TABLE IF NOT EXISTS ${tableName("datasets")} (
         id text PRIMARY KEY,
         title text NOT NULL,
         description text NOT NULL DEFAULT '',
@@ -321,10 +333,10 @@ export const ensureDatasetSchema = async () => {
         separators text NOT NULL DEFAULT E'\\n\\n',
         keep_separators boolean NOT NULL DEFAULT true
       );
-      CREATE TABLE IF NOT EXISTS documents (
+      CREATE TABLE IF NOT EXISTS ${tableName("documents")} (
         id text PRIMARY KEY,
         file_name text NOT NULL,
-        dataset_id text NOT NULL REFERENCES datasets(id) ON DELETE CASCADE,
+        dataset_id text NOT NULL REFERENCES ${tableName("datasets")}(id) ON DELETE CASCADE,
         file_size bigint NOT NULL,
         created_at timestamptz NOT NULL,
         updated_time timestamptz NOT NULL,
@@ -338,18 +350,18 @@ export const ensureDatasetSchema = async () => {
         status text NOT NULL,
         enabled boolean NOT NULL DEFAULT true
       );
-      CREATE INDEX IF NOT EXISTS documents_dataset_id_idx ON documents(dataset_id);
-      CREATE TABLE IF NOT EXISTS chunks (
+      CREATE INDEX IF NOT EXISTS documents_dataset_id_idx ON ${tableName("documents")}(dataset_id);
+      CREATE TABLE IF NOT EXISTS ${tableName("chunks")} (
         id text PRIMARY KEY,
-        file_id text NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+        file_id text NOT NULL REFERENCES ${tableName("documents")}(id) ON DELETE CASCADE,
         text text NOT NULL,
         position integer NOT NULL,
         metadata jsonb NOT NULL DEFAULT '{}',
         es_document_id text NOT NULL DEFAULT '',
         enabled boolean NOT NULL DEFAULT true
       );
-      CREATE INDEX IF NOT EXISTS chunks_file_id_position_idx ON chunks(file_id, position);
-      CREATE TABLE IF NOT EXISTS tasks (
+      CREATE INDEX IF NOT EXISTS chunks_file_id_position_idx ON ${tableName("chunks")}(file_id, position);
+      CREATE TABLE IF NOT EXISTS ${tableName("tasks")} (
         id text PRIMARY KEY,
         dataset_id text NOT NULL,
         document_ids text[] NOT NULL,
@@ -359,7 +371,7 @@ export const ensureDatasetSchema = async () => {
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL
       );
-      CREATE TABLE IF NOT EXISTS embeddings (
+      CREATE TABLE IF NOT EXISTS ${tableName("embeddings")} (
         id text PRIMARY KEY,
         chunk_id text NOT NULL,
         dataset_id text NOT NULL,
@@ -369,8 +381,8 @@ export const ensureDatasetSchema = async () => {
         elasticsearch_saved boolean NOT NULL DEFAULT false,
         created_at timestamptz NOT NULL
       );
-      CREATE INDEX IF NOT EXISTS embeddings_chunk_id_idx ON embeddings(chunk_id);
-      CREATE INDEX IF NOT EXISTS embeddings_dataset_id_idx ON embeddings(dataset_id);
+      CREATE INDEX IF NOT EXISTS embeddings_chunk_id_idx ON ${tableName("embeddings")}(chunk_id);
+      CREATE INDEX IF NOT EXISTS embeddings_dataset_id_idx ON ${tableName("embeddings")}(dataset_id);
     `);
     await migrateJsonIfEmpty();
   })();
@@ -380,19 +392,19 @@ export const ensureDatasetSchema = async () => {
 
 export const getDatasets = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM datasets ORDER BY created_at DESC");
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("datasets")} ORDER BY created_at DESC`);
   return rows.map(datasetFromRow);
 };
 
 export const getDocuments = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM documents ORDER BY uploaded_time DESC");
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("documents")} ORDER BY uploaded_time DESC`);
   return rows.map(documentFromRow);
 };
 
 export const getChunks = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM chunks ORDER BY file_id, position");
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("chunks")} ORDER BY file_id, position`);
   return rows.map(chunkFromRow);
 };
 
@@ -402,7 +414,7 @@ export const createDatasetWithDocuments = async (dataset: Dataset, documents: Da
   try {
     await client.query("BEGIN");
     await client.query(
-      `INSERT INTO datasets
+      `INSERT INTO ${tableName("datasets")}
         (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
@@ -421,7 +433,7 @@ export const createDatasetWithDocuments = async (dataset: Dataset, documents: Da
     );
     for (const document of documents) {
       await client.query(
-        `INSERT INTO documents
+        `INSERT INTO ${tableName("documents")}
           (id, file_name, dataset_id, file_size, created_at, updated_time, uploaded_time, deleted, deleted_at, upload_source, mime_type, ext, storage_page, status, enabled)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
         [
@@ -454,14 +466,14 @@ export const createDatasetWithDocuments = async (dataset: Dataset, documents: Da
 
 export const readTasks = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM tasks ORDER BY created_at DESC");
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("tasks")} ORDER BY created_at DESC`);
   return rows.map(taskFromRow);
 };
 
 export const insertTask = async (task: DatasetTask) => {
   await ensureDatasetSchema();
   await pool.query(
-    `INSERT INTO tasks (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
+    `INSERT INTO ${tableName("tasks")} (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
   );
@@ -473,7 +485,7 @@ export const updateTaskRecord = async (taskId: string, patch: Partial<DatasetTas
   if (!current) return;
   const next = {...current, ...patch, updated_at: new Date().toISOString()};
   await pool.query(
-    `UPDATE tasks
+    `UPDATE ${tableName("tasks")}
      SET dataset_id = $2, document_ids = $3, file_paths = $4, status = $5, error = $6, updated_at = $7
      WHERE id = $1`,
     [next.id, next.dataset_id, next.document_ids, next.file_paths, next.status, next.error ?? null, next.updated_at],
@@ -486,7 +498,7 @@ export const updateDocumentRecord = async (documentId: string, patch: Partial<Da
   if (!current) return;
   const next = {...current, ...patch, updated_time: new Date().toISOString()};
   await pool.query(
-    `UPDATE documents
+    `UPDATE ${tableName("documents")}
      SET file_name = $2, dataset_id = $3, file_size = $4, created_at = $5, updated_time = $6, uploaded_time = $7,
          deleted = $8, deleted_at = $9, upload_source = $10, mime_type = $11, ext = $12, storage_page = $13,
          status = $14, enabled = $15
@@ -518,7 +530,7 @@ export const upsertChunks = async (nextChunks: DocumentChunk[]) => {
     await client.query("BEGIN");
     for (const chunk of nextChunks) {
       await client.query(
-        `INSERT INTO chunks (id, file_id, text, position, metadata, es_document_id, enabled)
+        `INSERT INTO ${tableName("chunks")} (id, file_id, text, position, metadata, es_document_id, enabled)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE
          SET file_id = EXCLUDED.file_id, text = EXCLUDED.text, position = EXCLUDED.position,
@@ -542,7 +554,7 @@ export const upsertEmbeddings = async (nextEmbeddings: EmbeddingRecord[]) => {
     await client.query("BEGIN");
     for (const embedding of nextEmbeddings) {
       await client.query(
-        `INSERT INTO embeddings (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
+        `INSERT INTO ${tableName("embeddings")} (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (id) DO UPDATE
          SET chunk_id = EXCLUDED.chunk_id, dataset_id = EXCLUDED.dataset_id, file_id = EXCLUDED.file_id,
@@ -585,13 +597,13 @@ export const formatFileSize = (bytes: number) => {
 
 export const getDatasetById = async (datasetId: string) => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM datasets WHERE id = $1", [datasetId]);
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("datasets")} WHERE id = $1`, [datasetId]);
   return rows[0] ? datasetFromRow(rows[0]) : undefined;
 };
 
 export const getDocumentById = async (fileId: string) => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query("SELECT * FROM documents WHERE id = $1", [fileId]);
+  const {rows} = await pool.query(`SELECT * FROM ${tableName("documents")} WHERE id = $1`, [fileId]);
   return rows[0] ? documentFromRow(rows[0]) : undefined;
 };
 
