@@ -1,11 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
-import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
+import {createDatasetWithDocuments, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
+import {putR2Object} from "@/app/lib/r2";
 
 export const runtime = "nodejs";
 
@@ -178,8 +178,6 @@ export async function POST(request: Request) {
 
   const timestamp = new Date().toISOString();
   const datasetId = `dataset-${toSlug(title) || "upload"}-${randomUUID().slice(0, 8)}`;
-  const uploadDirectory = dataPath("uploads", datasetId);
-  fs.mkdirSync(uploadDirectory, {recursive: true});
 
   const embedding_config = mergeModelConfig(o.embedding_config);
   const reranking_config =
@@ -200,13 +198,12 @@ export async function POST(request: Request) {
   for (const item of prepared) {
     const documentId = `file-${randomUUID()}`;
     const storedName = `${documentId}-${safeFileName(item.displayName)}`;
-    const relativePath = path.join("uploads", datasetId, storedName);
-    const filePath = dataPath(relativePath);
+    const objectKey = path.posix.join("uploads", datasetId, storedName);
 
-    fs.writeFileSync(filePath, item.bytes);
+    await putR2Object(objectKey, item.bytes, item.mime);
     await removeUpload(item.stagingId);
     documentIds.push(documentId);
-    filePaths.push(filePath);
+    filePaths.push(objectKey);
     documents.push({
       id: documentId,
       file_name: item.displayName,
@@ -220,7 +217,7 @@ export async function POST(request: Request) {
       upload_source: "file",
       mime_type: item.mime,
       ext: item.extension,
-      storage_page: relativePath,
+      storage_page: objectKey,
       status: "queued",
       enabled: true,
     });

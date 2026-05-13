@@ -1,8 +1,5 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import {randomUUID} from "node:crypto";
-
-const UPLOAD_ROOT = path.join(process.cwd(), "data", "uploads");
+import {deleteR2Object, getR2Object, putR2Object} from "@/app/lib/r2";
 
 export type StoredFileMeta = {
   id: string;
@@ -11,15 +8,10 @@ export type StoredFileMeta = {
   mime: string;
 };
 
-const blobPath = (id: string) => path.join(UPLOAD_ROOT, id);
-const metaPath = (id: string) => path.join(UPLOAD_ROOT, `${id}.meta.json`);
-
-async function ensureDir() {
-  await fs.mkdir(UPLOAD_ROOT, {recursive: true});
-}
+const blobKey = (id: string) => `staging/${id}/blob`;
+const metaKey = (id: string) => `staging/${id}/meta.json`;
 
 export async function saveUpload(file: File): Promise<StoredFileMeta> {
-  await ensureDir();
   const id = randomUUID();
   const buffer = Buffer.from(await file.arrayBuffer());
   const meta: StoredFileMeta = {
@@ -28,15 +20,15 @@ export async function saveUpload(file: File): Promise<StoredFileMeta> {
     file_size: buffer.length,
     mime: file.type || "application/octet-stream",
   };
-  await fs.writeFile(blobPath(id), buffer);
-  await fs.writeFile(metaPath(id), JSON.stringify(meta), "utf8");
+  await putR2Object(blobKey(id), buffer, meta.mime);
+  await putR2Object(metaKey(id), Buffer.from(JSON.stringify(meta), "utf8"), "application/json");
   return meta;
 }
 
 export async function readMeta(id: string): Promise<StoredFileMeta | null> {
   try {
-    const raw = await fs.readFile(metaPath(id), "utf8");
-    return JSON.parse(raw) as StoredFileMeta;
+    const raw = await getR2Object(metaKey(id));
+    return JSON.parse(raw.toString("utf8")) as StoredFileMeta;
   } catch {
     return null;
   }
@@ -44,7 +36,7 @@ export async function readMeta(id: string): Promise<StoredFileMeta | null> {
 
 export async function readBlob(id: string): Promise<Buffer | null> {
   try {
-    return await fs.readFile(blobPath(id));
+    return await getR2Object(blobKey(id));
   } catch {
     return null;
   }
@@ -57,5 +49,5 @@ export function isValidUploadId(id: string): boolean {
 }
 
 export async function removeUpload(id: string): Promise<void> {
-  await Promise.all([fs.unlink(blobPath(id)).catch(() => {}), fs.unlink(metaPath(id)).catch(() => {})]);
+  await Promise.all([deleteR2Object(blobKey(id)).catch(() => {}), deleteR2Object(metaKey(id)).catch(() => {})]);
 }

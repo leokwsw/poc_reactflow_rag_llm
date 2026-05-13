@@ -19,7 +19,11 @@ module.exports = {
                 POSTGRES_USER:"postgres",
                 POSTGRES_PASSWORD:"password",
                 POSTGRES_DATABASE:"postgres",
-                POSTGRES_SCHEMA:"public"
+                POSTGRES_SCHEMA:"public",
+                R2_S3_API:"https://e9d2e49e12dfd9fb87710bd33a3a5fed.r2.cloudflarestorage.com/poc-reactflow-rag-llm",
+                R2_BUCKET:"poc-reactflow-rag-llm",
+                R2_ACCESS_KEY_ID:process.env.R2_ACCESS_KEY_ID,
+                R2_SECRET_ACCESS_KEY:process.env.R2_SECRET_ACCESS_KEY
             },
         },
     ],

@@ -1,6 +1,8 @@
 import {createHash, randomUUID} from "node:crypto";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import {
-  dataPath,
   DatasetTask,
   DocumentChunk,
   EmbeddingRecord,
@@ -17,6 +19,7 @@ import {
 } from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
 import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {getR2Object} from "@/app/lib/r2";
 import {createTextSplitter} from "@/app/lib/text-splitter";
 
 const now = () => new Date().toISOString();
@@ -24,6 +27,20 @@ const now = () => new Date().toISOString();
 const deterministicEmbedding = (text: string) => {
   const hash = createHash("sha256").update(text).digest();
   return Array.from({length: 32}, (_, index) => Number(((hash[index % hash.length] / 255) * 2 - 1).toFixed(6)));
+};
+
+const withR2ObjectTempFile = async <T,>(objectKey: string, fileName: string, fn: (filePath: string) => Promise<T>) => {
+  const bytes = await getR2Object(objectKey);
+  const tempDir = await fs.mkdtemp(path.join(/*turbopackIgnore: true*/ os.tmpdir(), "rag-upload-"));
+  const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]+/g, "-") || "upload";
+  const tempPath = path.join(/*turbopackIgnore: true*/ tempDir, safeFileName);
+
+  try {
+    await fs.writeFile(tempPath, bytes);
+    return await fn(tempPath);
+  } finally {
+    await fs.rm(tempDir, {force: true, recursive: true}).catch(() => {});
+  }
 };
 
 export const embedText = async (text: string, config: ModelConfig): Promise<{
@@ -91,7 +108,11 @@ const processTask = async (taskId: string) => {
 
       await updateDocumentRecord(document.id, {status: "processing"});
 
-      const raw = await extractFileToText(dataPath(document.storage_page)); // TODO : To Each Page string array
+      const raw = await withR2ObjectTempFile(
+        document.storage_page,
+        document.file_name,
+        (filePath) => extractFileToText(filePath),
+      ); // TODO : To Each Page string array
       const texts = raw.replace("\r\n", "")
       const textSplitter = createTextSplitter(
         texts,
