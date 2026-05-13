@@ -7,7 +7,6 @@ import {
   getChunksForDocument,
   getDatasetById,
   getDocumentById,
-  getDocuments,
 } from "@/app/datasets/data";
 
 type FileDetailsPageProps = {
@@ -17,25 +16,18 @@ type FileDetailsPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
-  return getDocuments().map((document) => ({
-    datasetId: document.dataset_id,
-    fileId: document.id,
-  }));
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function FileDetailsPage({params}: FileDetailsPageProps) {
   const {datasetId, fileId} = await params;
-  const dataset = getDatasetById(datasetId);
-  const document = getDocumentById(fileId);
+  const dataset = await getDatasetById(datasetId);
+  const document = await getDocumentById(fileId);
 
   if (!dataset || !document || document.dataset_id !== dataset.id) {
     notFound();
   }
 
-  const chunks = getChunksForDocument(document.id);
+  const chunks = await getChunksForDocument(document.id);
 
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">

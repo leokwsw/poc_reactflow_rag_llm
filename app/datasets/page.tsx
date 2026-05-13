@@ -3,11 +3,12 @@ import {datasetGridColumns, formatDate, formatFileSize, getDatasets, getDatasetS
 
 export const dynamic = "force-dynamic";
 
-export default function DatasetsPage() {
-  const datasets = getDatasets().map((dataset) => ({
+export default async function DatasetsPage() {
+  const rawDatasets = await getDatasets();
+  const datasets = await Promise.all(rawDatasets.map(async (dataset) => ({
     ...dataset,
-    stats: getDatasetStats(dataset),
-  }));
+    stats: await getDatasetStats(dataset),
+  })));
 
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">

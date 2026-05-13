@@ -64,16 +64,17 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
 
   const esQueries: Record<string, Record<string, unknown>> = {};
   const queryVectorDimensions: Record<string, number> = {};
+  const allDocuments = await getDocuments();
 
   for (const dataset of datasets) {
-    const o = getDatasetById(dataset.id);
+    const o = await getDatasetById(dataset.id);
     if (o) {
       const embedding_config = mergeModelConfig(o.embedding_config);
       const embedded = await embedText(resolvedQuery, embedding_config);
       queryVectorDimensions[dataset.id] = embedded.vector.length;
       const rerankCfg = mergeRerankingConfig(o.reranking_config);
       const k = Math.max(10, rerankCfg.top_k);
-      const allowedFileIds = getDocuments()
+      const allowedFileIds = allDocuments
         .filter(
           (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
         )

@@ -6,7 +6,6 @@ import {
   formatFileSize,
   getChunksForDocument,
   getDatasetById,
-  getDatasets,
   getDocumentsForDataset,
 } from "@/app/datasets/data";
 
@@ -16,26 +15,21 @@ type DatasetDetailsPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
-  return getDatasets().map((dataset) => ({
-    datasetId: dataset.id,
-  }));
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function DatasetDetailsPage({params}: DatasetDetailsPageProps) {
   const {datasetId} = await params;
-  const dataset = getDatasetById(datasetId);
+  const dataset = await getDatasetById(datasetId);
 
   if (!dataset) {
     notFound();
   }
 
-  const documents = getDocumentsForDataset(dataset.id).map((document) => ({
+  const datasetDocuments = await getDocumentsForDataset(dataset.id);
+  const documents = await Promise.all(datasetDocuments.map(async (document) => ({
     ...document,
-    chunkCount: getChunksForDocument(document.id).length,
-  }));
+    chunkCount: (await getChunksForDocument(document.id)).length,
+  })));
 
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">

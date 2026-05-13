@@ -4,15 +4,16 @@ import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
-import {dataPath, getDatasets, getDocuments, ModelConfig, readJsonFile, writeJsonFile} from "@/app/datasets/data";
+import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
 
 export const runtime = "nodejs";
 
 /** List datasets for workflow UI (e.g. Knowledge Retrieval picker). */
 export async function GET() {
+  const datasets = await getDatasets();
   return NextResponse.json({
-    datasets: getDatasets().map((d) => ({id: d.id, title: d.title})),
+    datasets: datasets.map((d) => ({id: d.id, title: d.title})),
   });
 }
 
@@ -57,7 +58,7 @@ export const mergeRerankingConfig = (raw: unknown): ModelConfig & {top_k: number
   return {...merged, top_k, score};
 };
 
-const parseChunkConfig = (raw: unknown): {chunk_size_words: number; overlap_words: number} | null => {
+const parseChunkConfig = (raw: unknown): {chunk_size: number; chunk_overlap: number} | null => {
   if (raw === undefined) {
     return null;
   }
@@ -75,7 +76,7 @@ const parseChunkConfig = (raw: unknown): {chunk_size_words: number; overlap_word
   if (chunk_size_words < 10 || chunk_size_words > 50_000 || overlap_words < 0 || overlap_words >= chunk_size_words) {
     return null;
   }
-  return {chunk_size_words, overlap_words};
+  return {chunk_size: chunk_size_words, chunk_overlap: overlap_words};
 };
 
 export type UploadFileRef = {
@@ -190,9 +191,9 @@ export async function POST(request: Request) {
       "chunk_config must include chunk_size_words (10–50000) and overlap_words (0 ≤ overlap < chunk_size).",
     );
   }
-  const chunk_config = chunkParsed ?? {chunk_size_words: 1024, overlap_words: 50};
+  const chunk_config = chunkParsed ?? {chunk_size: 1024, chunk_overlap: 50};
 
-  const documents = getDocuments();
+  const documents = [];
   const documentIds: string[] = [];
   const filePaths: string[] = [];
 
@@ -225,24 +226,24 @@ export async function POST(request: Request) {
     });
   }
 
-  writeJsonFile("0-datasets.json", {
-    datasets: [
-      ...getDatasets(),
-      {
-        id: datasetId,
-        title,
-        description,
-        created_at: timestamp,
-        updated_at: timestamp,
-        embedding_config,
-        reranking_config,
-        chunk_config,
-      },
-    ],
-  });
-  writeJsonFile("1-documents.json", {documents});
+  await createDatasetWithDocuments(
+    {
+      id: datasetId,
+      title,
+      description,
+      created_at: timestamp,
+      updated_at: timestamp,
+      embedding_config,
+      reranking_config,
+      chunk_config,
+      language_hint: "chinese",
+      separators: "\n\n",
+      keep_separators: true,
+    },
+    documents,
+  );
 
-  enqueueDatasetTask({
+  await enqueueDatasetTask({
     id: createTaskId(),
     dataset_id: datasetId,
     document_ids: documentIds,

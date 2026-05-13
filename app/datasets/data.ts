@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import {Pool} from "pg";
 
 export type ModelConfig = {
   api_base_url: string;
@@ -73,6 +74,36 @@ type ChunksJson = {
   chunks: DocumentChunk[];
 };
 
+export type DatasetTask = {
+  id: string;
+  dataset_id: string;
+  document_ids: string[];
+  file_paths: string[];
+  status: "queued" | "processing" | "ready" | "failed";
+  error?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EmbeddingRecord = {
+  id: string;
+  chunk_id: string;
+  dataset_id: string;
+  file_id: string;
+  vector: number[];
+  provider: "api" | "local";
+  elasticsearch_saved: boolean;
+  created_at: string;
+};
+
+type TasksJson = {
+  tasks: DatasetTask[];
+};
+
+type EmbeddingsJson = {
+  embeddings: EmbeddingRecord[];
+};
+
 export const dataPath = (...segments: string[]) => path.join(process.cwd(), "data", ...segments);
 
 export const datasetGridColumns = "minmax(360px, 1fr) 110px 110px 120px 150px 120px";
@@ -93,11 +124,449 @@ export const writeJsonFile = (fileName: string, value: unknown) => {
   fs.writeFileSync(dataPath(fileName), `${JSON.stringify(value, null, 2)}\n`);
 };
 
-export const getDatasets = () => readJsonFile<DatasetsJson>("0-datasets.json", {datasets: []}).datasets;
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST ?? "10.0.0.209",
+  port: Number(process.env.POSTGRES_PORT ?? 5432),
+  user: process.env.POSTGRES_USER ?? "postgres",
+  password: process.env.POSTGRES_PASSWORD ?? "password",
+  database: process.env.POSTGRES_DATABASE ?? "postgres",
+  max: 10,
+});
 
-export const getDocuments = () => readJsonFile<DocumentsJson>("1-documents.json", {documents: []}).documents;
+let schemaReady: Promise<void> | null = null;
 
-export const getChunks = () => readJsonFile<ChunksJson>("2-chunk.json", {chunks: []}).chunks;
+const toIso = (value: unknown) => {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") return new Date(value).toISOString();
+  return new Date().toISOString();
+};
+
+const normalizeChunkConfig = (value: unknown): ChunkConfig => {
+  const config = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const chunkSize = config.chunk_size ?? config.chunk_size_words;
+  const chunkOverlap = config.chunk_overlap ?? config.overlap_words;
+  return {
+    chunk_size: typeof chunkSize === "number" ? chunkSize : 1024,
+    chunk_overlap: typeof chunkOverlap === "number" ? chunkOverlap : 50,
+  };
+};
+
+const datasetFromRow = (row: Record<string, unknown>): Dataset => ({
+  id: String(row.id),
+  title: String(row.title ?? ""),
+  description: String(row.description ?? ""),
+  created_at: toIso(row.created_at),
+  updated_at: toIso(row.updated_at),
+  embedding_config: row.embedding_config as ModelConfig,
+  reranking_config: row.reranking_config as ModelConfig & {top_k: number; score: number},
+  chunk_config: normalizeChunkConfig(row.chunk_config),
+  language_hint: String(row.language_hint ?? "chinese"),
+  separators: String(row.separators ?? "\n\n"),
+  keep_separators: Boolean(row.keep_separators ?? true),
+});
+
+const documentFromRow = (row: Record<string, unknown>): DatasetDocument => ({
+  id: String(row.id),
+  file_name: String(row.file_name ?? ""),
+  dataset_id: String(row.dataset_id ?? ""),
+  file_size: Number(row.file_size ?? 0),
+  created_at: toIso(row.created_at),
+  updated_time: toIso(row.updated_time),
+  uploaded_time: toIso(row.uploaded_time),
+  deleted: String(row.deleted ?? "false"),
+  deleted_at: String(row.deleted_at ?? ""),
+  upload_source: String(row.upload_source ?? "file"),
+  mime_type: String(row.mime_type ?? ""),
+  ext: String(row.ext ?? ""),
+  storage_page: String(row.storage_page ?? ""),
+  status: String(row.status ?? "queued"),
+  enabled: Boolean(row.enabled ?? true),
+});
+
+const chunkFromRow = (row: Record<string, unknown>): DocumentChunk => ({
+  id: String(row.id),
+  file_id: String(row.file_id ?? ""),
+  text: String(row.text ?? ""),
+  position: Number(row.position ?? 0),
+  metadata: (row.metadata ?? {}) as DocumentChunk["metadata"],
+  es_document_id: String(row.es_document_id ?? ""),
+  enabled: Boolean(row.enabled ?? true),
+});
+
+const taskFromRow = (row: Record<string, unknown>): DatasetTask => ({
+  id: String(row.id),
+  dataset_id: String(row.dataset_id ?? ""),
+  document_ids: row.document_ids as string[],
+  file_paths: row.file_paths as string[],
+  status: row.status as DatasetTask["status"],
+  error: typeof row.error === "string" ? row.error : undefined,
+  created_at: toIso(row.created_at),
+  updated_at: toIso(row.updated_at),
+});
+
+const migrateJsonIfEmpty = async () => {
+  const {rows} = await pool.query<{count: string}>("SELECT COUNT(*)::text AS count FROM datasets");
+  if (Number(rows[0]?.count ?? 0) > 0) return;
+
+  const datasets = readJsonFile<DatasetsJson>("0-datasets.json", {datasets: []}).datasets;
+  const documents = readJsonFile<DocumentsJson>("1-documents.json", {documents: []}).documents;
+  const chunks = readJsonFile<ChunksJson>("2-chunk.json", {chunks: []}).chunks;
+  const tasks = readJsonFile<TasksJson>("3-tasks.json", {tasks: []}).tasks;
+  const embeddings = readJsonFile<EmbeddingsJson>("4-embeddings.json", {embeddings: []}).embeddings;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const dataset of datasets) {
+      await client.query(
+        `INSERT INTO datasets
+          (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO NOTHING`,
+        [
+          dataset.id,
+          dataset.title,
+          dataset.description,
+          dataset.created_at,
+          dataset.updated_at,
+          JSON.stringify(dataset.embedding_config),
+          JSON.stringify(dataset.reranking_config),
+          JSON.stringify(dataset.chunk_config),
+          dataset.language_hint ?? "chinese",
+          dataset.separators ?? "\n\n",
+          dataset.keep_separators ?? true,
+        ],
+      );
+    }
+    for (const document of documents) {
+      await client.query(
+        `INSERT INTO documents
+          (id, file_name, dataset_id, file_size, created_at, updated_time, uploaded_time, deleted, deleted_at, upload_source, mime_type, ext, storage_page, status, enabled)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+         ON CONFLICT (id) DO NOTHING`,
+        [
+          document.id,
+          document.file_name,
+          document.dataset_id,
+          document.file_size,
+          document.created_at,
+          document.updated_time,
+          document.uploaded_time,
+          document.deleted,
+          document.deleted_at || null,
+          document.upload_source,
+          document.mime_type,
+          document.ext,
+          document.storage_page,
+          document.status,
+          document.enabled,
+        ],
+      );
+    }
+    for (const chunk of chunks) {
+      await client.query(
+        `INSERT INTO chunks (id, file_id, text, position, metadata, es_document_id, enabled)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO UPDATE SET text = EXCLUDED.text, metadata = EXCLUDED.metadata, es_document_id = EXCLUDED.es_document_id`,
+        [chunk.id, chunk.file_id, chunk.text, chunk.position, JSON.stringify(chunk.metadata), chunk.es_document_id, chunk.enabled],
+      );
+    }
+    for (const task of tasks) {
+      await client.query(
+        `INSERT INTO tasks (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (id) DO NOTHING`,
+        [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
+      );
+    }
+    for (const embedding of embeddings) {
+      await client.query(
+        `INSERT INTO embeddings (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (id) DO UPDATE SET vector = EXCLUDED.vector, elasticsearch_saved = EXCLUDED.elasticsearch_saved`,
+        [
+          embedding.id,
+          embedding.chunk_id,
+          embedding.dataset_id,
+          embedding.file_id,
+          JSON.stringify(embedding.vector),
+          embedding.provider,
+          embedding.elasticsearch_saved,
+          embedding.created_at,
+        ],
+      );
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+export const ensureDatasetSchema = async () => {
+  schemaReady ??= (async () => {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS datasets (
+        id text PRIMARY KEY,
+        title text NOT NULL,
+        description text NOT NULL DEFAULT '',
+        created_at timestamptz NOT NULL,
+        updated_at timestamptz NOT NULL,
+        embedding_config jsonb NOT NULL,
+        reranking_config jsonb NOT NULL,
+        chunk_config jsonb NOT NULL,
+        language_hint text NOT NULL DEFAULT 'chinese',
+        separators text NOT NULL DEFAULT E'\\n\\n',
+        keep_separators boolean NOT NULL DEFAULT true
+      );
+      CREATE TABLE IF NOT EXISTS documents (
+        id text PRIMARY KEY,
+        file_name text NOT NULL,
+        dataset_id text NOT NULL REFERENCES datasets(id) ON DELETE CASCADE,
+        file_size bigint NOT NULL,
+        created_at timestamptz NOT NULL,
+        updated_time timestamptz NOT NULL,
+        uploaded_time timestamptz NOT NULL,
+        deleted text NOT NULL DEFAULT 'false',
+        deleted_at text NOT NULL DEFAULT '',
+        upload_source text NOT NULL DEFAULT 'file',
+        mime_type text NOT NULL DEFAULT '',
+        ext text NOT NULL DEFAULT '',
+        storage_page text NOT NULL,
+        status text NOT NULL,
+        enabled boolean NOT NULL DEFAULT true
+      );
+      CREATE INDEX IF NOT EXISTS documents_dataset_id_idx ON documents(dataset_id);
+      CREATE TABLE IF NOT EXISTS chunks (
+        id text PRIMARY KEY,
+        file_id text NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+        text text NOT NULL,
+        position integer NOT NULL,
+        metadata jsonb NOT NULL DEFAULT '{}',
+        es_document_id text NOT NULL DEFAULT '',
+        enabled boolean NOT NULL DEFAULT true
+      );
+      CREATE INDEX IF NOT EXISTS chunks_file_id_position_idx ON chunks(file_id, position);
+      CREATE TABLE IF NOT EXISTS tasks (
+        id text PRIMARY KEY,
+        dataset_id text NOT NULL,
+        document_ids text[] NOT NULL,
+        file_paths text[] NOT NULL,
+        status text NOT NULL,
+        error text,
+        created_at timestamptz NOT NULL,
+        updated_at timestamptz NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS embeddings (
+        id text PRIMARY KEY,
+        chunk_id text NOT NULL,
+        dataset_id text NOT NULL,
+        file_id text NOT NULL,
+        vector jsonb NOT NULL,
+        provider text NOT NULL,
+        elasticsearch_saved boolean NOT NULL DEFAULT false,
+        created_at timestamptz NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS embeddings_chunk_id_idx ON embeddings(chunk_id);
+      CREATE INDEX IF NOT EXISTS embeddings_dataset_id_idx ON embeddings(dataset_id);
+    `);
+    await migrateJsonIfEmpty();
+  })();
+
+  await schemaReady;
+};
+
+export const getDatasets = async () => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM datasets ORDER BY created_at DESC");
+  return rows.map(datasetFromRow);
+};
+
+export const getDocuments = async () => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM documents ORDER BY uploaded_time DESC");
+  return rows.map(documentFromRow);
+};
+
+export const getChunks = async () => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM chunks ORDER BY file_id, position");
+  return rows.map(chunkFromRow);
+};
+
+export const createDatasetWithDocuments = async (dataset: Dataset, documents: DatasetDocument[]) => {
+  await ensureDatasetSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `INSERT INTO datasets
+        (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        dataset.id,
+        dataset.title,
+        dataset.description,
+        dataset.created_at,
+        dataset.updated_at,
+        JSON.stringify(dataset.embedding_config),
+        JSON.stringify(dataset.reranking_config),
+        JSON.stringify(dataset.chunk_config),
+        dataset.language_hint ?? "chinese",
+        dataset.separators ?? "\n\n",
+        dataset.keep_separators ?? true,
+      ],
+    );
+    for (const document of documents) {
+      await client.query(
+        `INSERT INTO documents
+          (id, file_name, dataset_id, file_size, created_at, updated_time, uploaded_time, deleted, deleted_at, upload_source, mime_type, ext, storage_page, status, enabled)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        [
+          document.id,
+          document.file_name,
+          document.dataset_id,
+          document.file_size,
+          document.created_at,
+          document.updated_time,
+          document.uploaded_time,
+          document.deleted,
+          document.deleted_at,
+          document.upload_source,
+          document.mime_type,
+          document.ext,
+          document.storage_page,
+          document.status,
+          document.enabled,
+        ],
+      );
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+export const readTasks = async () => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM tasks ORDER BY created_at DESC");
+  return rows.map(taskFromRow);
+};
+
+export const insertTask = async (task: DatasetTask) => {
+  await ensureDatasetSchema();
+  await pool.query(
+    `INSERT INTO tasks (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
+  );
+};
+
+export const updateTaskRecord = async (taskId: string, patch: Partial<DatasetTask>) => {
+  await ensureDatasetSchema();
+  const current = (await readTasks()).find((task) => task.id === taskId);
+  if (!current) return;
+  const next = {...current, ...patch, updated_at: new Date().toISOString()};
+  await pool.query(
+    `UPDATE tasks
+     SET dataset_id = $2, document_ids = $3, file_paths = $4, status = $5, error = $6, updated_at = $7
+     WHERE id = $1`,
+    [next.id, next.dataset_id, next.document_ids, next.file_paths, next.status, next.error ?? null, next.updated_at],
+  );
+};
+
+export const updateDocumentRecord = async (documentId: string, patch: Partial<DatasetDocument>) => {
+  await ensureDatasetSchema();
+  const current = (await getDocuments()).find((document) => document.id === documentId);
+  if (!current) return;
+  const next = {...current, ...patch, updated_time: new Date().toISOString()};
+  await pool.query(
+    `UPDATE documents
+     SET file_name = $2, dataset_id = $3, file_size = $4, created_at = $5, updated_time = $6, uploaded_time = $7,
+         deleted = $8, deleted_at = $9, upload_source = $10, mime_type = $11, ext = $12, storage_page = $13,
+         status = $14, enabled = $15
+     WHERE id = $1`,
+    [
+      next.id,
+      next.file_name,
+      next.dataset_id,
+      next.file_size,
+      next.created_at,
+      next.updated_time,
+      next.uploaded_time,
+      next.deleted,
+      next.deleted_at,
+      next.upload_source,
+      next.mime_type,
+      next.ext,
+      next.storage_page,
+      next.status,
+      next.enabled,
+    ],
+  );
+};
+
+export const upsertChunks = async (nextChunks: DocumentChunk[]) => {
+  await ensureDatasetSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const chunk of nextChunks) {
+      await client.query(
+        `INSERT INTO chunks (id, file_id, text, position, metadata, es_document_id, enabled)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO UPDATE
+         SET file_id = EXCLUDED.file_id, text = EXCLUDED.text, position = EXCLUDED.position,
+             metadata = EXCLUDED.metadata, es_document_id = EXCLUDED.es_document_id, enabled = EXCLUDED.enabled`,
+        [chunk.id, chunk.file_id, chunk.text, chunk.position, JSON.stringify(chunk.metadata), chunk.es_document_id, chunk.enabled],
+      );
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+export const upsertEmbeddings = async (nextEmbeddings: EmbeddingRecord[]) => {
+  await ensureDatasetSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const embedding of nextEmbeddings) {
+      await client.query(
+        `INSERT INTO embeddings (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (id) DO UPDATE
+         SET chunk_id = EXCLUDED.chunk_id, dataset_id = EXCLUDED.dataset_id, file_id = EXCLUDED.file_id,
+             vector = EXCLUDED.vector, provider = EXCLUDED.provider, elasticsearch_saved = EXCLUDED.elasticsearch_saved`,
+        [
+          embedding.id,
+          embedding.chunk_id,
+          embedding.dataset_id,
+          embedding.file_id,
+          JSON.stringify(embedding.vector),
+          embedding.provider,
+          embedding.elasticsearch_saved,
+          embedding.created_at,
+        ],
+      );
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 
 export const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en", {
@@ -114,20 +583,28 @@ export const formatFileSize = (bytes: number) => {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 };
 
-export const getDatasetById = (datasetId: string) => getDatasets().find((dataset) => dataset.id === datasetId);
+export const getDatasetById = async (datasetId: string) => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM datasets WHERE id = $1", [datasetId]);
+  return rows[0] ? datasetFromRow(rows[0]) : undefined;
+};
 
-export const getDocumentById = (fileId: string) => getDocuments().find((document) => document.id === fileId);
+export const getDocumentById = async (fileId: string) => {
+  await ensureDatasetSchema();
+  const {rows} = await pool.query("SELECT * FROM documents WHERE id = $1", [fileId]);
+  return rows[0] ? documentFromRow(rows[0]) : undefined;
+};
 
 export const getDocumentsForDataset = (datasetId: string) =>
-  getDocuments().filter((document) => document.dataset_id === datasetId && document.enabled);
+  getDocuments().then((documents) => documents.filter((document) => document.dataset_id === datasetId && document.enabled));
 
 export const getChunksForDocument = (fileId: string) =>
-  getChunks().filter((chunk) => chunk.file_id === fileId && chunk.enabled).sort((a, b) => a.position - b.position);
+  getChunks().then((chunks) => chunks.filter((chunk) => chunk.file_id === fileId && chunk.enabled).sort((a, b) => a.position - b.position));
 
-export const getDatasetStats = (dataset: Dataset) => {
-  const datasetDocuments = getDocumentsForDataset(dataset.id);
+export const getDatasetStats = async (dataset: Dataset) => {
+  const datasetDocuments = await getDocumentsForDataset(dataset.id);
   const documentIds = new Set(datasetDocuments.map((document) => document.id));
-  const datasetChunks = getChunks().filter((chunk) => documentIds.has(chunk.file_id) && chunk.enabled);
+  const datasetChunks = (await getChunks()).filter((chunk) => documentIds.has(chunk.file_id) && chunk.enabled);
   const totalSize = datasetDocuments.reduce((sum, document) => sum + document.file_size, 0);
 
   const statuses = new Set(datasetDocuments.map((document) => document.status));
