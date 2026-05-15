@@ -1,5 +1,6 @@
 import {revalidatePath} from "next/cache";
 import {listModelConfigs, updateModelConfig} from "@/app/model/data";
+import {MODEL_TYPES, isModelType} from "@/app/model/profiles";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +22,14 @@ export default async function ModelPage() {
     const id = String(formData.get("id") ?? "");
     const api_base_url = String(formData.get("api_base_url") ?? "");
     const raw_api_key = String(formData.get("api_key") ?? "");
-    const providerModel = String(formData.get("providerModel") ?? "");
+    const model = String(formData.get("model") ?? "");
+    const model_type = String(formData.get("model_type") ?? "");
 
     await updateModelConfig(id, {
       api_base_url,
       api_key: raw_api_key.trim() ? raw_api_key : undefined,
-      providerModel,
+      model,
+      model_type: isModelType(model_type) ? model_type : undefined,
     });
     revalidatePath("/model");
   }
@@ -82,12 +85,29 @@ export default async function ModelPage() {
 
                 <label className="block">
                   <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                    Model Type
+                  </span>
+                  <select
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    defaultValue={config.model_type}
+                    name="model_type"
+                  >
+                    {MODEL_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
                     Provider Model
                   </span>
                   <input
                     className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                     defaultValue={config.model}
-                    name="providerModel"
+                    name="model"
                     placeholder={config.id}
                   />
                 </label>
