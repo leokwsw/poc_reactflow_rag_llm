@@ -1,14 +1,15 @@
 import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
 import {getInputValue} from "@/app/components/workflow/nodes/_base/execution-helpers";
+import { resolveModelConfig } from "@/app/model/data";
 
 type QuestionClass = {
   id: string;
-  name: string;
+  name?: string;
+  title?: string;
+  value?: string;
 };
 
 type QuestionClassifierNodeData = {
-  apiBaseUrl?: string;
-  apiKey?: string;
   model?: string;
   instruction?: string;
   classes?: QuestionClass[];
@@ -92,8 +93,12 @@ function extractJsonObject(text: string) {
 
 function pickClassByHeuristic(query: string, classes: QuestionClass[]) {
   const loweredQuery = query.toLowerCase();
-  const matched = classes.find((item) => item.name && loweredQuery.includes(item.name.toLowerCase()));
+  const matched = classes.find((item) => getClassName(item) && loweredQuery.includes(getClassName(item).toLowerCase()));
   return matched ?? classes[0];
+}
+
+function getClassName(item: QuestionClass) {
+  return item.name || item.value || item.title || item.id;
 }
 
 function normalizeQueryVariableSelector(selector: QuestionClassifierNodeData["queryVariableSelector"]) {
@@ -135,7 +140,7 @@ function buildClassifierMessages(
       input_text: [query],
       categories: classes.map((item) => ({
         category_id: item.id,
-        category_name: item.name,
+        category_name: getClassName(item),
       })),
       classification_instructions: classificationInstructions,
     })}
@@ -176,9 +181,10 @@ async function pickClassByModel(
   config: QuestionClassifierNodeData,
   messages: ClassifierMessage[],
 ) {
-  const apiBaseUrl = (config.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
-  const model = config.model || process.env.OPENAI_MODEL;
+  const modelConfig = await resolveModelConfig(config.model);
+  const apiBaseUrl = modelConfig.apiBaseUrl;
+  const apiKey = modelConfig.apiKey;
+  const model = modelConfig.model;
 
   if (!apiKey || !model) return null;
 
@@ -215,7 +221,7 @@ async function pickClassByModel(
   const finishReason = payload.choices?.[0]?.finish_reason || "stop";
   const parsed = content ? extractJsonObject(content) : null;
   const selected = classes.find((item) => item.id === parsed?.category_id)
-    ?? classes.find((item) => item.name === parsed?.category_name)
+    ?? classes.find((item) => getClassName(item) === parsed?.category_name)
     ?? null;
 
   if (!selected) return null;
@@ -226,7 +232,8 @@ async function pickClassByModel(
     usage: normalizeUsage(payload.usage, startedAt),
     finishReason,
     model,
-    modelProvider: config.apiBaseUrl || process.env.OPENAI_BASE_URL || "openai",
+    modelProvider: apiBaseUrl,
+    modelProfile: modelConfig.id,
   };
 }
 
@@ -245,14 +252,14 @@ export async function executeQuestionClassifierNode(context: NodeExecutionContex
   const usage = modelResult?.usage ?? normalizeUsage(undefined, Date.now());
   const model = modelResult?.model ?? config.model ?? null;
   const output = {
-    class_name: selected.name,
+    class_name: getClassName(selected),
     class_id: selected.id,
     usage,
   };
 
   return {
     output,
-    detail: `class=${selected.name}`,
+    detail: `class=${getClassName(selected)}`,
     selectedSourceHandles: [selected.id],
     traceInput: {
       query,
@@ -266,7 +273,8 @@ export async function executeQuestionClassifierNode(context: NodeExecutionContex
       })),
       usage,
       finish_reason: modelResult?.finishReason ?? "heuristic",
-      model_provider: modelResult?.modelProvider ?? config.apiBaseUrl ?? null,
+      model_provider: modelResult?.modelProvider ?? null,
+      model_profile: modelResult?.modelProfile ?? config.model ?? null,
       model_name: model,
     },
     traceOutput: output,

@@ -1,6 +1,7 @@
 import sampleGraph from "@/data/graph.json";
 import { WorkflowDataType } from "@/app/components/workflow/types";
 import { isCustomNodeType } from "@/app/components/workflow/nodes/allowed";
+import { DEFAULT_MODEL_PROFILE_ID, isModelProfileId } from "@/app/model/profiles";
 
 type GraphNode = {
   id: string;
@@ -189,6 +190,10 @@ function normalizeLlmMessages(messages: Array<{ role?: string; content?: string 
   ];
 }
 
+function normalizeModelProfile(value: unknown) {
+  return isModelProfileId(value) ? value : DEFAULT_MODEL_PROFILE_ID;
+}
+
 function buildNodeData(node: GraphNode) {
   const data = node.data ?? {};
   const nodeType = mapNodeType(data.type);
@@ -223,9 +228,13 @@ function buildNodeData(node: GraphNode) {
     return {
       type: nodeType,
       label,
-      model: data.model ?? "",
+      model: normalizeModelProfile(data.model),
       instruction: data.instructions ?? "",
-      classes: data.classes ?? [],
+      classes: (data.classes ?? []).map((classItem) => ({
+        id: classItem.id,
+        title: classItem.name,
+        value: classItem.name,
+      })),
       queryVariableSelector: data.query_variable_selector ?? [],
     };
   }
@@ -265,9 +274,7 @@ function buildNodeData(node: GraphNode) {
     return {
       type: nodeType,
       label,
-      apiBaseUrl: data.apiBaseUrl ?? "https://api.openai.com/v1",
-      apiKey: data.apiKey ?? "",
-      model: data.model ?? "",
+      model: normalizeModelProfile(data.model),
       messages: normalizeLlmMessages(rawMessages.length > 0 ? rawMessages : fallbackMessages),
       context_variable: Array.isArray(data.context?.variable_selector)
         ? data.context?.variable_selector.join(".")
@@ -296,11 +303,9 @@ function buildNodeData(node: GraphNode) {
       type: nodeType,
       label,
       role: firstLine,
-      apiBaseUrl: data.apiBaseUrl ?? "",
-      apiKey: data.apiKey ?? "",
       instruction,
       query: data.agent_parameters?.query?.value ?? "",
-      model: data.agent_parameters?.model?.value?.model ?? data.model ?? "",
+      model: normalizeModelProfile(data.agent_parameters?.model?.value?.model ?? data.model),
       maximumIterations: data.agent_parameters?.maximum_iterations?.value ?? 3,
       tools: data.agent_parameters?.tools?.value?.map((tool) => tool.tool_name ?? "").filter(Boolean) ?? [],
     };

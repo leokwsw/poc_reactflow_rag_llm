@@ -6,6 +6,7 @@ import {usePathname} from "next/navigation";
 const navItems = [
   {href: "/workflow", label: "Workflow"},
   {href: "/datasets", label: "Datasets"},
+  {href: "/model", label: "Model"},
 ];
 
 export default function AppNavigation() {

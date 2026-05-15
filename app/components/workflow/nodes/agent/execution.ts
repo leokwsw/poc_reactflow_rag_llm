@@ -1,10 +1,9 @@
 import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
 import { getIncomingEdges, summarizeFiles } from "@/app/components/workflow/nodes/execution-utils";
 import { getPrimaryParentOutput, interpolateTemplate } from "@/app/components/workflow/nodes/_base/execution-helpers";
+import { resolveModelConfig } from "@/app/model/data";
 
 type AgentNodeData = {
-  apiBaseUrl?: string;
-  apiKey?: string;
   model?: string;
   role?: string;
   instruction?: string;
@@ -66,18 +65,19 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
   const instruction = getAgentInstruction(data);
   const query = getAgentQuery(data, context, parentText);
   const tools = getAgentTools(data);
-  const apiBaseUrl = (data.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const apiKey = data.apiKey || process.env.OPENAI_API_KEY;
-  const model = data.model || data.agent_parameters?.model?.value?.model || process.env.OPENAI_MODEL;
+  const modelConfig = await resolveModelConfig(data.model || data.agent_parameters?.model?.value?.model);
+  const apiBaseUrl = modelConfig.apiBaseUrl;
+  const apiKey = modelConfig.apiKey;
+  const model = modelConfig.model;
   const maximumIterations = data.maximumIterations
     ?? data.agent_parameters?.maximum_iterations?.value
     ?? 3;
 
   if (!apiKey) {
-    throw new Error(`Agent node "${context.node.id}" is missing apiKey, and OPENAI_API_KEY is not set.`);
+    throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
-    throw new Error(`Agent node "${context.node.id}" is missing model.`);
+    throw new Error(`Model profile "${modelConfig.id}" is missing provider model.`);
   }
 
   const fileSummary = summarizeFiles(context.input.files);
@@ -151,7 +151,8 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
       text,
       usage: payload.usage ?? {},
       model,
+      model_profile: modelConfig.id,
     },
-    detail: `model=${model}, tools=${tools.length}`,
+    detail: `model=${modelConfig.id}, tools=${tools.length}`,
   };
 }

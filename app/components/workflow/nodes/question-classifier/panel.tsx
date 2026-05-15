@@ -4,6 +4,7 @@ import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import WorkflowPromptEditor from "../../prompt-editor";
 import {QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
+import ModelProfileSelect from "@/app/components/workflow/nodes/_base/model-profile-select";
 
 export default function QuestionClassifierPanel({ node, patchNodeData }: NodePanelProps) {
   const data = (node.data ?? {}) as QuestionClassifierNodeData;
@@ -14,14 +15,8 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
       <PanelField label="Label">
         <PanelInput value={data.label ?? "Question Classifier"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
-      <PanelField label="API Base URL">
-        <PanelInput value={data.api_base_url ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
-      </PanelField>
-      <PanelField label="API Key">
-        <PanelInput type="password" value={data.api_key ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
-      </PanelField>
       <PanelField label="Model">
-        <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
+        <ModelProfileSelect value={data.model} onChange={(model) => patchNodeData({ model })} />
       </PanelField>
       <PanelField label="Instruction">
         <WorkflowPromptEditor

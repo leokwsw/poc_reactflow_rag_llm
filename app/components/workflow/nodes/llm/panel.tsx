@@ -2,6 +2,7 @@
 import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import { getContextOptions, getPromptVariableOptions } from "@/app/components/workflow/nodes/prompt-variable-options";
+import ModelProfileSelect from "@/app/components/workflow/nodes/_base/model-profile-select";
 import WorkflowPromptEditor from "../../prompt-editor";
 
 type LlmMessage = {
@@ -11,8 +12,6 @@ type LlmMessage = {
 
 type LlmNodeData = {
   label?: string;
-  apiBaseUrl?: string;
-  apiKey?: string;
   model?: string;
   context_variable?: string;
   vision_enable?: boolean;
@@ -84,13 +83,7 @@ export default function LlmPanel({ node, patchNodeData, allNodes, allEdges }: No
           <PanelInput value={data.label ?? "LLM"} onChange={(event) => patchNodeData({ label: event.target.value })} />
         </PanelField>
         <PanelField label="Model">
-          <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
-        </PanelField>
-        <PanelField label="API Base URL">
-          <PanelInput value={data.apiBaseUrl ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
-        </PanelField>
-        <PanelField label="API Key">
-          <PanelInput type="password" value={data.apiKey ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
+          <ModelProfileSelect value={data.model} onChange={(model) => patchNodeData({ model })} />
         </PanelField>
 
         <label className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2">

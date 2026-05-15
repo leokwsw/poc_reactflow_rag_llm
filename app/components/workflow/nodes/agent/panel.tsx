@@ -2,12 +2,11 @@
 
 import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
+import ModelProfileSelect from "@/app/components/workflow/nodes/_base/model-profile-select";
 import WorkflowPromptEditor from "../../prompt-editor";
 
 type AgentNodeData = {
   label?: string;
-  apiBaseUrl?: string;
-  apiKey?: string;
   model?: string;
   role?: string;
   instruction?: string;
@@ -24,14 +23,8 @@ export default function AgentPanel({ node, patchNodeData }: NodePanelProps) {
       <PanelField label="Label">
         <PanelInput value={data.label ?? "Agent"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
-      <PanelField label="API Base URL">
-        <PanelInput value={data.apiBaseUrl ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
-      </PanelField>
-      <PanelField label="API Key">
-        <PanelInput type="password" value={data.apiKey ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
-      </PanelField>
       <PanelField label="Model">
-        <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
+        <ModelProfileSelect value={data.model} onChange={(model) => patchNodeData({ model })} />
       </PanelField>
       <PanelField label="Role">
         <PanelInput value={data.role ?? ""} onChange={(event) => patchNodeData({ role: event.target.value })} />

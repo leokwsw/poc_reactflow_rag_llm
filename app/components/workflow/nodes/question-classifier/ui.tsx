@@ -4,8 +4,7 @@ import { Handle, Position, type NodeProps } from "reactflow";
 import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
-import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
-import {QuestionClass, QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
+import {QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
 
 export default function QuestionClassifierNode({ data }: NodeProps<QuestionClassifierNodeData>) {
   const classes = data.classes ?? [];

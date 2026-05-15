@@ -5,6 +5,7 @@ import {Pool} from "pg";
 import {defaultData} from "@/app/components/workflow/default-data";
 import type {WorkflowDataType} from "@/app/components/workflow/types";
 import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
+import {DEFAULT_MODEL_PROFILE_ID, isModelProfileId} from "@/app/model/profiles";
 
 export type WorkflowRecord = {
   id: string;
@@ -66,17 +67,6 @@ const toIso = (value: unknown) => {
   return new Date().toISOString();
 };
 
-const workflowFromRow = (row: Record<string, unknown>): WorkflowRecord => ({
-  id: String(row.id),
-  title: String(row.title ?? ""),
-  description: String(row.description ?? ""),
-  graph: row.graph as WorkflowDataType,
-  created_at: toIso(row.created_at),
-  updated_at: toIso(row.updated_at),
-  run_count: row.run_count === undefined ? undefined : Number(row.run_count),
-  last_run_at: row.last_run_at ? toIso(row.last_run_at) : null,
-});
-
 const runFromRow = (row: Record<string, unknown>): WorkflowRunRecord => ({
   id: String(row.id),
   workflow_id: String(row.workflow_id),
@@ -88,6 +78,41 @@ const runFromRow = (row: Record<string, unknown>): WorkflowRunRecord => ({
   error: typeof row.error === "string" ? row.error : null,
   created_at: toIso(row.created_at),
   finished_at: row.finished_at ? toIso(row.finished_at) : null,
+});
+
+const sanitizeWorkflowGraph = (graph: WorkflowDataType): WorkflowDataType => ({
+  ...graph,
+  nodes: graph.nodes.map((node) => {
+    const data = node.data ?? {};
+    const nodeType = data.type;
+    const shouldUseModelProfile = ["llm", "agent", "questionClassifier"].includes(String(nodeType));
+    const safeData = {...(data as Record<string, unknown>)};
+    delete safeData.apiBaseUrl;
+    delete safeData.apiKey;
+    delete safeData.api_base_url;
+    delete safeData.api_key;
+
+    return {
+      ...node,
+      data: shouldUseModelProfile
+        ? {
+          ...safeData,
+          model: isModelProfileId(safeData.model) ? safeData.model : DEFAULT_MODEL_PROFILE_ID,
+        }
+        : safeData,
+    };
+  }),
+});
+
+const workflowFromRow = (row: Record<string, unknown>): WorkflowRecord => ({
+  id: String(row.id),
+  title: String(row.title ?? ""),
+  description: String(row.description ?? ""),
+  graph: sanitizeWorkflowGraph(row.graph as WorkflowDataType),
+  created_at: toIso(row.created_at),
+  updated_at: toIso(row.updated_at),
+  run_count: row.run_count === undefined ? undefined : Number(row.run_count),
+  last_run_at: row.last_run_at ? toIso(row.last_run_at) : null,
 });
 
 const migrateJsonIfEmpty = async () => {
@@ -107,7 +132,7 @@ const migrateJsonIfEmpty = async () => {
       workflowId,
       "Default Workflow",
       "Seeded from data/graph.json",
-      JSON.stringify(defaultData),
+      JSON.stringify(sanitizeWorkflowGraph(defaultData)),
       timestamp,
       timestamp,
     ],
@@ -199,7 +224,7 @@ export const createWorkflow = async (title?: string) => {
     id: `workflow-${randomUUID()}`,
     title: title?.trim() || "Untitled Workflow",
     description: "",
-    graph: defaultData,
+    graph: sanitizeWorkflowGraph(defaultData),
     created_at: timestamp,
     updated_at: timestamp,
   };
@@ -211,7 +236,7 @@ export const createWorkflow = async (title?: string) => {
       workflow.id,
       workflow.title,
       workflow.description,
-      JSON.stringify(workflow.graph),
+      JSON.stringify(sanitizeWorkflowGraph(workflow.graph)),
       workflow.created_at,
       workflow.updated_at,
     ],
@@ -235,7 +260,7 @@ export const updateWorkflowGraph = async (
         SET title = $2, description = $3, graph = $4, updated_at = $5
       WHERE id = $1
       RETURNING *`,
-    [workflowId, nextTitle, nextDescription, JSON.stringify(graph), updatedAt],
+    [workflowId, nextTitle, nextDescription, JSON.stringify(sanitizeWorkflowGraph(graph)), updatedAt],
   );
   return rows[0] ? workflowFromRow(rows[0]) : undefined;
 };

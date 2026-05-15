@@ -1,5 +1,6 @@
 import type { Node } from "reactflow";
 import type { CustomNodeType } from "@/app/components/workflow/nodes/types";
+import { DEFAULT_MODEL_PROFILE_ID } from "@/app/model/profiles";
 
 export function createNodeData(type: CustomNodeType): Record<string, unknown> {
   let data: Record<string, unknown> = { type };
@@ -18,9 +19,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       ...data,
       label: "Agent",
       role: "General-purpose assistant",
-      apiBaseUrl: "https://api.openai.com/v1",
-      apiKey: "",
-      model: "gpt-4o-mini",
+      model: DEFAULT_MODEL_PROFILE_ID,
       instruction: "You are a helpful AI agent. Think step by step and answer with the most useful result.",
       query: "{{#sys.query#}}",
       maximumIterations: 3,
@@ -32,9 +31,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "LLM",
-      apiBaseUrl: "https://api.openai.com/v1",
-      apiKey: "",
-      model: "gpt-4o-mini",
+      model: DEFAULT_MODEL_PROFILE_ID,
       messages: [
         {
           role: "system",
@@ -63,11 +60,9 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "Question Classifier",
-      apiBaseUrl: "https://api.openai.com/v1",
-      apiKey: "",
-      model: "gpt-4o-mini",
+      model: DEFAULT_MODEL_PROFILE_ID,
       instruction: "Classify the query into exactly one class and return the class id only.",
-      classes: [{ id: "sales", name: "Sales" }, { id: "support", name: "Support" }],
+      classes: [{ id: "sales", title: "Sales", value: "Sales" }, { id: "support", title: "Support", value: "Support" }],
     };
   } else if (type === "knowledgeRetrieval") {
     data = {

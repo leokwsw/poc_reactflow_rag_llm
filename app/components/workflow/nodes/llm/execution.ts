@@ -1,10 +1,9 @@
 import type {NodeExecutionContext, NodeExecutionResult} from "@/app/components/workflow/nodes/execution-types";
 import {getIncomingEdges, summarizeFiles} from "@/app/components/workflow/nodes/execution-utils";
 import {getInputValue, interpolateTemplate} from "@/app/components/workflow/nodes/_base/execution-helpers";
+import { resolveModelConfig } from "@/app/model/data";
 
 type LlmNodeConfig = {
-  apiBaseUrl?: string;
-  apiKey?: string;
   model?: string;
   temperature?: number;
   context_variable?: string;
@@ -83,15 +82,16 @@ export async function executeLlmNode({
         ? parentOutput.query
         : input.query;
 
-  const apiBaseUrl = (config.apiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
-  const model = config.model || process.env.OPENAI_MODEL;
+  const modelConfig = await resolveModelConfig(config.model);
+  const apiBaseUrl = modelConfig.apiBaseUrl;
+  const apiKey = modelConfig.apiKey;
+  const model = modelConfig.model;
 
   if (!apiKey) {
-    throw new Error(`LLM node "${node.id}" is missing apiKey, and OPENAI_API_KEY is not set.`);
+    throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
-    throw new Error(`LLM node "${node.id}" is missing model.`);
+    throw new Error(`Model profile "${modelConfig.id}" is missing provider model.`);
   }
 
   const contextObject = {
@@ -114,6 +114,7 @@ export async function executeLlmNode({
     },
     body: JSON.stringify({
       model,
+      model_profile: modelConfig.id,
       messages,
       temperature: typeof config.temperature === "number" ? config.temperature : 0.7,
     }),
@@ -156,7 +157,7 @@ export async function executeLlmNode({
       finish_reason: finishReason,
       model,
     },
-    detail: `model=${model}`,
+    detail: `model=${modelConfig.id}`,
     traceInput: {},
     traceProcessData: {
       model_mode: "chat",
@@ -168,6 +169,7 @@ export async function executeLlmNode({
       usage: payload.usage ?? {},
       finish_reason: finishReason,
       model_name: model,
+      model_profile: modelConfig.id,
     },
     traceOutput: {
       text,

@@ -8,8 +8,6 @@ export type QuestionClass = {
 
 export type QuestionClassifierNodeData = WorkflowNodeDataBase & {
   label?: string;
-  api_base_url?: string;
-  api_key?: string;
   model?: string;
   instruction?: string;
   classes?: QuestionClass[];
