@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent} from "react";
 import {allowedExtensions, maxFileSize} from "@/app/api/file/upload-limits";
+import {DEFAULT_EMBEDDING_MODEL_PROFILE_ID, DEFAULT_RERANKING_MODEL_PROFILE_ID} from "@/app/model/profiles";
 
 const acceptedFileTypes = ".pdf,.txt,.rtx,.rtf,.html,.csv,.xls,.xlsx,.doc,.docx,.ppt,.pptx";
 
@@ -40,13 +41,6 @@ export default function NewDatasetPage() {
   const [chunkSizeWords, setChunkSizeWords] = useState(1024);
   const [overlapWords, setOverlapWords] = useState(50);
 
-  const [embedApiBaseUrl, setEmbedApiBaseUrl] = useState("https://omlx-server.octopus-tech.com/v1");
-  const [embedApiKey, setEmbedApiKey] = useState("octopusPass");
-  const [embedModel, setEmbedModel] = useState("bge-mn3-mlx-fp16");
-
-  const [rerankApiBaseUrl, setRerankApiBaseUrl] = useState("https://omlx-server.octopus-tech.com/v1");
-  const [rerankApiKey, setRerankApiKey] = useState("octopusPass");
-  const [rerankModel, setRerankModel] = useState("Qwen3-Reranker-0.5B-mxfp8");
   const [rerankTopK, setRerankTopK] = useState(3);
   const [rerankScore, setRerankScore] = useState(0.5);
 
@@ -159,12 +153,6 @@ export default function NewDatasetPage() {
     setStep(2);
   };
 
-  const copyEmbeddingToRerank = () => {
-    setRerankApiBaseUrl(embedApiBaseUrl);
-    setRerankApiKey(embedApiKey);
-    setRerankModel(embedModel);
-  };
-
   const startIngestion = async () => {
     setError(null);
     const cs = Math.floor(Number(chunkSizeWords));
@@ -223,14 +211,10 @@ export default function NewDatasetPage() {
           files: stagedFiles,
           chunk_config: {chunk_size_words: cs, overlap_words: ov},
           embedding_config: {
-            apiBaseUrl: embedApiBaseUrl.trim(),
-            apiKey: embedApiKey.trim(),
-            model: embedModel.trim(),
+            model: DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
           },
           reranking_config: {
-            apiBaseUrl: rerankApiBaseUrl.trim(),
-            apiKey: rerankApiKey.trim(),
-            model: rerankModel.trim(),
+            model: DEFAULT_RERANKING_MODEL_PROFILE_ID,
             top_k: Math.max(1, Math.floor(Number(rerankTopK))),
             score: Math.min(1, Math.max(0, Number(rerankScore))),
           },
@@ -439,76 +423,20 @@ export default function NewDatasetPage() {
 
               <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
                 <legend className="px-1 text-sm font-semibold text-zinc-800">Embedding</legend>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">API base URL</span>
-                  <input
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    placeholder="https://api.example.com/v1"
-                    type="url"
-                    value={embedApiBaseUrl}
-                    onChange={(e) => setEmbedApiBaseUrl(e.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">API key</span>
-                  <input
-                    autoComplete="off"
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    placeholder="Optional if using local deterministic embeddings"
-                    type="password"
-                    value={embedApiKey}
-                    onChange={(e) => setEmbedApiKey(e.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">Model</span>
-                  <input
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    type="text"
-                    value={embedModel}
-                    onChange={(e) => setEmbedModel(e.target.value)}
-                  />
-                </label>
+                <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                  <p className="text-xs font-medium text-zinc-500">Central profile</p>
+                  <p className="mt-1 text-sm font-semibold text-zinc-900">{DEFAULT_EMBEDDING_MODEL_PROFILE_ID}</p>
+                </div>
+                <p className="text-xs text-zinc-500">Configure API base URL, key, and provider model in the Model page.</p>
               </fieldset>
 
               <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
                 <legend className="px-1 text-sm font-semibold text-zinc-800">Reranking</legend>
-                <button
-                  className="w-fit rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
-                  type="button"
-                  onClick={copyEmbeddingToRerank}
-                >
-                  Copy embedding URL / key / model
-                </button>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">API base URL</span>
-                  <input
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    placeholder="https://api.example.com/v1"
-                    type="url"
-                    value={rerankApiBaseUrl}
-                    onChange={(e) => setRerankApiBaseUrl(e.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">API key</span>
-                  <input
-                    autoComplete="off"
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    type="password"
-                    value={rerankApiKey}
-                    onChange={(e) => setRerankApiKey(e.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-zinc-700">Model</span>
-                  <input
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    type="text"
-                    value={rerankModel}
-                    onChange={(e) => setRerankModel(e.target.value)}
-                  />
-                </label>
+                <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
+                  <p className="text-xs font-medium text-zinc-500">Central profile</p>
+                  <p className="mt-1 text-sm font-semibold text-zinc-900">{DEFAULT_RERANKING_MODEL_PROFILE_ID}</p>
+                </div>
+                <p className="text-xs text-zinc-500">Configure API base URL, key, and provider model in the Model page.</p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-1.5">
                     <span className="text-xs font-medium text-zinc-700">Top K</span>

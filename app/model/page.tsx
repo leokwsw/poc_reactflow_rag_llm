@@ -38,7 +38,7 @@ export default async function ModelPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Model</p>
           <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Model Profiles</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Configure central API settings for workflow model selections. Workflow nodes store only the profile name.
+            Configure central API settings for workflow and dataset model selections. Graphs and datasets store only the profile name.
           </p>
         </div>
 

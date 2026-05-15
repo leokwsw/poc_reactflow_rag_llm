@@ -18,6 +18,7 @@ import {
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
 import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
 import {createTextSplitter} from "@/app/lib/text-splitter";
+import {resolveModelConfig} from "@/app/model/data";
 
 const now = () => new Date().toISOString();
 
@@ -31,15 +32,20 @@ export const embedText = async (text: string, config: ModelConfig): Promise<{
   vector: number[]
 }> => {
   try {
-    const response = await fetch(`${config.api_base_url.replace(/\/$/, "")}/embeddings`, {
+    const modelConfig = await resolveModelConfig(config.model);
+    if (!modelConfig.apiKey || !modelConfig.model) {
+      throw new Error(`Model profile "${modelConfig.id}" is missing embedding API configuration.`);
+    }
+
+    const response = await fetch(`${modelConfig.apiBaseUrl.replace(/\/$/, "")}/embeddings`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${config.api_key}`,
+        Authorization: `Bearer ${modelConfig.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         input: text,
-        model: config.model,
+        model: modelConfig.model,
       }),
     });
 

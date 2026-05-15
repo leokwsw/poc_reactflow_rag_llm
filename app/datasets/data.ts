@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import {Pool} from "pg";
+import {
+  DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
+  DEFAULT_RERANKING_MODEL_PROFILE_ID,
+  isModelProfileId,
+} from "@/app/model/profiles";
 
 export type ModelConfig = {
   api_base_url: string;
@@ -104,6 +109,24 @@ type EmbeddingsJson = {
   embeddings: EmbeddingRecord[];
 };
 
+const normalizeDatasetModelConfig = (value: unknown, fallbackModel: string): ModelConfig => {
+  const config = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return {
+    api_base_url: "",
+    api_key: "",
+    model: isModelProfileId(config.model) ? config.model : fallbackModel,
+  };
+};
+
+const normalizeDatasetRerankingConfig = (value: unknown): ModelConfig & {top_k: number; score: number} => {
+  const config = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return {
+    ...normalizeDatasetModelConfig(config, DEFAULT_RERANKING_MODEL_PROFILE_ID),
+    top_k: typeof config.top_k === "number" && Number.isFinite(config.top_k) ? Math.max(1, Math.floor(config.top_k)) : 3,
+    score: typeof config.score === "number" && Number.isFinite(config.score) ? Math.min(1, Math.max(0, config.score)) : 0.5,
+  };
+};
+
 export const dataPath = (...segments: string[]) => path.join(process.cwd(), "data", ...segments);
 
 export const datasetGridColumns = "minmax(360px, 1fr) 110px 110px 120px 150px 120px";
@@ -168,8 +191,8 @@ const datasetFromRow = (row: Record<string, unknown>): Dataset => ({
   description: String(row.description ?? ""),
   created_at: toIso(row.created_at),
   updated_at: toIso(row.updated_at),
-  embedding_config: row.embedding_config as ModelConfig,
-  reranking_config: row.reranking_config as ModelConfig & {top_k: number; score: number},
+  embedding_config: normalizeDatasetModelConfig(row.embedding_config, DEFAULT_EMBEDDING_MODEL_PROFILE_ID),
+  reranking_config: normalizeDatasetRerankingConfig(row.reranking_config),
   chunk_config: normalizeChunkConfig(row.chunk_config),
   language_hint: String(row.language_hint ?? "chinese"),
   separators: String(row.separators ?? "\n\n"),
@@ -240,8 +263,8 @@ const migrateJsonIfEmpty = async () => {
           dataset.description,
           dataset.created_at,
           dataset.updated_at,
-          JSON.stringify(dataset.embedding_config),
-          JSON.stringify(dataset.reranking_config),
+          JSON.stringify(normalizeDatasetModelConfig(dataset.embedding_config, DEFAULT_EMBEDDING_MODEL_PROFILE_ID)),
+          JSON.stringify(normalizeDatasetRerankingConfig(dataset.reranking_config)),
           JSON.stringify(dataset.chunk_config),
           dataset.language_hint ?? "chinese",
           dataset.separators ?? "\n\n",
@@ -423,8 +446,8 @@ export const createDatasetWithDocuments = async (dataset: Dataset, documents: Da
         dataset.description,
         dataset.created_at,
         dataset.updated_at,
-        JSON.stringify(dataset.embedding_config),
-        JSON.stringify(dataset.reranking_config),
+        JSON.stringify(normalizeDatasetModelConfig(dataset.embedding_config, DEFAULT_EMBEDDING_MODEL_PROFILE_ID)),
+        JSON.stringify(normalizeDatasetRerankingConfig(dataset.reranking_config)),
         JSON.stringify(dataset.chunk_config),
         dataset.language_hint ?? "chinese",
         dataset.separators ?? "\n\n",

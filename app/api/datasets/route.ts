@@ -6,6 +6,11 @@ import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
 import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
+import {
+  DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
+  DEFAULT_RERANKING_MODEL_PROFILE_ID,
+  isModelProfileId,
+} from "@/app/model/profiles";
 
 export const runtime = "nodejs";
 
@@ -36,21 +41,25 @@ const defaultModelBase = (): ModelConfig =>
     model: "local-deterministic",
   });
 
-export const mergeModelConfig = (raw: unknown): ModelConfig => {
+export const mergeModelConfig = (raw: unknown, fallbackModel = DEFAULT_EMBEDDING_MODEL_PROFILE_ID): ModelConfig => {
   const base = defaultModelBase();
   if (!raw || typeof raw !== "object") {
-    return base;
+    return {
+      api_base_url: "",
+      api_key: "",
+      model: fallbackModel,
+    };
   }
   const o = raw as Record<string, unknown>;
   return {
-    api_base_url: typeof o.apiBaseUrl === "string" ? o.apiBaseUrl.trim() : base.api_base_url,
-    api_key: typeof o.apiKey === "string" ? o.apiKey.trim() : base.api_key,
-    model: typeof o.model === "string" ? o.model.trim() : base.model,
+    api_base_url: "",
+    api_key: "",
+    model: isModelProfileId(o.model) ? o.model : (isModelProfileId(base.model) ? base.model : fallbackModel),
   };
 };
 
 export const mergeRerankingConfig = (raw: unknown): ModelConfig & {top_k: number; score: number} => {
-  const merged = mergeModelConfig(raw);
+  const merged = mergeModelConfig(raw, DEFAULT_RERANKING_MODEL_PROFILE_ID);
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const top_k = typeof o.top_k === "number" && Number.isFinite(o.top_k) ? Math.max(1, Math.floor(o.top_k)) : 3;
   const score =

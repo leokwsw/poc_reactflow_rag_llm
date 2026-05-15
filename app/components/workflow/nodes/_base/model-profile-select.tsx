@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_MODEL_PROFILE_ID, MODEL_PROFILES, isModelProfileId } from "@/app/model/profiles";
+import { CHAT_MODEL_PROFILES, DEFAULT_MODEL_PROFILE_ID, isModelProfileId } from "@/app/model/profiles";
 import type { ModelProfileId } from "@/app/model/profiles";
 
 type ModelProfileSelectProps = {
@@ -21,7 +21,7 @@ export default function ModelProfileSelect({ value, onChange }: ModelProfileSele
         }
       }}
     >
-      {MODEL_PROFILES.map((profile) => (
+      {CHAT_MODEL_PROFILES.map((profile) => (
         <option key={profile.id} value={profile.id}>
           {profile.id}
         </option>
