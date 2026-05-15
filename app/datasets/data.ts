@@ -129,7 +129,6 @@ const normalizeDatasetRerankingConfig = (value: unknown): ModelConfig & {top_k: 
 
 export const dataPath = (...segments: string[]) => path.join(process.cwd(), "data", ...segments);
 
-export const datasetGridColumns = "minmax(360px, 1fr) 110px 110px 120px 150px 120px";
 export const documentGridColumns = "minmax(360px, 1fr) 120px 120px 150px 120px";
 export const chunkGridColumns = "90px minmax(520px, 1fr) 160px 180px";
 
@@ -140,11 +139,6 @@ export const readJsonFile = <T,>(fileName: string, fallback: T): T => {
   }
 
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-};
-
-export const writeJsonFile = (fileName: string, value: unknown) => {
-  fs.mkdirSync(dataPath(), {recursive: true});
-  fs.writeFileSync(dataPath(fileName), `${JSON.stringify(value, null, 2)}\n`);
 };
 
 const pool = new Pool({
