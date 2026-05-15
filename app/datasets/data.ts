@@ -653,3 +653,21 @@ export const getDatasetStats = async (dataset: Dataset) => {
     totalSize,
   };
 };
+
+export const deleteDataset = async (datasetId: string) => {
+  await ensureDatasetSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM ${tableName("embeddings")} WHERE dataset_id = $1`, [datasetId]);
+    await client.query(`DELETE FROM ${tableName("tasks")} WHERE dataset_id = $1`, [datasetId]);
+    const {rowCount} = await client.query(`DELETE FROM ${tableName("datasets")} WHERE id = $1`, [datasetId]);
+    await client.query("COMMIT");
+    return (rowCount ?? 0) > 0;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};

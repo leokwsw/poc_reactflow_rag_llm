@@ -242,6 +242,47 @@ export const createWorkflow = async (title?: string) => {
   return workflow;
 };
 
+export const cloneWorkflow = async (workflowId: string) => {
+  await ensureWorkflowSchema();
+  const source = await getWorkflowById(workflowId);
+  if (!source) return undefined;
+
+  const timestamp = new Date().toISOString();
+  const workflow: WorkflowRecord = {
+    id: `workflow-${randomUUID()}`,
+    title: `Copy of ${source.title}`,
+    description: source.description,
+    graph: sanitizeWorkflowGraph(source.graph),
+    created_at: timestamp,
+    updated_at: timestamp,
+  };
+
+  await pool.query(
+    `INSERT INTO ${tableName("workflow_graphs")}
+       (id, title, description, graph, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      workflow.id,
+      workflow.title,
+      workflow.description,
+      JSON.stringify(workflow.graph),
+      workflow.created_at,
+      workflow.updated_at,
+    ],
+  );
+
+  return workflow;
+};
+
+export const deleteWorkflow = async (workflowId: string) => {
+  await ensureWorkflowSchema();
+  const {rowCount} = await pool.query(
+    `DELETE FROM ${tableName("workflow_graphs")} WHERE id = $1`,
+    [workflowId],
+  );
+  return (rowCount ?? 0) > 0;
+};
+
 export const updateWorkflowGraph = async (
   workflowId: string,
   graph: WorkflowDataType,
