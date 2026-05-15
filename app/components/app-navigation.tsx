@@ -7,6 +7,7 @@ const navItems = [
   {href: "/workflow", label: "Workflow"},
   {href: "/datasets", label: "Datasets"},
   {href: "/model", label: "Model"},
+  {href: "/mcp", label: "MCP"},
 ];
 
 export default function AppNavigation() {
