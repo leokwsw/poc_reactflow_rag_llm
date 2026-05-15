@@ -1,6 +1,6 @@
 import type { Edge } from "reactflow";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
-import type { WorkflowPromptVariableOption } from "@/app/components/workflow/nodes/prompt-editor/utils";
+import type { WorkflowPromptVariableOption } from "../prompt-editor/utils";
 
 function getAncestorNodeIds(currentNodeId: string, edges: Edge[]) {
   const parentsByTarget = new Map<string, string[]>();

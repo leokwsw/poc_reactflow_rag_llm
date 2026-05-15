@@ -2,7 +2,7 @@
 
 import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
-import WorkflowPromptEditor from "../prompt-editor";
+import WorkflowPromptEditor from "../../prompt-editor";
 import {QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
 
 export default function QuestionClassifierPanel({ node, patchNodeData }: NodePanelProps) {

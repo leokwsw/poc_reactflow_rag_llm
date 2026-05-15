@@ -4,7 +4,7 @@ import {
   getWorkflowVariableDisplayLabel,
   useWorkflowVariableLabelMap,
   WorkflowVariableBadge,
-} from "../prompt-editor/workflow-variable-shared";
+} from "../../prompt-editor/workflow-variable-shared";
 import { useMemo } from "react";
 
 type ReadonlyTemplateWithVariablesProps = {

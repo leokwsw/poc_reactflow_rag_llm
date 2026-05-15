@@ -2,7 +2,7 @@
 import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import { getContextOptions, getPromptVariableOptions } from "@/app/components/workflow/nodes/prompt-variable-options";
-import WorkflowPromptEditor from "../prompt-editor";
+import WorkflowPromptEditor from "../../prompt-editor";
 
 type LlmMessage = {
   role: "system" | "user" | "assistant";

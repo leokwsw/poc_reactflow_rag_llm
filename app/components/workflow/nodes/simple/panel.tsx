@@ -2,7 +2,7 @@
 
 import { PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
-import WorkflowPromptEditor from "../prompt-editor";
+import WorkflowPromptEditor from "../../prompt-editor";
 
 type SimpleNodeData = {
   label?: string;
