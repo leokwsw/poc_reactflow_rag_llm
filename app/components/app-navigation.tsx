@@ -6,6 +6,8 @@ import {usePathname} from "next/navigation";
 const navItems = [
   {href: "/workflow", label: "Workflow"},
   {href: "/datasets", label: "Datasets"},
+  {href: "/templates", label: "Templates"},
+  {href: "/playground", label: "Playground"},
   {href: "/model", label: "Model"},
   {href: "/mcp", label: "MCP"},
   {href: "/mcp-inspector", label: "MCP Inspector"},
@@ -16,11 +18,11 @@ export default function AppNavigation() {
 
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center border-b border-zinc-200/80 bg-white/95 px-5 shadow-sm backdrop-blur">
-      <div className="flex w-full items-center justify-between gap-4">
+      <div className="flex w-full min-w-0 items-center justify-between gap-4">
         <Link className="text-sm font-semibold text-zinc-950" href="/workflow">
           RAG Workflow
         </Link>
-        <nav className="flex rounded-xl border border-zinc-200 bg-zinc-100 p-1">
+        <nav className="flex max-w-full overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-100 p-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
