@@ -8,6 +8,7 @@ const navItems = [
   {href: "/datasets", label: "Datasets"},
   {href: "/model", label: "Model"},
   {href: "/mcp", label: "MCP"},
+  {href: "/mcp-inspector", label: "MCP Inspector"},
 ];
 
 export default function AppNavigation() {

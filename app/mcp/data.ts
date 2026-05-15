@@ -20,6 +20,8 @@ export type McpTool = {
   [key: string]: unknown;
 };
 
+type McpRequestHeaders = Record<string, string>;
+
 const pool = new Pool({
   host: process.env.POSTGRES_HOST ?? "10.0.0.209",
   port: Number(process.env.POSTGRES_PORT ?? 5432),
@@ -80,6 +82,7 @@ const postMcpJsonRpc = async (
   serverUrl: string,
   payload: Record<string, unknown>,
   sessionId?: string,
+  customHeaders: McpRequestHeaders = {},
 ) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
@@ -87,6 +90,7 @@ const postMcpJsonRpc = async (
     const response = await fetch(serverUrl, {
       method: "POST",
       headers: {
+        ...customHeaders,
         "Accept": "application/json, text/event-stream",
         "Content-Type": "application/json",
         "MCP-Protocol-Version": "2024-11-05",
@@ -113,7 +117,7 @@ const postMcpJsonRpc = async (
   }
 };
 
-const fetchMcpTools = async (serverUrl: string): Promise<McpTool[]> => {
+const initializeMcpSession = async (serverUrl: string, customHeaders: McpRequestHeaders = {}) => {
   const initialized = await postMcpJsonRpc(serverUrl, {
     jsonrpc: "2.0",
     id: 1,
@@ -126,21 +130,30 @@ const fetchMcpTools = async (serverUrl: string): Promise<McpTool[]> => {
         version: "0.1.0",
       },
     },
-  });
+  }, undefined, customHeaders);
   const sessionId = initialized.sessionId ?? undefined;
 
   await postMcpJsonRpc(serverUrl, {
     jsonrpc: "2.0",
     method: "notifications/initialized",
     params: {},
-  }, sessionId).catch(() => undefined);
+  }, sessionId, customHeaders).catch(() => undefined);
+
+  return sessionId;
+};
+
+export const inspectMcpTools = async (
+  serverUrl: string,
+  customHeaders: McpRequestHeaders = {},
+): Promise<McpTool[]> => {
+  const sessionId = await initializeMcpSession(serverUrl, customHeaders);
 
   const toolsResponse = await postMcpJsonRpc(serverUrl, {
     jsonrpc: "2.0",
     id: 2,
     method: "tools/list",
     params: {},
-  }, sessionId);
+  }, sessionId, customHeaders);
 
   const result = toolsResponse.body?.result;
   if (!result || typeof result !== "object") {
@@ -155,6 +168,26 @@ const fetchMcpTools = async (serverUrl: string): Promise<McpTool[]> => {
   return tools
     .filter((tool): tool is McpTool => Boolean(tool) && typeof tool === "object" && typeof (tool as Record<string, unknown>).name === "string")
     .map((tool) => tool);
+};
+
+export const callMcpTool = async (input: {
+  serverUrl: string;
+  toolName: string;
+  arguments?: Record<string, unknown>;
+  headers?: McpRequestHeaders;
+}) => {
+  const sessionId = await initializeMcpSession(input.serverUrl, input.headers ?? {});
+  const response = await postMcpJsonRpc(input.serverUrl, {
+    jsonrpc: "2.0",
+    id: 3,
+    method: "tools/call",
+    params: {
+      name: input.toolName,
+      arguments: input.arguments ?? {},
+    },
+  }, sessionId, input.headers ?? {});
+
+  return response.body;
 };
 
 const ensureMcpSchema = async () => {
@@ -276,7 +309,7 @@ export const refreshMcpServerTools = async (id: string, serverUrl?: string) => {
   const timestamp = new Date().toISOString();
 
   try {
-    const tools = await fetchMcpTools(targetUrl);
+    const tools = await inspectMcpTools(targetUrl);
     await pool.query(
       `UPDATE ${tableName}
           SET tools = $2,
