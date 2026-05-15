@@ -1,5 +1,6 @@
 import sampleGraph from "@/data/graph.json";
 import { WorkflowDataType } from "@/app/components/workflow/types";
+import { isCustomNodeType } from "@/app/components/workflow/nodes/allowed";
 
 type GraphNode = {
   id: string;
@@ -125,48 +126,15 @@ const rawGraph = sampleGraph as GraphPayload;
 
 function mapNodeType(type?: string) {
   switch (type) {
-    case "answer":
-      return "answer";
     case "if-else":
       return "ifElse";
     case "question-classifier":
       return "questionClassifier";
-    case "template-transform":
-      return "templateTransform";
-    case "document-extractor":
-      return "documentExtractor";
-    case "human-input":
-      return "humanInput";
     case "knowledge-retrieval":
       return "knowledgeRetrieval";
-    case "trigger-schedule":
-      return "triggerSchedule";
-    case "trigger-webhook":
-      return "triggerWebhook";
-    case "variable-aggregator":
-      return "variableAggregator";
-    case "datasource":
-      return "dataSource";
     default:
-      return type ?? "simple";
+      return isCustomNodeType(type) ? type : undefined;
   }
-}
-
-function normalizeExpression(value: string[] | string | undefined) {
-  if (!value)
-    return "";
-
-  if (Array.isArray(value)) {
-    if (value[0] === "sys" && value[1] === "query")
-      return "{{#sys.query#}}";
-    if (value[0] === "sys" && value[1] === "files")
-      return "{{#sys.files#}}";
-    if (value.length >= 2)
-      return `{{#${value[0]}.${value[1]}#}}`;
-    return value.join(".");
-  }
-
-  return value;
 }
 
 function extractOutputsFromAnswer(answer?: string) {
@@ -224,6 +192,10 @@ function normalizeLlmMessages(messages: Array<{ role?: string; content?: string 
 function buildNodeData(node: GraphNode) {
   const data = node.data ?? {};
   const nodeType = mapNodeType(data.type);
+  if (!nodeType) {
+    return null;
+  }
+
   const label = data.label ?? data.title ?? nodeType;
 
   if (nodeType === "start") {
@@ -238,7 +210,7 @@ function buildNodeData(node: GraphNode) {
     };
   }
 
-  if (nodeType === "answer" || nodeType === "end") {
+  if (nodeType === "end") {
     return {
       type: nodeType,
       label,
@@ -316,72 +288,6 @@ function buildNodeData(node: GraphNode) {
     };
   }
 
-  if (nodeType === "templateTransform") {
-    return {
-      type: nodeType,
-      label,
-      template: data.template ?? "",
-    };
-  }
-
-  if (nodeType === "documentExtractor") {
-    return {
-      type: nodeType,
-      label,
-      variable_selector: data.variable_selector ?? ["start", "files"],
-      is_array_file: data.is_array_file ?? true,
-      mode: "text",
-    };
-  }
-
-  if (nodeType === "humanInput") {
-    return {
-      type: nodeType,
-      label,
-      variableName: "human_input",
-      prompt: "",
-      required_variables: data.required_variables ?? [],
-      default_value_dict: data.default_value_dict ?? {},
-    };
-  }
-
-  if (nodeType === "assigner") {
-    return {
-      type: nodeType,
-      label,
-      assignments: (data.items ?? []).map((item) => ({
-        target: item.variable_selector?.join(".") ?? "",
-        value: normalizeExpression(item.value),
-      })),
-    };
-  }
-
-  if (nodeType === "variableAggregator") {
-    const variables = Array.isArray(data.variables) ? data.variables : [];
-    return {
-      type: nodeType,
-      label,
-      output_type: data.output_type ?? "string",
-      variables: variables,
-      advanced_settings: (data as Record<string, unknown>).advanced_settings ?? {
-        group_enabled: false,
-        groups: [],
-      },
-    };
-  }
-
-  if (nodeType === "variableAssigner") {
-    const variables = Array.isArray(data.variables) ? data.variables : [];
-    return {
-      type: nodeType,
-      label,
-      variables: variables.map((item, index) => ({
-        name: index === 0 ? "output" : `value_${index + 1}`,
-        expression: normalizeExpression(Array.isArray(item) ? item : undefined),
-      })),
-    };
-  }
-
   if (nodeType === "agent") {
     const instruction = data.agent_parameters?.instruction?.value ?? "";
     const firstLine = instruction.split("\n").find((line) => line.trim()) ?? "General-purpose assistant";
@@ -400,40 +306,6 @@ function buildNodeData(node: GraphNode) {
     };
   }
 
-  if (nodeType === "triggerSchedule") {
-    return {
-      type: nodeType,
-      label,
-      mode: data.mode ?? "visual",
-      frequency: data.frequency ?? "daily",
-      timezone: data.timezone ?? "UTC",
-      cron_expression: data.cron_expression ?? "",
-      visual_config: data.visual_config ?? {
-        time: "12:00 AM",
-        on_minute: 0,
-        weekdays: ["sun"],
-        monthly_days: [1],
-      },
-    };
-  }
-
-  if (nodeType === "triggerWebhook") {
-    return {
-      type: nodeType,
-      label,
-      webhook_url: data.webhook_url ?? "",
-      method: data.method ?? "POST",
-      content_type: data.content_type ?? "application/json",
-      headers: data.headers ?? [],
-      params: data.params ?? [],
-      body: data.body ?? [],
-      async_mode: data.async_mode ?? true,
-      status_code: data.status_code ?? 200,
-      response_body: data.response_body ?? "",
-      variables: data.variables ?? [],
-    };
-  }
-
   return {
     ...data,
     type: nodeType,
@@ -443,30 +315,38 @@ function buildNodeData(node: GraphNode) {
 
 function buildDefaultData(): WorkflowDataType {
   const graph = rawGraph.graph ?? {};
-  const nodes = (graph.nodes ?? []).map((node) => ({
-    ...node,
-    id: node.id,
-    type: "custom",
-    position: {
-      x: node.position?.x ?? 0,
-      y: node.position?.y ?? 0,
-    },
-    data: buildNodeData(node),
-  }));
+  const nodes = (graph.nodes ?? []).flatMap((node) => {
+    const data = buildNodeData(node);
+    if (!data) return [];
 
-  const edges = (graph.edges ?? []).map((edge) => ({
-    ...edge,
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    sourceHandle: edge.sourceHandle === "false" ? "else" : edge.sourceHandle,
-    targetHandle: edge.targetHandle,
-    style: {
-      ...edge.style,
-      opacity: edge.style?.opacity ?? 1,
-      strokeWidth: edge.style?.strokeWidth ?? 2,
-    },
-  }));
+    return [{
+      ...node,
+      id: node.id,
+      type: "custom",
+      position: {
+        x: node.position?.x ?? 0,
+        y: node.position?.y ?? 0,
+      },
+      data,
+    }];
+  });
+  const nodeIds = new Set(nodes.map((node) => node.id));
+
+  const edges = (graph.edges ?? [])
+    .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+    .map((edge) => ({
+      ...edge,
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: edge.sourceHandle === "false" ? "else" : edge.sourceHandle,
+      targetHandle: edge.targetHandle,
+      style: {
+        ...edge.style,
+        opacity: edge.style?.opacity ?? 1,
+        strokeWidth: edge.style?.strokeWidth ?? 2,
+      },
+    }));
 
   return {
     nodes,

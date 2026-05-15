@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useCallback, useEffect, useRef, useState} from "react";
 import Markdown from "@/app/components/markdown";
 import {nodeSettingsPanelMap} from "@/app/components/workflow/nodes/panels";
+import {isCustomNodeType} from "@/app/components/workflow/nodes/allowed";
 import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
 import type {WorkflowDataType} from "@/app/components/workflow/types";
@@ -260,7 +261,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
   const startNode = data.nodes.find((node) => node.data?.type === "start");
   const startVariables = ((startNode?.data as StartNodeData | undefined)?.variables ?? []);
   const selectedNodeType = typeof selectedNode?.data?.type === "string" ? selectedNode.data.type : "";
-  const SelectedNodePanel = selectedNodeType ? nodeSettingsPanelMap[selectedNodeType] : undefined;
+  const SelectedNodePanel = isCustomNodeType(selectedNodeType) ? nodeSettingsPanelMap[selectedNodeType] : undefined;
 
   const handleRun = useCallback(async () => {
     runStreamAbortRef.current?.abort();

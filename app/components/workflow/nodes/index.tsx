@@ -2,6 +2,7 @@ import {NodeProps} from "reactflow";
 import {cloneElement, FC, ReactElement, useMemo} from "react";
 import EntryNodeContainer, {StartNodeTypeEnum} from "@/app/components/workflow/nodes/entry-node-container";
 import {NodeComponentMap} from "@/app/components/workflow/nodes/types";
+import {isCustomNodeType} from "@/app/components/workflow/nodes/allowed";
 
 type NodeChildProps = {
   id: string
@@ -23,7 +24,7 @@ const BaseNode: FC<BaseNodeProps> = (
 
   const nodeContent = cloneElement(children, { id, data })
 
-  const isEntryNode = ["start", "triggerSchedule", "triggerWebhook"].includes(data.type)
+  const isEntryNode = data.type === "start"
 
   return isEntryNode
     ? (
@@ -39,7 +40,15 @@ const BaseNode: FC<BaseNodeProps> = (
 
 const CustomNode = (props: NodeProps) => {
   const nodeData = props.data
-  const NodeComponent = useMemo(() => NodeComponentMap[nodeData.type], [nodeData.type])
+  const nodeType = nodeData.type as unknown;
+  const NodeComponent = useMemo(
+    () => isCustomNodeType(nodeType) ? NodeComponentMap[nodeType] : null,
+    [nodeType],
+  )
+
+  if (!NodeComponent) {
+    return null;
+  }
 
   return (
     <>

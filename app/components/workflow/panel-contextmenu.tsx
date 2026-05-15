@@ -28,56 +28,16 @@ export default function PanelContextMenu({
     {
       title: "",
       items: [
+        { type: "start", label: "Start", disabled: hasStartNode },
+        { type: "end", label: "End" },
         { type: "llm", label: "LLM" },
-        { type: "knowledgeRetrieval", label: "Knowledge Retrieval" },
-        { type: "answer", label: "Answer" },
+        { type: "agent", label: "Agent" },
         { type: "questionClassifier", label: "Question Classifier" },
-        // { type: "agent", label: "Agent" },
+        { type: "knowledgeRetrieval", label: "Knowledge Retrieval" },
+        { type: "ifElse", label: "If-Else" },
+        { type: "http", label: "HTTP" },
       ],
     },
-    // {
-    //   title: "Question Understand",
-    //   items: [
-    //     { type: "questionClassifier", label: "Question Classifier" },
-    //   ],
-    // },
-    // {
-    //   title: "Logic",
-    //   items: [
-    //     { type: "ifElse", label: "If-Else" },
-    //     { type: "iteration", label: "Iteration" },
-    //     { type: "loop", label: "Loop" },
-    //   ],
-    // },
-    // {
-    //   title: "Transform",
-    //   items: [
-    //     { type: "templateTransform", label: "Template Transform" },
-    //     { type: "documentExtractor", label: "Doc Extractor" },
-    //     { type: "parameterExtractor", label: "Parameter Extractor" },
-    //   ],
-    // },
-    // {
-    //   title: "Utilities",
-    //   items: [
-    //     { type: "listOperator", label: "List Operator" },
-    //   ],
-    // },
-    // {
-    //   title: "Other",
-    //   items: [
-    //     { type: "start", label: "Start", disabled: hasStartNode },
-    //     { type: "end", label: "End" },
-    //     { type: "assigner", label: "Assigner" },
-    //     { type: "dataSource", label: "Data Source" },
-    //     { type: "dataSourceEmpty", label: "Data Source Empty" },
-    //     { type: "iterationStart", label: "Iteration Start" },
-    //     { type: "loopStart", label: "Loop Start" },
-    //     { type: "loopEnd", label: "Loop End" },
-    //     { type: "tool", label: "Tool" },
-    //     { type: "simple", label: "Simple" },
-    //   ],
-    // },
   ];
 
   return (

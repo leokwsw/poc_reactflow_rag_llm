@@ -6,6 +6,7 @@ import type {
   WorkflowTraceItem,
 } from "@/app/components/workflow/nodes/execution-types";
 import { nodeExecutors } from "@/app/components/workflow/nodes/executors";
+import { isCustomNodeType } from "@/app/components/workflow/nodes/allowed";
 import {
   buildTraceSections,
   getNodeType,
@@ -52,7 +53,7 @@ export async function runWorkflow(
     if (label) aliasMap.set(label, node.id);
   });
 
-  const startNode = nodes.find((node) => ["start", "triggerSchedule", "triggerWebhook"].includes(getNodeType(node)));
+  const startNode = nodes.find((node) => getNodeType(node) === "start");
   if (!startNode) {
     throw new Error("Workflow requires one entry node.");
   }
@@ -84,7 +85,7 @@ export async function runWorkflow(
       traceItem: trace[trace.length - 1],
     });
 
-    const executor = nodeExecutors[nodeType];
+    const executor = isCustomNodeType(nodeType) ? nodeExecutors[nodeType] : undefined;
     if (!executor) {
       const errorMessage = `Unsupported node type "${nodeType}" in runner.`;
       const traceSections = buildTraceSections({

@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
   addEdge, applyEdgeChanges, applyNodeChanges,
   Background,
@@ -27,6 +27,7 @@ import {useWorkflowHistory} from "@/app/components/workflow/hooks/use-workflow-h
 import {useWorkflowContextMenu} from "@/app/components/workflow/hooks/use-workflow-context-menu";
 import {useWorkflowFocusNode} from "@/app/components/workflow/hooks/use-workflow-focus-node";
 import CustomConnectionLine from "@/app/components/workflow/edges/custom-connection-line";
+import {isCustomNodeType} from "@/app/components/workflow/nodes/allowed";
 
 type ControlMode = "pointer" | "hand";
 type WorkflowProps = {
@@ -56,19 +57,31 @@ function normalizeNodeGuards(node: Node): Node {
   };
 }
 
+function removeUnsupportedNodes(data: WorkflowDataType): WorkflowDataType {
+  const nodes = data.nodes.filter((node) => isCustomNodeType(node.data?.type));
+  const nodeIds = new Set(nodes.map((node) => node.id));
+
+  return {
+    ...data,
+    nodes,
+    edges: data.edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)),
+  };
+}
+
 function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest, onDataChange, runNodeState}: WorkflowProps) {
-  const [nodes, setNodes] = useNodesState(initData.nodes.map(normalizeNodeGuards));
-  const [edges, setEdges] = useEdgesState(initData.edges);
+  const supportedInitData = useMemo(() => removeUnsupportedNodes(initData), [initData]);
+  const [nodes, setNodes] = useNodesState(supportedInitData.nodes.map(normalizeNodeGuards));
+  const [edges, setEdges] = useEdgesState(supportedInitData.edges);
   const [controlMode, setControlMode] = useState<ControlMode>("hand");
   const wrapperRef = useRef<HTMLElement | null>(null);
-  const initMetaRef = useRef({readOnly: initData.readOnly, viewport: initData.viewport});
+  const initMetaRef = useRef({readOnly: supportedInitData.readOnly, viewport: supportedInitData.viewport});
   const reactflow = useReactFlow();
   const edgeUpdateSuccessful = useRef(true);
   const blockedProtectedEdgeRemovalIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    initMetaRef.current = {readOnly: initData.readOnly, viewport: initData.viewport};
-  }, [initData.readOnly, initData.viewport]);
+    initMetaRef.current = {readOnly: supportedInitData.readOnly, viewport: supportedInitData.viewport};
+  }, [supportedInitData.readOnly, supportedInitData.viewport]);
 
   const {
     historyState,
@@ -304,7 +317,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
         nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
-        defaultViewport={initData.viewport}
+        defaultViewport={supportedInitData.viewport}
         onNodesChange={_onNodesChange}
         onNodeClick={handleNodeClick}
         onEdgesChange={_onEdgesChange}
@@ -326,10 +339,10 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
         zoomOnPinch={true}
         zoomOnScroll={true}
         zoomOnDoubleClick={true}
-        nodesDraggable={!initData.readOnly}
-        nodesConnectable={!initData.readOnly}
-        nodesFocusable={!initData.readOnly}
-        edgesFocusable={!initData.readOnly}
+        nodesDraggable={!supportedInitData.readOnly}
+        nodesConnectable={!supportedInitData.readOnly}
+        nodesFocusable={!supportedInitData.readOnly}
+        edgesFocusable={!supportedInitData.readOnly}
         edgesUpdatable
         deleteKeyCode={["Backspace", "Delete"]}
         minZoom={0.25}
