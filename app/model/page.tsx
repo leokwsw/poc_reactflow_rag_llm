@@ -19,13 +19,13 @@ export default async function ModelPage() {
   async function saveModelConfigAction(formData: FormData) {
     "use server";
     const id = String(formData.get("id") ?? "");
-    const apiBaseUrl = String(formData.get("apiBaseUrl") ?? "");
-    const rawApiKey = String(formData.get("apiKey") ?? "");
+    const api_base_url = String(formData.get("api_base_url") ?? "");
+    const raw_api_key = String(formData.get("api_key") ?? "");
     const providerModel = String(formData.get("providerModel") ?? "");
 
     await updateModelConfig(id, {
-      apiBaseUrl,
-      apiKey: rawApiKey.trim() ? rawApiKey : undefined,
+      api_base_url,
+      api_key: raw_api_key.trim() ? raw_api_key : undefined,
       providerModel,
     });
     revalidatePath("/model");
@@ -75,7 +75,7 @@ export default async function ModelPage() {
                   <input
                     className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                     defaultValue={config.api_base_url}
-                    name="apiBaseUrl"
+                    name="api_base_url"
                     placeholder="https://api.openai.com/v1"
                   />
                 </label>
@@ -99,7 +99,7 @@ export default async function ModelPage() {
                   <input
                     autoComplete="new-password"
                     className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                    name="apiKey"
+                    name="api_key"
                     placeholder={config.api_key_configured ? "Leave blank to keep current key" : "Enter API key"}
                     type="password"
                   />

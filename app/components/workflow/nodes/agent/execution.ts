@@ -66,14 +66,14 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
   const query = getAgentQuery(data, context, parentText);
   const tools = getAgentTools(data);
   const modelConfig = await resolveModelConfig(data.model || data.agent_parameters?.model?.value?.model);
-  const apiBaseUrl = modelConfig.apiBaseUrl;
-  const apiKey = modelConfig.apiKey;
+  const api_base_url = modelConfig.api_base_url;
+  const api_key = modelConfig.api_key;
   const model = modelConfig.model;
   const maximumIterations = data.maximumIterations
     ?? data.agent_parameters?.maximum_iterations?.value
     ?? 3;
 
-  if (!apiKey) {
+  if (!api_key) {
     throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
@@ -89,11 +89,11 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
     .filter(Boolean)
     .join("\n\n");
 
-  const response = await fetch(`${apiBaseUrl}/chat/completions`, {
+  const response = await fetch(`${api_base_url}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${api_key}`,
     },
     body: JSON.stringify({
       model,

@@ -182,18 +182,18 @@ async function pickClassByModel(
   messages: ClassifierMessage[],
 ) {
   const modelConfig = await resolveModelConfig(config.model);
-  const apiBaseUrl = modelConfig.apiBaseUrl;
-  const apiKey = modelConfig.apiKey;
+  const api_base_url = modelConfig.api_base_url;
+  const api_key = modelConfig.api_key;
   const model = modelConfig.model;
 
-  if (!apiKey || !model) return null;
+  if (!api_key || !model) return null;
 
   const startedAt = Date.now();
-  const response = await fetch(`${apiBaseUrl}/chat/completions`, {
+  const response = await fetch(`${api_base_url}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${api_key}`,
     },
     body: JSON.stringify({
       model,
@@ -232,7 +232,7 @@ async function pickClassByModel(
     usage: normalizeUsage(payload.usage, startedAt),
     finishReason,
     model,
-    modelProvider: apiBaseUrl,
+    modelProvider: api_base_url,
     modelProfile: modelConfig.id,
   };
 }

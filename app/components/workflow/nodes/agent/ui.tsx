@@ -7,7 +7,6 @@ import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
 
 type AgentNodeData = WorkflowNodeDataBase & {
-  apiBaseUrl?: string;
   model?: string;
   tools?: string[];
 };

@@ -83,11 +83,11 @@ export async function executeLlmNode({
         : input.query;
 
   const modelConfig = await resolveModelConfig(config.model);
-  const apiBaseUrl = modelConfig.apiBaseUrl;
-  const apiKey = modelConfig.apiKey;
+  const api_base_url = modelConfig.api_base_url;
+  const api_key = modelConfig.api_key;
   const model = modelConfig.model;
 
-  if (!apiKey) {
+  if (!api_key) {
     throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
@@ -106,11 +106,11 @@ export async function executeLlmNode({
   const messages = getRenderedMessages(config, contextObject, upstreamText)
     .filter((message) => message.content.trim().length > 0 || message.role === "system");
 
-  const response = await fetch(`${apiBaseUrl}/chat/completions`, {
+  const response = await fetch(`${api_base_url}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${api_key}`,
     },
     body: JSON.stringify({
       model,

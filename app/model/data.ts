@@ -14,8 +14,8 @@ export type ModelConfig = {
 export type ResolvedModelConfig = {
   id: ModelProfileId;
   label: string;
-  apiBaseUrl: string;
-  apiKey: string;
+  api_base_url: string;
+  api_key: string;
   model: string;
 };
 
@@ -107,8 +107,8 @@ export const listModelConfigs = async (): Promise<ModelConfig[]> => {
 export const updateModelConfig = async (
   id: string,
   input: {
-    apiBaseUrl?: string;
-    apiKey?: string;
+    api_base_url?: string;
+    api_key?: string;
     providerModel?: string;
   },
 ) => {
@@ -127,8 +127,8 @@ export const updateModelConfig = async (
       WHERE id = $1`,
     [
       id,
-      input.apiBaseUrl?.trim() ?? "",
-      input.apiKey === undefined ? null : input.apiKey,
+      input.api_base_url?.trim() ?? "",
+      input.api_key === undefined ? null : input.api_key,
       input.providerModel?.trim() || id,
       timestamp,
     ],
@@ -143,15 +143,15 @@ export const resolveModelConfig = async (id: unknown): Promise<ResolvedModelConf
     [profileId],
   );
   const row = rows[0] as Record<string, unknown> | undefined;
-  const apiBaseUrl = String(row?.api_base_url || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const apiKey = String(row?.api_key || process.env.OPENAI_API_KEY || "");
+  const api_base_url = String(row?.api_base_url || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  const api_key = String(row?.api_key || process.env.OPENAI_API_KEY || "");
   const model = String(row?.provider_model || profileId || process.env.OPENAI_MODEL || profileId);
 
   return {
     id: profileId,
     label: profileLabel(profileId),
-    apiBaseUrl,
-    apiKey,
+    api_base_url,
+    api_key,
     model,
   };
 };

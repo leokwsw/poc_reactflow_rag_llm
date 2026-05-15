@@ -50,8 +50,8 @@ type GraphNode = {
     }>;
     classes?: Array<{ id: string; name: string }>;
     instructions?: string;
-    apiBaseUrl?: string;
-    apiKey?: string;
+    api_base_url?: string;
+    api_key?: string;
     model?: string;
     prompt_template?: Array<{
       role?: string;

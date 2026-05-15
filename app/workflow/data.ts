@@ -87,8 +87,6 @@ const sanitizeWorkflowGraph = (graph: WorkflowDataType): WorkflowDataType => ({
     const nodeType = data.type;
     const shouldUseModelProfile = ["llm", "agent", "questionClassifier"].includes(String(nodeType));
     const safeData = {...(data as Record<string, unknown>)};
-    delete safeData.apiBaseUrl;
-    delete safeData.apiKey;
     delete safeData.api_base_url;
     delete safeData.api_key;
 

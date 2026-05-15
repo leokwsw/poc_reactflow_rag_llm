@@ -33,14 +33,14 @@ export const embedText = async (text: string, config: ModelConfig): Promise<{
 }> => {
   try {
     const modelConfig = await resolveModelConfig(config.model);
-    if (!modelConfig.apiKey || !modelConfig.model) {
+    if (!modelConfig.api_key || !modelConfig.model) {
       throw new Error(`Model profile "${modelConfig.id}" is missing embedding API configuration.`);
     }
 
-    const response = await fetch(`${modelConfig.apiBaseUrl.replace(/\/$/, "")}/embeddings`, {
+    const response = await fetch(`${modelConfig.api_base_url.replace(/\/$/, "")}/embeddings`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${modelConfig.apiKey}`,
+        Authorization: `Bearer ${modelConfig.api_key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
