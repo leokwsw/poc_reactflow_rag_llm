@@ -3,20 +3,7 @@
 import { PanelButton, PanelCard, PanelField, PanelInput } from "@/app/components/workflow/nodes/_base/panel-form";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import WorkflowPromptEditor from "../prompt-editor";
-
-type QuestionClass = {
-  id: string;
-  name: string;
-};
-
-type QuestionClassifierNodeData = {
-  label?: string;
-  apiBaseUrl?: string;
-  apiKey?: string;
-  model?: string;
-  instruction?: string;
-  classes?: QuestionClass[];
-};
+import {QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
 
 export default function QuestionClassifierPanel({ node, patchNodeData }: NodePanelProps) {
   const data = (node.data ?? {}) as QuestionClassifierNodeData;
@@ -28,10 +15,10 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
         <PanelInput value={data.label ?? "Question Classifier"} onChange={(event) => patchNodeData({ label: event.target.value })} />
       </PanelField>
       <PanelField label="API Base URL">
-        <PanelInput value={data.apiBaseUrl ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
+        <PanelInput value={data.api_base_url ?? "https://api.openai.com/v1"} onChange={(event) => patchNodeData({ apiBaseUrl: event.target.value })} />
       </PanelField>
       <PanelField label="API Key">
-        <PanelInput type="password" value={data.apiKey ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
+        <PanelInput type="password" value={data.api_key ?? ""} onChange={(event) => patchNodeData({ apiKey: event.target.value })} />
       </PanelField>
       <PanelField label="Model">
         <PanelInput value={data.model ?? ""} onChange={(event) => patchNodeData({ model: event.target.value })} />
@@ -48,7 +35,8 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
         {classes.map((classItem, index) => (
           <PanelCard key={classItem.id}>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-semibold text-zinc-700">Class {index + 1}</p>
+              <div></div>
+              {/*<p className="text-xs font-semibold text-zinc-700">Class {index + 1}</p>*/}
               <PanelButton
                 className="w-auto border-0 p-0"
                 danger
@@ -57,22 +45,22 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
                 Remove
               </PanelButton>
             </div>
-            <PanelField label="Class ID">
+            <PanelField label="Class Title">
               <PanelInput
-                value={classItem.id}
+                value={classItem.title}
                 onChange={(event) =>
                   patchNodeData({
-                    classes: classes.map((item, itemIndex) => (itemIndex === index ? { ...item, id: event.target.value } : item)),
+                    classes: classes.map((item, itemIndex) => (itemIndex === index ? { ...item, title: event.target.value } : item)),
                   })
                 }
               />
             </PanelField>
             <PanelField label="Class Name">
               <PanelInput
-                value={classItem.name}
+                value={classItem.value}
                 onChange={(event) =>
                   patchNodeData({
-                    classes: classes.map((item, itemIndex) => (itemIndex === index ? { ...item, name: event.target.value } : item)),
+                    classes: classes.map((item, itemIndex) => (itemIndex === index ? { ...item, value: event.target.value } : item)),
                   })
                 }
               />
@@ -88,7 +76,8 @@ export default function QuestionClassifierPanel({ node, patchNodeData }: NodePan
               ...classes,
               {
                 id: `class_${Date.now()}`,
-                name: `Class ${classes.length + 1}`,
+                title: `Class ${classes.length + 1}`,
+                value: ``,
               },
             ],
           })

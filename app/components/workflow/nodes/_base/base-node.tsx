@@ -67,33 +67,34 @@ export default function BaseNode({
         : "";
 
   return (
-    <div
-      className={`relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}>
-      <div className={`border-b px-3 py-2.5 ${toneClass.border} ${toneClass.headerBg}`}>
-        <div className="min-w-0">
-          <p className={`truncate text-sm font-semibold ${toneClass.title}`}>{title}</p>
+    <div className={"relative"}>
+      <div
+        className={`relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}>
+        <div className={`border-b px-3 py-2.5 ${toneClass.border} ${toneClass.headerBg}`}>
+          <div className="min-w-0">
+            <p className={`truncate text-sm font-semibold ${toneClass.title}`}>{title}</p>
+          </div>
         </div>
+
+        {children ? (
+          <div className="space-y-3 p-3">{children}</div>
+        ) : null}
+
+
+        {runStatus !== "idle" && (
+          <div className="absolute right-2 top-2.5">
+            <div
+              className={`h-2.5 w-2.5 rounded-full ${
+                runStatus === "running"
+                  ? "bg-sky-500 shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
+                  : runStatus === "error"
+                    ? "bg-red-500 shadow-[0_0_0_4px_rgba(248,113,113,0.14)]"
+                    : "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
+              }`}
+            />
+          </div>
+        )}
       </div>
-
-      {children ? (
-        <div className="space-y-3 p-3">{children}</div>
-      ) : null}
-
-
-      {runStatus !== "idle" && (
-        <div className="absolute right-2 top-2.5">
-          <div
-            className={`h-2.5 w-2.5 rounded-full ${
-              runStatus === "running"
-                ? "bg-sky-500 shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
-                : runStatus === "error"
-                  ? "bg-red-500 shadow-[0_0_0_4px_rgba(248,113,113,0.14)]"
-                  : "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
-            }`}
-          />
-        </div>
-      )}
-
       {hasTarget && (
         <Handle
           type="target"
@@ -105,9 +106,10 @@ export default function BaseNode({
         <Handle
           type="source"
           position={Position.Right}
-          className={`h-5 w-5 border-3! border-red-800! ${toneClass.handle}`}
+          className={`h-5 w-5 border-3! border-black! ${toneClass.handle}`}
         />
       )}
     </div>
+
   );
 }

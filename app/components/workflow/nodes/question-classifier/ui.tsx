@@ -5,16 +5,7 @@ import BaseNode from "@/app/components/workflow/nodes/_base/base-node";
 import NodeSection from "@/app/components/workflow/nodes/_base/node-section";
 import NodeToken from "@/app/components/workflow/nodes/_base/node-token";
 import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base/workflow-node-data";
-
-type QuestionClass = {
-  id: string;
-  name: string;
-};
-
-type QuestionClassifierNodeData = WorkflowNodeDataBase & {
-  model?: string;
-  classes?: QuestionClass[];
-};
+import {QuestionClass, QuestionClassifierNodeData} from "@/app/components/workflow/nodes/question-classifier/data";
 
 export default function QuestionClassifierNode({ data }: NodeProps<QuestionClassifierNodeData>) {
   const classes = data.classes ?? [];
@@ -37,14 +28,14 @@ export default function QuestionClassifierNode({ data }: NodeProps<QuestionClass
             No classes configured
           </div>
         ) : (
-          <div className="space-y-1.5 pr-6">
+          <div className="space-y-1.5">
             {classes.map((item, index) => (
               <div key={item.id} className="relative rounded-lg border border-zinc-200 bg-zinc-100 px-2.5 py-2">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                    Class {index + 1}
+                    {item.title}
                   </span>
-                  <span className="truncate text-xs font-medium text-zinc-700">{item.name || "Untitled"}</span>
+                  <span className="truncate text-xs font-medium text-zinc-700">{item.value || "Untitled"}</span>
                 </div>
                 <Handle
                   type="source"

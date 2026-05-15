@@ -26,6 +26,7 @@ import {useWorkflowOrganize} from "@/app/components/workflow/hooks/use-workflow-
 import {useWorkflowHistory} from "@/app/components/workflow/hooks/use-workflow-history";
 import {useWorkflowContextMenu} from "@/app/components/workflow/hooks/use-workflow-context-menu";
 import {useWorkflowFocusNode} from "@/app/components/workflow/hooks/use-workflow-focus-node";
+import CustomConnectionLine from "@/app/components/workflow/edges/custom-connection-line";
 
 type ControlMode = "pointer" | "hand";
 type WorkflowProps = {
@@ -298,6 +299,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
         canUndo={historyState.undo > 0}
         canRedo={historyState.redo > 0}
       />
+      {/*edgeTypes={edgeTypes}*/}
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -316,6 +318,7 @@ function WorkflowCanvas({initData, onNodeSelect, nodeDataPatch, focusNodeRequest
         }}
         onPaneContextMenu={handlePaneContextMenu}
         onMoveEnd={notifyDataChange}
+        connectionLineComponent={CustomConnectionLine}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag={controlMode === "pointer" && !initData.readOnly}
         panOnDrag={controlMode === "hand"}
