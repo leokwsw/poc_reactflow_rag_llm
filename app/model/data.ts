@@ -6,17 +6,10 @@ export type ModelConfig = {
   id: ModelProfileId;
   label: string;
   api_base_url: string;
-  api_key_configured: boolean;
-  provider_model: string;
-  updated_at: string;
-};
-
-export type ResolvedModelConfig = {
-  id: ModelProfileId;
-  label: string;
-  api_base_url: string;
   api_key: string;
+  api_key_configured: boolean;
   model: string;
+  updated_at: string;
 };
 
 const pool = new Pool({
@@ -97,8 +90,9 @@ export const listModelConfigs = async (): Promise<ModelConfig[]> => {
       id: profile.id,
       label: profile.label,
       api_base_url: String(row?.api_base_url ?? ""),
+      api_key: "",
       api_key_configured: Boolean(String(row?.api_key ?? "")),
-      provider_model: String(row?.provider_model ?? profile.id),
+      model: String(row?.provider_model ?? profile.id),
       updated_at: toIso(row?.updated_at),
     };
   });
@@ -135,7 +129,7 @@ export const updateModelConfig = async (
   );
 };
 
-export const resolveModelConfig = async (id: unknown): Promise<ResolvedModelConfig> => {
+export const resolveModelConfig = async (id: unknown): Promise<ModelConfig> => {
   const profileId = isModelProfileId(id) ? id : DEFAULT_MODEL_PROFILE_ID;
   await ensureModelConfigSchema();
   const {rows} = await pool.query(
@@ -152,6 +146,8 @@ export const resolveModelConfig = async (id: unknown): Promise<ResolvedModelConf
     label: profileLabel(profileId),
     api_base_url,
     api_key,
+    api_key_configured: Boolean(api_key),
     model,
+    updated_at: toIso(row?.updated_at),
   };
 };
