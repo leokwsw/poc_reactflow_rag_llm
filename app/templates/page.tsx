@@ -22,10 +22,10 @@ export default function TemplatesPage() {
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Templates</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Workflow Templates</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">範本</p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">工作流範本</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Start from reusable workflow patterns, then customize the graph in the workflow editor.
+            從可重用的工作流模式開始，再到編輯器按實際需要調整節點及流程。
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function TemplatesPage() {
                 className="mt-6 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
                 type="submit"
               >
-                Use Template
+                使用範本
               </button>
             </form>
           ))}

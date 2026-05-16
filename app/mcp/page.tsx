@@ -54,9 +54,9 @@ export default async function McpPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">MCP</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">MCP Servers</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">MCP 伺服器</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Store MCP server URLs, names, and server identifiers for workflow integrations.
+            儲存 MCP 伺服器網址、名稱及識別碼，方便工作流重用外部工具整合。
           </p>
         </div>
 

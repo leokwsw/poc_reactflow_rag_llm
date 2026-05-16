@@ -38,10 +38,10 @@ export default async function ModelPage() {
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Model</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Model Profiles</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">模型</p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">模型設定檔</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Configure central API settings for workflow and dataset model selections. Graphs and datasets store only the profile name.
+            集中管理工作流及資料集會用到的模型 API 設定；圖表和資料集只會儲存設定檔名稱。
           </p>
         </div>
 

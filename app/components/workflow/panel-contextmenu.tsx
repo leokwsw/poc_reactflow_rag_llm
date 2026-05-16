@@ -14,6 +14,7 @@ type NodeGroup = {
   items: Array<{
     type: CustomNodeType;
     label: string;
+    description: string;
     disabled?: boolean;
   }>;
 };
@@ -28,14 +29,14 @@ export default function PanelContextMenu({
     {
       title: "",
       items: [
-        { type: "start", label: "Start", disabled: hasStartNode },
-        { type: "end", label: "End" },
-        { type: "llm", label: "LLM" },
-        { type: "agent", label: "Agent" },
-        { type: "questionClassifier", label: "Question Classifier" },
-        { type: "knowledgeRetrieval", label: "Knowledge Retrieval" },
-        { type: "ifElse", label: "If-Else" },
-        { type: "http", label: "HTTP" },
+        { type: "start", label: "開始", description: "定義工作流入口，接收使用者問題及上載檔案。", disabled: hasStartNode },
+        { type: "end", label: "結束", description: "整理並輸出工作流的最終答案或指定欄位。"},
+        { type: "llm", label: "LLM", description: "呼叫語言模型，按提示詞生成回應或中間結果。"},
+        { type: "agent", label: "Agent", description: "讓 AI 代理根據指令自主推理，並可配合工具完成任務。"},
+        { type: "questionClassifier", label: "問題分類", description: "分析輸入問題，將它分到預設類別並引導後續分支。"},
+        { type: "knowledgeRetrieval", label: "知識檢索", description: "從已建立的知識庫搜尋相關內容，提供上下文予後續節點。"},
+        { type: "ifElse", label: "If / Else", description: "根據條件判斷走不同分支，處理路由及例外情況。"},
+        { type: "http", label: "HTTP", description: "呼叫外部 HTTP API，取得或提交資料畀工作流使用。"},
       ],
     },
   ];
@@ -60,7 +61,10 @@ export default function PanelContextMenu({
                   disabled={item.disabled}
                   type="button"
                 >
-                  Add {item.label} Node
+                  <span className="block font-medium">{item.label} Node</span>
+                  <span className="mt-0.5 block whitespace-normal text-xs leading-5 text-zinc-500">
+                    {item.description}
+                  </span>
                 </button>
               </div>
             ))}

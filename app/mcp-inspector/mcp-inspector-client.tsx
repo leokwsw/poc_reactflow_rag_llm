@@ -140,9 +140,9 @@ export default function McpInspectorClient() {
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">MCP Inspector</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Test MCP Servers</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">測試 MCP 伺服器</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Connect to an MCP HTTP endpoint, inspect available tools, and run tool calls with JSON arguments.
+            連接 MCP HTTP 端點，查看可用工具，並用 JSON 參數即時試行工具呼叫。
           </p>
         </div>
 

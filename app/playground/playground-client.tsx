@@ -100,10 +100,10 @@ export default function PlaygroundClient({workflows}: {workflows: WorkflowRecord
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Playground</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Workflow Playground</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">試驗場</p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">工作流試驗場</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-            Pick a workflow, send a query, and inspect live events without opening the full editor.
+            選擇工作流、輸入問題，毋須打開完整編輯器都可以檢視即時執行事件。
           </p>
         </div>
 
