@@ -107,7 +107,7 @@ function getVariableOptions(allNodes: NodePanelProps["allNodes"], currentNodeId:
           ];
         case "http":
           return [
-            { name: "status", typeLabel: "Number" },
+            { name: "status_code", typeLabel: "Number" },
             { name: "body", typeLabel: "Object" },
             { name: "headers", typeLabel: "Object" },
           ];

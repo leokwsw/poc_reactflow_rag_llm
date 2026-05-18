@@ -35,7 +35,21 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       tools: [],
     };
   } else if (type === "http") {
-    data = { ...data, label: "HTTP", method: "GET", url: "https://api.example.com" };
+    data = {
+      ...data,
+      label: "HTTP",
+      method: "GET",
+      url: "https://api.example.com",
+      headers: [],
+      params: [],
+      body_type: "none",
+      body_form_data: [],
+      body_urlencoded: [],
+      body_json: "",
+      body_raw: "",
+      body_binary: "",
+      skip_ssl_verification: false,
+    };
   } else if (type === "llm") {
     data = {
       ...data,
