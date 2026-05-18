@@ -8,24 +8,36 @@ import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base
 
 type AgentNodeData = WorkflowNodeDataBase & {
   model?: string;
+  messages?: Array<{role?: string; content?: string}>;
   tools?: string[];
 };
 
 export default function AgentNode({ data }: NodeProps<AgentNodeData>) {
+  const hasModel = Boolean(data.model);
+  const messageCount = data.messages?.length ?? 0;
   const tools = data.tools ?? [];
 
   return (
     <BaseNode title={data.label || "Agent"} tone="indigo" hasTarget hasSource runStatus={data.runStatus}>
-      <NodeSection label="Model">
-        <NodeToken>{data.model || "Use environment model"}</NodeToken>
-      </NodeSection>
-      <NodeSection label="Tools">
-        {tools.length === 0 ? <NodeToken muted>No tools attached</NodeToken> : (
-          <div className="space-y-1.5">
-            {tools.map((tool) => <NodeToken key={tool}>{tool}</NodeToken>)}
-          </div>
-        )}
-      </NodeSection>
+      {hasModel ? (
+        <>
+          <NodeSection label="Model">
+            <NodeToken>{data.model}</NodeToken>
+          </NodeSection>
+          <NodeSection label="Messages">
+            <NodeToken>{messageCount || 1} configured</NodeToken>
+          </NodeSection>
+          <NodeSection label="MCP Tools">
+            {tools.length === 0 ? <NodeToken muted>No tools attached</NodeToken> : (
+              <div className="space-y-1.5">
+                {tools.map((tool) => <NodeToken key={tool}>{tool}</NodeToken>)}
+              </div>
+            )}
+          </NodeSection>
+        </>
+      ) : (
+        <NodeToken muted>No model selected</NodeToken>
+      )}
     </BaseNode>
   );
 }

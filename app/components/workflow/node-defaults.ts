@@ -18,12 +18,21 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
     data = {
       ...data,
       label: "Agent",
-      role: "General-purpose assistant",
       model: DEFAULT_MODEL_PROFILE_ID,
-      instruction: "You are a helpful AI agent. Think step by step and answer with the most useful result.",
-      query: "{{#sys.query#}}",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful AI agent. Use tools when they can improve the answer.",
+        },
+        {
+          role: "user",
+          content: "{{#sys.query#}}\n\n{{#sys.files#}}",
+        },
+      ],
+      context_variable: "",
+      vision_enable: false,
       maximumIterations: 3,
-      tools: ["web_search", "calculator"],
+      tools: [],
     };
   } else if (type === "http") {
     data = { ...data, label: "HTTP", method: "GET", url: "https://api.example.com" };

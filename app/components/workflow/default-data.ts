@@ -297,15 +297,24 @@ function buildNodeData(node: GraphNode) {
 
   if (nodeType === "agent") {
     const instruction = data.agent_parameters?.instruction?.value ?? "";
-    const firstLine = instruction.split("\n").find((line) => line.trim()) ?? "General-purpose assistant";
+    const query = data.agent_parameters?.query?.value ?? "{{#sys.query#}}";
 
     return {
       type: nodeType,
       label,
-      role: firstLine,
-      instruction,
-      query: data.agent_parameters?.query?.value ?? "",
       model: normalizeModelProfile(data.agent_parameters?.model?.value?.model ?? data.model),
+      messages: normalizeLlmMessages([
+        {
+          role: "system",
+          content: instruction || "You are a helpful AI agent. Use tools when they can improve the answer.",
+        },
+        {
+          role: "user",
+          content: query,
+        },
+      ]),
+      context_variable: "",
+      vision_enable: false,
       maximumIterations: data.agent_parameters?.maximum_iterations?.value ?? 3,
       tools: data.agent_parameters?.tools?.value?.map((tool) => tool.tool_name ?? "").filter(Boolean) ?? [],
     };
