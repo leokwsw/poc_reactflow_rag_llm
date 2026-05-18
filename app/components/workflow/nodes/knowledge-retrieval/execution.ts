@@ -92,7 +92,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
 
   const client = getElasticsearchClient();
 
-  const objResult: KnowledgeRetrievalOutputChunk[] = []
+  const vectorObjResult: KnowledgeRetrievalOutputChunk[] = []
   let hitsTotal = 0;
   let hitsMaxScore = 1.0;
   const scoreStats: Record<string, {min_score: number; avg_score: number; score_gap: number}> = {};
@@ -135,7 +135,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
         const score = hit._score ?? 0;
         const scoreRatio = hitsMaxScore ? score / hitsMaxScore : 0;
 
-        objResult.push({
+        vectorObjResult.push({
           text: hit._source?.text ?? "",
           metadata: hit._source?.metadata ?? {},
           score,
@@ -149,7 +149,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
 
   return {
     output: {
-      result: objResult,
+      result: vectorObjResult,
       query: resolvedQuery,
       hits_total: hitsTotal,
       hits_max_score: hitsMaxScore,
