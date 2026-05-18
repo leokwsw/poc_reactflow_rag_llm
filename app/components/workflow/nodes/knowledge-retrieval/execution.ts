@@ -19,6 +19,8 @@ type KnowledgeRetrievalInputData = {
 
 type QualityTier = "high" | "medium" | "low";
 type RetrievalSource = "vector" | "bm25";
+type SourceRankMap = Partial<Record<RetrievalSource, number>>;
+type SourceScoreMap = Partial<Record<RetrievalSource, number>>;
 
 type KnowledgeRetrievalOutputChunk = {
   text: string;
@@ -28,7 +30,10 @@ type KnowledgeRetrievalOutputChunk = {
   score_ratio: number;
   quality_tier: QualityTier;
   retrieval_sources?: RetrievalSource[];
-  source_scores?: Partial<Record<RetrievalSource, number>>;
+  source_scores?: SourceScoreMap;
+  source_score_ratios?: SourceScoreMap;
+  source_ranks?: SourceRankMap;
+  rrf_score?: number;
 }
 
 type ElasticSearchHitSource = {
@@ -40,6 +45,9 @@ type ElasticSearchHitSource = {
 }
 
 const roundToFourDecimals = (value: number) => Math.round(value * 10_000) / 10_000;
+const RRF_K = 60;
+const BM25_WEIGHT = 0.4;
+const VECTOR_WEIGHT = 0.6;
 
 const getHitsTotalValue = (total: estypes.SearchTotalHits | number | undefined) => {
   if (typeof total === "number") return total;
@@ -51,6 +59,8 @@ const getQualityTier = (scoreRatio: number): QualityTier => {
   if (scoreRatio >= 0.5) return "medium";
   return "low";
 };
+
+const getSourceWeight = (source: RetrievalSource) => source === "bm25" ? BM25_WEIGHT : VECTOR_WEIGHT;
 
 const buildBm25SearchBody = (body: Record<string, unknown>): Record<string, unknown> => ({
   query: body.query,
@@ -74,16 +84,20 @@ const createOutputChunk = (
 ): KnowledgeRetrievalOutputChunk => {
   const score = hit._score ?? 0;
   const scoreRatio = maxScore ? score / maxScore : 0;
+  const finalScore = getSourceWeight(source) * scoreRatio;
 
   return {
     text: hit._source?.text ?? "",
     metadata: hit._source?.metadata ?? {},
-    score,
+    score: roundToFourDecimals(finalScore),
     rank,
-    score_ratio: roundToFourDecimals(scoreRatio),
-    quality_tier: getQualityTier(scoreRatio),
+    score_ratio: roundToFourDecimals(finalScore),
+    quality_tier: getQualityTier(finalScore),
     retrieval_sources: [source],
     source_scores: {[source]: score},
+    source_score_ratios: {[source]: roundToFourDecimals(scoreRatio)},
+    source_ranks: {[source]: rank},
+    rrf_score: 1 / (RRF_K + rank),
   };
 };
 
@@ -116,23 +130,32 @@ const mergeRetrievalResults = (
 
     const retrievalSources = new Set([...(current.retrieval_sources ?? []), ...(chunk.retrieval_sources ?? [])]);
     const sourceScores = {...current.source_scores, ...chunk.source_scores};
-    const scoreRatio = Math.max(current.score_ratio, chunk.score_ratio);
+    const sourceScoreRatios = {...current.source_score_ratios, ...chunk.source_score_ratios};
+    const sourceRanks = {...current.source_ranks, ...chunk.source_ranks};
+    const rrfScore = (current.rrf_score ?? 0) + (chunk.rrf_score ?? 0);
+    const bm25ScoreRatio = sourceScoreRatios.bm25 ?? 0;
+    const vectorScoreRatio = sourceScoreRatios.vector ?? 0;
+    const scoreRatio = (BM25_WEIGHT * bm25ScoreRatio) + (VECTOR_WEIGHT * vectorScoreRatio);
 
     merged.set(key, {
       ...current,
-      score: Math.max(current.score, chunk.score),
-      score_ratio: scoreRatio,
+      score: roundToFourDecimals(scoreRatio),
+      score_ratio: roundToFourDecimals(scoreRatio),
       quality_tier: getQualityTier(scoreRatio),
       retrieval_sources: Array.from(retrievalSources),
       source_scores: sourceScores,
+      source_score_ratios: sourceScoreRatios,
+      source_ranks: sourceRanks,
+      rrf_score: roundToFourDecimals(rrfScore),
     });
   }
 
   return Array.from(merged.values())
-    .sort((a, b) => b.score_ratio - a.score_ratio || b.score - a.score)
+    .sort((a, b) => (b.rrf_score ?? 0) - (a.rrf_score ?? 0) || b.score - a.score)
     .map((chunk, index) => ({
       ...chunk,
       rank: index + 1,
+      rrf_score: roundToFourDecimals(chunk.rrf_score ?? 0),
     }));
 };
 
