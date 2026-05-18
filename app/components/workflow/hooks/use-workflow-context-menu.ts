@@ -84,7 +84,7 @@ export function useWorkflowContextMenu({
     if (!contextMenu)
       return;
 
-    if (["start", "end"].includes(type) && nodesRef.current.some((node) => node.data.type === type))
+    if (type === "start" && nodesRef.current.some((node) => node.data.type === type))
       return;
 
     pushUndoSnapshot();

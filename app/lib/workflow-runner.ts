@@ -61,6 +61,8 @@ export async function runWorkflow(
 
   let finalOutput = "";
   let finalOutputs: Record<string, unknown> = {};
+  const finalOutputParts: string[] = [];
+  const endNodeOutputs: Record<string, {label: string; output: string; outputs: Record<string, unknown>}> = {};
   const executionQueue: string[] = [startNode.id];
   const queuedNodeIds = new Set<string>([startNode.id]);
   const executedNodeIds = new Set<string>();
@@ -147,10 +149,29 @@ export async function runWorkflow(
 
     nodeOutputs[nodeId] = result.output;
     if (result.finalOutput !== undefined) {
-      finalOutput = result.finalOutput;
+      if (nodeType === "end") {
+        const label = typeof node.data?.label === "string" && node.data.label.trim()
+          ? node.data.label.trim()
+          : nodeId;
+        finalOutputParts.push(result.finalOutput);
+        finalOutput = finalOutputParts.filter(Boolean).join("\n\n");
+        endNodeOutputs[nodeId] = {
+          label,
+          output: result.finalOutput,
+          outputs: result.finalOutputs ?? {},
+        };
+      } else {
+        finalOutput = result.finalOutput;
+      }
     }
     if (result.finalOutputs !== undefined) {
-      finalOutputs = result.finalOutputs;
+      finalOutputs = nodeType === "end"
+        ? {
+          ...finalOutputs,
+          ...result.finalOutputs,
+          end_nodes: endNodeOutputs,
+        }
+        : result.finalOutputs;
     }
 
     trace[trace.length - 1] = {

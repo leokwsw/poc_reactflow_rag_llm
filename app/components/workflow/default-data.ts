@@ -152,19 +152,19 @@ function normalizeIfElseCondition(condition: IfElseCondition) {
 
   switch (condition.comparison_operator) {
     case "empty":
-      return `${selector} == ''`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "is_empty", right: "" };
     case "not empty":
-      return `${selector} != ''`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "is_not_empty", right: "" };
     case "contains":
-      return `${selector} contains '${rawValue}'`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "includes", right: rawValue };
     case "not contains":
-      return `${selector} not contains '${rawValue}'`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "not_includes", right: rawValue };
     case "equal":
-      return `${selector} == '${rawValue}'`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "is", right: rawValue };
     case "not equal":
-      return `${selector} != '${rawValue}'`;
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "is_not", right: rawValue };
     default:
-      return [selector, condition.comparison_operator, rawValue].filter(Boolean).join(" ");
+      return { id: `condition-${crypto.randomUUID()}`, left: selector, operator: "includes", right: rawValue };
   }
 }
 
@@ -287,9 +287,10 @@ function buildNodeData(node: GraphNode) {
     return {
       type: nodeType,
       label,
-      cases: (data.cases ?? []).map((caseItem) => ({
-        id: caseItem.id ?? caseItem.case_id ?? `case-${Date.now()}`,
-        label: caseItem.case_id?.toUpperCase() ?? caseItem.id ?? "CASE",
+      cases: (data.cases ?? []).map((caseItem, index) => ({
+        id: index === 0 ? (caseItem.id ?? caseItem.case_id ?? "if") : (caseItem.id ?? caseItem.case_id ?? `elif-${index}`),
+        label: index === 0 ? "IF" : (caseItem.case_id?.toUpperCase() ?? caseItem.id ?? `ELSE IF ${index}`),
+        logical_operator: "and",
         conditions: (caseItem.conditions ?? []).map(normalizeIfElseCondition),
       })),
     };

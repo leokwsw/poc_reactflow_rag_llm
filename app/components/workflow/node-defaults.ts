@@ -75,8 +75,12 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       ...data,
       label: "If / Else",
       cases: [
-        { id: "if", label: "IF", conditions: ["query contains 'help'"] },
-        { id: "elif-1", label: "ELIF", conditions: ["files count > 0"] },
+        {
+          id: "if",
+          label: "IF",
+          logical_operator: "and",
+          conditions: [{id: "if-condition-1", left: "query", operator: "includes", right: "help"}],
+        },
       ],
     };
   } else if (type === "questionClassifier") {

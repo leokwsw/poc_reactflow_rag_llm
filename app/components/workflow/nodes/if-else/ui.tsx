@@ -8,7 +8,12 @@ import type { WorkflowNodeDataBase } from "@/app/components/workflow/nodes/_base
 type IfElseCase = {
   id: string;
   label: string;
-  conditions: string[];
+  logical_operator?: "and" | "or";
+  conditions?: Array<string | {
+    left?: string;
+    operator?: string;
+    right?: string;
+  }>;
 };
 
 type IfElseNodeData = WorkflowNodeDataBase & {
@@ -18,6 +23,16 @@ type IfElseNodeData = WorkflowNodeDataBase & {
 export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
   const cases = data.cases ?? [];
   const branchCount = cases.length + 1; // +1 for ELSE
+  const describeCondition = (condition: NonNullable<IfElseCase["conditions"]>[number]) => {
+    if (typeof condition === "string") {
+      return condition;
+    }
+    const operator = condition.operator ?? "includes";
+    if (operator === "is_empty" || operator === "is_not_empty") {
+      return `${condition.left ?? ""} ${operator}`;
+    }
+    return `${condition.left ?? ""} ${operator} ${condition.right ?? ""}`;
+  };
 
   return (
     <BaseNode title={data.label || "If / Else"} tone="amber" hasTarget hasSource={false} runStatus={data.runStatus}>
@@ -34,10 +49,11 @@ export default function IfElseNode({ data }: NodeProps<IfElseNodeData>) {
                 <span className="text-[10px] text-zinc-500">{branch.label}</span>
               </div>
               <div className="space-y-1">
-                {branch.conditions.length > 0 ? (
-                  branch.conditions.map((condition) => (
-                    <p key={condition} className="truncate text-xs text-zinc-700">
-                      {condition}
+                {(branch.conditions ?? []).length > 0 ? (
+                  (branch.conditions ?? []).map((condition, conditionIndex) => (
+                    <p key={`${branch.id}-${conditionIndex}`} className="truncate text-xs text-zinc-700">
+                      {conditionIndex > 0 ? `${(branch.logical_operator ?? "and").toUpperCase()} ` : ""}
+                      {describeCondition(condition)}
                     </p>
                   ))
                 ) : (
