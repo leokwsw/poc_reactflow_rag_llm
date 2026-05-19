@@ -214,6 +214,9 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
   );
 
   const [data, setData] = useState(initialData);
+  const [title, setTitle] = useState(workflowTitle);
+  const [renameDraft, setRenameDraft] = useState(workflowTitle);
+  const [isRenaming, setIsRenaming] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
   const [runQuery, setRunQuery] = useState("一間本地連鎖餐廳收購另一間同類餐廳，並擴大生產規模。解釋這屬於哪種企業擴張，並分析對成本及短期／長期生產的影響。");
   const [runFiles, setRunFiles] = useState<File[]>([]);
@@ -229,18 +232,19 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
   const [isJsonCopied, setIsJsonCopied] = useState(false);
   const [isTraceCopied, setIsTraceCopied] = useState(false);
 
-  const saveWorkflow = useCallback(async (next: WorkflowDataType) => {
+  const saveWorkflow = useCallback(async (next: WorkflowDataType, nextTitle = title) => {
     setSaveStatus("saving");
     const response = await fetch(`/api/workflows/${workflowId}`, {
       method: "PUT",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        title: workflowTitle,
+        title: nextTitle,
         graph: next,
       }),
     });
     setSaveStatus(response.ok ? "saved" : "error");
-  }, [workflowId, workflowTitle]);
+    return response.ok;
+  }, [title, workflowId]);
 
   const handleWorkflowDataChange = useCallback((next: WorkflowDataType) => {
     setData(next);
@@ -257,6 +261,41 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
       window.clearTimeout(saveTimerRef.current);
     }
   }, []);
+
+  const handleStartRename = useCallback(() => {
+    setRenameDraft(title);
+    setIsRenaming(true);
+  }, [title]);
+
+  const handleCancelRename = useCallback(() => {
+    setRenameDraft(title);
+    setIsRenaming(false);
+  }, [title]);
+
+  const handleSaveRename = useCallback(async () => {
+    const nextTitle = renameDraft.trim();
+    if (!nextTitle) {
+      setSaveStatus("error");
+      return;
+    }
+
+    if (saveTimerRef.current) {
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    const ok = await saveWorkflow(data, nextTitle).catch(() => {
+      setSaveStatus("error");
+      return false;
+    });
+    if (!ok) {
+      return;
+    }
+
+    setTitle(nextTitle);
+    setRenameDraft(nextTitle);
+    setIsRenaming(false);
+  }, [data, renameDraft, saveWorkflow]);
 
   const startNode = data.nodes.find((node) => node.data?.type === "start");
   const startVariables = ((startNode?.data as StartNodeData | undefined)?.variables ?? []);
@@ -447,7 +486,46 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
               <Link className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 transition hover:text-zinc-900" href="/workflow">
                 Workflows
               </Link>
-              <h1 className="mt-1 truncate text-lg font-semibold text-zinc-950">{workflowTitle}</h1>
+              {isRenaming ? (
+                <form
+                  className="mt-1 flex items-center gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleSaveRename();
+                  }}
+                >
+                  <input
+                    className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-950 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                    value={renameDraft}
+                    onChange={(event) => setRenameDraft(event.target.value)}
+                    autoFocus
+                  />
+                  <button
+                    className="rounded-xl bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-700"
+                    type="submit"
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+                    type="button"
+                    onClick={handleCancelRename}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <div className="mt-1 flex items-center gap-2">
+                  <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-zinc-950">{title}</h1>
+                  <button
+                    className="rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+                    type="button"
+                    onClick={handleStartRename}
+                  >
+                    Rename
+                  </button>
+                </div>
+              )}
               <p className="mt-1 text-xs text-zinc-500">
                 {saveStatus === "saving" ? "Saving..." : saveStatus === "error" ? "Save failed" : "Saved"}
               </p>
