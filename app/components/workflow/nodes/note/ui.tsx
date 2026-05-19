@@ -88,7 +88,10 @@ export default function NoteNode({id, data}: NodeProps<NoteNodeData>) {
 
   return (
     <div className="relative">
-      <div className="nodrag nopan absolute -top-[76px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-zinc-200 bg-white px-3 py-2 shadow-lg">
+      <div
+        className="nodrag nopan absolute -top-[76px] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-zinc-200 bg-white px-3 py-2 shadow-lg"
+        data-export-ignore="true"
+      >
         <div className="relative">
           <button
             className={`h-8 w-8 rounded-full border ${colorOptions.find((item) => item.value === color)?.className ?? colorOptions[0].className}`}
