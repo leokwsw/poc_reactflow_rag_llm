@@ -4,6 +4,7 @@ import { executeHttpNode } from "@/app/components/workflow/nodes/http/execution"
 import { executeIfElseNode } from "@/app/components/workflow/nodes/if-else/execution";
 import { executeKnowledgeRetrievalNode } from "@/app/components/workflow/nodes/knowledge-retrieval/execution";
 import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
+import { executeNoteNode } from "@/app/components/workflow/nodes/note/execution";
 import { executeQuestionClassifierNode } from "@/app/components/workflow/nodes/question-classifier/execution";
 import { executeStartNode } from "@/app/components/workflow/nodes/start/execution";
 import type { CustomNodeType } from "@/app/components/workflow/nodes/allowed";
@@ -20,4 +21,5 @@ export const nodeExecutors: Record<CustomNodeType, NodeExecutor> = {
   ifElse: executeIfElseNode,
   knowledgeRetrieval: executeKnowledgeRetrievalNode,
   questionClassifier: executeQuestionClassifierNode,
+  note: executeNoteNode,
 };

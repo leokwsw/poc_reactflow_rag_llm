@@ -98,6 +98,20 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       query: "{{#sys.query#}}",
       datasets: [],
     };
+  } else if (type === "note") {
+    data = {
+      ...data,
+      label: "Note",
+      content: "",
+      author: "Leo Wu",
+      color: "sky",
+      fontSize: "medium",
+      bold: false,
+      italic: false,
+      strike: false,
+      list: false,
+      link: "",
+    };
   } else {
     data = {...data, label: "Node", description: ""};
   }

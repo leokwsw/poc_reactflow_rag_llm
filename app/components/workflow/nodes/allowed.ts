@@ -7,6 +7,7 @@ export const ALLOWED_CUSTOM_NODE_TYPES = [
   "knowledgeRetrieval",
   "ifElse",
   "http",
+  "note",
 ] as const;
 
 export type CustomNodeType = (typeof ALLOWED_CUSTOM_NODE_TYPES)[number];

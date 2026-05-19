@@ -4,6 +4,7 @@ import IfElseNode from "@/app/components/workflow/nodes/if-else/ui";
 import HttpNode from "@/app/components/workflow/nodes/http/ui";
 import KnowledgeRetrievalNode from "@/app/components/workflow/nodes/knowledge-retrieval/ui";
 import LlmNode from "@/app/components/workflow/nodes/llm/ui";
+import NoteNode from "@/app/components/workflow/nodes/note/ui";
 import QuestionClassifierNode from "@/app/components/workflow/nodes/question-classifier/ui";
 import StartNode from "@/app/components/workflow/nodes/start/ui";
 import Custom from "@/app/components/workflow/nodes"
@@ -26,4 +27,5 @@ export const NodeComponentMap: Record<AllowedCustomNodeType, ComponentType<Parti
   knowledgeRetrieval: KnowledgeRetrievalNode as ComponentType<Partial<NodeProps>>,
   ifElse: IfElseNode as ComponentType<Partial<NodeProps>>,
   http: HttpNode as ComponentType<Partial<NodeProps>>,
+  note: NoteNode as ComponentType<Partial<NodeProps>>,
 }

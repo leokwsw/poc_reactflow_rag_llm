@@ -37,6 +37,7 @@ export default function PanelContextMenu({
         { type: "knowledgeRetrieval", label: "知識檢索", description: "從已建立的知識庫搜尋相關內容，提供上下文予後續節點。"},
         { type: "ifElse", label: "If / Else", description: "根據條件判斷走不同分支，處理路由及例外情況。"},
         { type: "http", label: "HTTP", description: "呼叫外部 HTTP API，取得或提交資料畀工作流使用。"},
+        { type: "note", label: "Note Memo", description: "在畫布加入自由文字備忘，不需要連接任何邊。"},
       ],
     },
   ];
