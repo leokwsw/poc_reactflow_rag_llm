@@ -16,6 +16,23 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## TypeORM
+
+TypeORM is configured for PostgreSQL in `app/lib/typeorm.ts` and reuses the existing database environment variables:
+
+```bash
+POSTGRES_HOST=10.0.0.209
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DATABASE=postgres
+POSTGRES_SCHEMA=public
+```
+
+You can also set `DATABASE_URL` instead of the individual `POSTGRES_*` values. Import `getDataSource` from `@/app/lib/typeorm` in server-only code.
+
+Existing PostgreSQL tables are mapped as one-file-per-entity TypeORM classes in `app/lib/entities/`: `datasets`, `documents`, `chunks`, `tasks`, `embeddings`, `workflow_graphs`, `workflow_runs`, `mcp_servers`, and `model_configs`.
+
 ## Deploy With PM2
 
 This project includes `ecosystem.config.cjs` for `pm2 deploy`.

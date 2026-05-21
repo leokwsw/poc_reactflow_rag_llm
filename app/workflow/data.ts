@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {randomUUID} from "node:crypto";
-import {Pool} from "pg";
+import {dbQuery} from "@/app/lib/typeorm-query";
 import {defaultData} from "@/app/components/workflow/default-data";
 import type {WorkflowDataType} from "@/app/components/workflow/types";
 import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
@@ -30,15 +30,6 @@ export type WorkflowRunRecord = {
   created_at: string;
   finished_at: string | null;
 };
-
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST ?? "10.0.0.209",
-  port: Number(process.env.POSTGRES_PORT ?? 5432),
-  user: process.env.POSTGRES_USER ?? "postgres",
-  password: process.env.POSTGRES_PASSWORD ?? "password",
-  database: process.env.POSTGRES_DATABASE ?? "postgres",
-  max: 10,
-});
 
 let schemaReady: Promise<void> | null = null;
 
@@ -114,14 +105,14 @@ const workflowFromRow = (row: Record<string, unknown>): WorkflowRecord => ({
 });
 
 const migrateJsonIfEmpty = async () => {
-  const {rows} = await pool.query<{count: string}>(
+  const {rows} = await dbQuery<{count: string}>(
     `SELECT COUNT(*)::text AS count FROM ${tableName("workflow_graphs")}`,
   );
   if (Number(rows[0]?.count ?? 0) > 0) return;
 
   const timestamp = new Date().toISOString();
   const workflowId = "workflow-default";
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("workflow_graphs")}
        (id, title, description, graph, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6)
@@ -138,7 +129,7 @@ const migrateJsonIfEmpty = async () => {
 
   const trace = readJsonFile<WorkflowTraceItem[]>("trace.json", []);
   if (trace.length > 0) {
-    await pool.query(
+    await dbQuery(
       `INSERT INTO ${tableName("workflow_runs")}
          (id, workflow_id, status, query, input, result, trace, error, created_at, finished_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -161,8 +152,8 @@ const migrateJsonIfEmpty = async () => {
 
 export const ensureWorkflowSchema = async () => {
   schemaReady ??= (async () => {
-    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
-    await pool.query(`
+    await dbQuery(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
+    await dbQuery(`
       CREATE TABLE IF NOT EXISTS ${tableName("workflow_graphs")} (
         id text PRIMARY KEY,
         title text NOT NULL,
@@ -194,7 +185,7 @@ export const ensureWorkflowSchema = async () => {
 
 export const listWorkflows = async () => {
   await ensureWorkflowSchema();
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `SELECT w.*,
             COUNT(r.id)::int AS run_count,
             MAX(r.created_at) AS last_run_at
@@ -208,7 +199,7 @@ export const listWorkflows = async () => {
 
 export const getWorkflowById = async (workflowId: string) => {
   await ensureWorkflowSchema();
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `SELECT * FROM ${tableName("workflow_graphs")} WHERE id = $1`,
     [workflowId],
   );
@@ -226,7 +217,7 @@ export const createWorkflow = async (title?: string) => {
     created_at: timestamp,
     updated_at: timestamp,
   };
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("workflow_graphs")}
        (id, title, description, graph, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -257,7 +248,7 @@ export const createWorkflowFromTemplate = async (input: {
     created_at: timestamp,
     updated_at: timestamp,
   };
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("workflow_graphs")}
        (id, title, description, graph, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -288,7 +279,7 @@ export const cloneWorkflow = async (workflowId: string) => {
     updated_at: timestamp,
   };
 
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("workflow_graphs")}
        (id, title, description, graph, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -307,7 +298,7 @@ export const cloneWorkflow = async (workflowId: string) => {
 
 export const deleteWorkflow = async (workflowId: string) => {
   await ensureWorkflowSchema();
-  const {rowCount} = await pool.query(
+  const {rowCount} = await dbQuery(
     `DELETE FROM ${tableName("workflow_graphs")} WHERE id = $1`,
     [workflowId],
   );
@@ -325,7 +316,7 @@ export const updateWorkflowGraph = async (
   const updatedAt = new Date().toISOString();
   const nextTitle = metadata?.title?.trim() || current.title;
   const nextDescription = metadata?.description ?? current.description;
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `UPDATE ${tableName("workflow_graphs")}
         SET title = $2, description = $3, graph = $4, updated_at = $5
       WHERE id = $1
@@ -337,7 +328,7 @@ export const updateWorkflowGraph = async (
 
 export const listWorkflowRuns = async (workflowId: string, limit = 20) => {
   await ensureWorkflowSchema();
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `SELECT * FROM ${tableName("workflow_runs")}
       WHERE workflow_id = $1
       ORDER BY created_at DESC
@@ -372,7 +363,7 @@ export const saveWorkflowRun = async (run: {
     created_at: run.started_at ?? timestamp,
     finished_at: run.finished_at ?? (run.status === "running" ? null : timestamp),
   };
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("workflow_runs")}
        (id, workflow_id, status, query, input, result, trace, error, created_at, finished_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,

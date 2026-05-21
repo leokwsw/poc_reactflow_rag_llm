@@ -1,5 +1,5 @@
 import {randomUUID} from "node:crypto";
-import {Pool} from "pg";
+import {dbQuery} from "@/app/lib/typeorm-query";
 
 export type McpServer = {
   id: string;
@@ -21,15 +21,6 @@ export type McpTool = {
 };
 
 type McpRequestHeaders = Record<string, string>;
-
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST ?? "10.0.0.209",
-  port: Number(process.env.POSTGRES_PORT ?? 5432),
-  user: process.env.POSTGRES_USER ?? "postgres",
-  password: process.env.POSTGRES_PASSWORD ?? "password",
-  database: process.env.POSTGRES_DATABASE ?? "postgres",
-  max: 10,
-});
 
 let schemaReady: Promise<void> | null = null;
 
@@ -192,8 +183,8 @@ export const callMcpTool = async (input: {
 
 const ensureMcpSchema = async () => {
   schemaReady ??= (async () => {
-    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
-    await pool.query(`
+    await dbQuery(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
+    await dbQuery(`
       CREATE TABLE IF NOT EXISTS ${tableName} (
         id text PRIMARY KEY,
         name text NOT NULL,
@@ -208,9 +199,9 @@ const ensureMcpSchema = async () => {
       CREATE UNIQUE INDEX IF NOT EXISTS mcp_servers_identifier_idx
         ON ${tableName}(server_identifier);
     `);
-    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools jsonb NOT NULL DEFAULT '[]'`);
-    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools_error text`);
-    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools_updated_at timestamptz`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools jsonb NOT NULL DEFAULT '[]'`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools_error text`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS tools_updated_at timestamptz`);
   })();
 
   await schemaReady;
@@ -218,7 +209,7 @@ const ensureMcpSchema = async () => {
 
 export const listMcpServers = async () => {
   await ensureMcpSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName} ORDER BY updated_at DESC`);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName} ORDER BY updated_at DESC`);
   return rows.map(serverFromRow);
 };
 
@@ -245,7 +236,7 @@ export const createMcpServer = async (input: {
     throw new Error("MCP server name, identifier, and URL are required.");
   }
 
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName}
        (id, name, server_identifier, server_url, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -280,7 +271,7 @@ export const updateMcpServer = async (
     throw new Error("MCP server name, identifier, and URL are required.");
   }
 
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `UPDATE ${tableName}
         SET name = $2,
             server_identifier = $3,
@@ -299,18 +290,18 @@ export const updateMcpServer = async (
 
 export const deleteMcpServer = async (id: string) => {
   await ensureMcpSchema();
-  const {rowCount} = await pool.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
+  const {rowCount} = await dbQuery(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
   return (rowCount ?? 0) > 0;
 };
 
 export const refreshMcpServerTools = async (id: string, serverUrl?: string) => {
   await ensureMcpSchema();
-  const targetUrl = serverUrl ?? String((await pool.query(`SELECT server_url FROM ${tableName} WHERE id = $1`, [id])).rows[0]?.server_url ?? "");
+  const targetUrl = serverUrl ?? String((await dbQuery(`SELECT server_url FROM ${tableName} WHERE id = $1`, [id])).rows[0]?.server_url ?? "");
   const timestamp = new Date().toISOString();
 
   try {
     const tools = await inspectMcpTools(targetUrl);
-    await pool.query(
+    await dbQuery(
       `UPDATE ${tableName}
           SET tools = $2,
               tools_error = NULL,
@@ -322,7 +313,7 @@ export const refreshMcpServerTools = async (id: string, serverUrl?: string) => {
     return {tools, error: null};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not fetch MCP tools.";
-    await pool.query(
+    await dbQuery(
       `UPDATE ${tableName}
           SET tools = '[]',
               tools_error = $2,

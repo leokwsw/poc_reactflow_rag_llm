@@ -29,8 +29,10 @@
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "reactflow": "^11.11.4",
+    "reflect-metadata": "^0.2.2",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
+    "typeorm": "^1.0.0",
     "ua-parser-js": "^2.0.9",
     "xlsx": "^0.18.5"
   },

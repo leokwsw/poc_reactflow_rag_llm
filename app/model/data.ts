@@ -1,4 +1,4 @@
-import {Pool} from "pg";
+import {dbQuery} from "@/app/lib/typeorm-query";
 import {DEFAULT_MODEL_PROFILE_ID, MODEL_PROFILES, isModelProfileId, isModelType} from "@/app/model/profiles";
 import type {ModelProfileId, ModelType} from "@/app/model/profiles";
 
@@ -12,15 +12,6 @@ export type ModelConfig = {
   model: string;
   updated_at: string;
 };
-
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST ?? "10.0.0.209",
-  port: Number(process.env.POSTGRES_PORT ?? 5432),
-  user: process.env.POSTGRES_USER ?? "postgres",
-  password: process.env.POSTGRES_PASSWORD ?? "password",
-  database: process.env.POSTGRES_DATABASE ?? "postgres",
-  max: 10,
-});
 
 let schemaReady: Promise<void> | null = null;
 
@@ -45,8 +36,8 @@ const profileModelType = (id: ModelProfileId) => MODEL_PROFILES.find((profile) =
 
 const ensureModelConfigSchema = async () => {
   schemaReady ??= (async () => {
-    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
-    await pool.query(`
+    await dbQuery(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
+    await dbQuery(`
       CREATE TABLE IF NOT EXISTS ${tableName} (
         id text PRIMARY KEY,
         label text NOT NULL,
@@ -57,11 +48,11 @@ const ensureModelConfigSchema = async () => {
         updated_at timestamptz NOT NULL
       );
     `);
-    await pool.query(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS model_type text NOT NULL DEFAULT 'llm'`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS model_type text NOT NULL DEFAULT 'llm'`);
 
     const timestamp = new Date().toISOString();
     for (const profile of MODEL_PROFILES) {
-      await pool.query(
+      await dbQuery(
         `INSERT INTO ${tableName}
            (id, label, model_type, api_base_url, api_key, provider_model, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -84,7 +75,7 @@ const ensureModelConfigSchema = async () => {
 
 export const listModelConfigs = async (): Promise<ModelConfig[]> => {
   await ensureModelConfigSchema();
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `SELECT id, label, model_type, api_base_url, api_key, provider_model, updated_at FROM ${tableName}`,
   );
   const rowsById = new Map(rows.map((row) => [String(row.id), row]));
@@ -119,7 +110,7 @@ export const updateModelConfig = async (
 
   await ensureModelConfigSchema();
   const timestamp = new Date().toISOString();
-  await pool.query(
+  await dbQuery(
     `UPDATE ${tableName}
         SET api_base_url = $2,
             api_key = CASE WHEN $3::text IS NULL THEN api_key ELSE $3 END,
@@ -141,7 +132,7 @@ export const updateModelConfig = async (
 export const resolveModelConfig = async (id: unknown): Promise<ModelConfig> => {
   const profileId = isModelProfileId(id) ? id : DEFAULT_MODEL_PROFILE_ID;
   await ensureModelConfigSchema();
-  const {rows} = await pool.query(
+  const {rows} = await dbQuery(
     `SELECT id, label, model_type, api_base_url, api_key, provider_model, updated_at FROM ${tableName} WHERE id = $1`,
     [profileId],
   );

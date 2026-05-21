@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {Pool} from "pg";
+import {dbQuery, withDbTransaction} from "@/app/lib/typeorm-query";
 import {
   DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
   DEFAULT_RERANKING_MODEL_PROFILE_ID,
@@ -141,15 +141,6 @@ export const readJsonFile = <T,>(fileName: string, fallback: T): T => {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 };
 
-const pool = new Pool({
-  host: process.env.POSTGRES_HOST ?? "10.0.0.209",
-  port: Number(process.env.POSTGRES_PORT ?? 5432),
-  user: process.env.POSTGRES_USER ?? "postgres",
-  password: process.env.POSTGRES_PASSWORD ?? "password",
-  database: process.env.POSTGRES_DATABASE ?? "postgres",
-  max: 10,
-});
-
 let schemaReady: Promise<void> | null = null;
 
 const quoteIdentifier = (value: string) => {
@@ -233,7 +224,7 @@ const taskFromRow = (row: Record<string, unknown>): DatasetTask => ({
 });
 
 const migrateJsonIfEmpty = async () => {
-  const {rows} = await pool.query<{count: string}>(`SELECT COUNT(*)::text AS count FROM ${tableName("datasets")}`);
+  const {rows} = await dbQuery<{count: string}>(`SELECT COUNT(*)::text AS count FROM ${tableName("datasets")}`);
   if (Number(rows[0]?.count ?? 0) > 0) return;
 
   const datasets = readJsonFile<DatasetsJson>("0-datasets.json", {datasets: []}).datasets;
@@ -242,9 +233,7 @@ const migrateJsonIfEmpty = async () => {
   const tasks = readJsonFile<TasksJson>("3-tasks.json", {tasks: []}).tasks;
   const embeddings = readJsonFile<EmbeddingsJson>("4-embeddings.json", {embeddings: []}).embeddings;
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  await withDbTransaction(async (client) => {
     for (const dataset of datasets) {
       await client.query(
         `INSERT INTO ${tableName("datasets")}
@@ -324,19 +313,13 @@ const migrateJsonIfEmpty = async () => {
         ],
       );
     }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 export const ensureDatasetSchema = async () => {
   schemaReady ??= (async () => {
-    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
-    await pool.query(`
+    await dbQuery(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
+    await dbQuery(`
       CREATE TABLE IF NOT EXISTS ${tableName("datasets")} (
         id text PRIMARY KEY,
         title text NOT NULL,
@@ -409,27 +392,25 @@ export const ensureDatasetSchema = async () => {
 
 export const getDatasets = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("datasets")} ORDER BY created_at DESC`);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("datasets")} ORDER BY created_at DESC`);
   return rows.map(datasetFromRow);
 };
 
 export const getDocuments = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("documents")} ORDER BY uploaded_time DESC`);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("documents")} ORDER BY uploaded_time DESC`);
   return rows.map(documentFromRow);
 };
 
 export const getChunks = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("chunks")} ORDER BY file_id, position`);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("chunks")} ORDER BY file_id, position`);
   return rows.map(chunkFromRow);
 };
 
 export const createDatasetWithDocuments = async (dataset: Dataset, documents: DatasetDocument[]) => {
   await ensureDatasetSchema();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  await withDbTransaction(async (client) => {
     await client.query(
       `INSERT INTO ${tableName("datasets")}
         (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
@@ -472,24 +453,18 @@ export const createDatasetWithDocuments = async (dataset: Dataset, documents: Da
         ],
       );
     }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 export const readTasks = async () => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("tasks")} ORDER BY created_at DESC`);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("tasks")} ORDER BY created_at DESC`);
   return rows.map(taskFromRow);
 };
 
 export const insertTask = async (task: DatasetTask) => {
   await ensureDatasetSchema();
-  await pool.query(
+  await dbQuery(
     `INSERT INTO ${tableName("tasks")} (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
@@ -501,7 +476,7 @@ export const updateTaskRecord = async (taskId: string, patch: Partial<DatasetTas
   const current = (await readTasks()).find((task) => task.id === taskId);
   if (!current) return;
   const next = {...current, ...patch, updated_at: new Date().toISOString()};
-  await pool.query(
+  await dbQuery(
     `UPDATE ${tableName("tasks")}
      SET dataset_id = $2, document_ids = $3, file_paths = $4, status = $5, error = $6, updated_at = $7
      WHERE id = $1`,
@@ -514,7 +489,7 @@ export const updateDocumentRecord = async (documentId: string, patch: Partial<Da
   const current = (await getDocuments()).find((document) => document.id === documentId);
   if (!current) return;
   const next = {...current, ...patch, updated_time: new Date().toISOString()};
-  await pool.query(
+  await dbQuery(
     `UPDATE ${tableName("documents")}
      SET file_name = $2, dataset_id = $3, file_size = $4, created_at = $5, updated_time = $6, uploaded_time = $7,
          deleted = $8, deleted_at = $9, upload_source = $10, mime_type = $11, ext = $12, storage_page = $13,
@@ -542,9 +517,7 @@ export const updateDocumentRecord = async (documentId: string, patch: Partial<Da
 
 export const upsertChunks = async (nextChunks: DocumentChunk[]) => {
   await ensureDatasetSchema();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  await withDbTransaction(async (client) => {
     for (const chunk of nextChunks) {
       await client.query(
         `INSERT INTO ${tableName("chunks")} (id, file_id, text, position, metadata, es_document_id, enabled)
@@ -555,20 +528,12 @@ export const upsertChunks = async (nextChunks: DocumentChunk[]) => {
         [chunk.id, chunk.file_id, chunk.text, chunk.position, JSON.stringify(chunk.metadata), chunk.es_document_id, chunk.enabled],
       );
     }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 export const upsertEmbeddings = async (nextEmbeddings: EmbeddingRecord[]) => {
   await ensureDatasetSchema();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  await withDbTransaction(async (client) => {
     for (const embedding of nextEmbeddings) {
       await client.query(
         `INSERT INTO ${tableName("embeddings")} (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
@@ -588,13 +553,7 @@ export const upsertEmbeddings = async (nextEmbeddings: EmbeddingRecord[]) => {
         ],
       );
     }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 export const formatDate = (value: string) =>
@@ -614,13 +573,13 @@ export const formatFileSize = (bytes: number) => {
 
 export const getDatasetById = async (datasetId: string) => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("datasets")} WHERE id = $1`, [datasetId]);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("datasets")} WHERE id = $1`, [datasetId]);
   return rows[0] ? datasetFromRow(rows[0]) : undefined;
 };
 
 export const getDocumentById = async (fileId: string) => {
   await ensureDatasetSchema();
-  const {rows} = await pool.query(`SELECT * FROM ${tableName("documents")} WHERE id = $1`, [fileId]);
+  const {rows} = await dbQuery(`SELECT * FROM ${tableName("documents")} WHERE id = $1`, [fileId]);
   return rows[0] ? documentFromRow(rows[0]) : undefined;
 };
 
@@ -656,18 +615,10 @@ export const getDatasetStats = async (dataset: Dataset) => {
 
 export const deleteDataset = async (datasetId: string) => {
   await ensureDatasetSchema();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  return withDbTransaction(async (client) => {
     await client.query(`DELETE FROM ${tableName("embeddings")} WHERE dataset_id = $1`, [datasetId]);
     await client.query(`DELETE FROM ${tableName("tasks")} WHERE dataset_id = $1`, [datasetId]);
     const {rowCount} = await client.query(`DELETE FROM ${tableName("datasets")} WHERE id = $1`, [datasetId]);
-    await client.query("COMMIT");
     return (rowCount ?? 0) > 0;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
