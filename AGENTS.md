@@ -1,0 +1,76 @@
+# AGENTS.md
+
+## 回答語言
+
+- 盡可能用繁體中文回答問題。
+- 技術名詞、檔名、指令、API 名稱可保留英文。
+
+## 專案概況
+
+這是 RAG Workflow Studio PoC monorepo。
+
+- `api/`: NestJS + Prisma + PostgreSQL + Elasticsearch + Neo4j + TypeScript
+- `web/`: Next.js App Router + ReactFlow + TypeScript
+- Package manager: `pnpm`
+- Local container runtime: Apple `container`
+
+不要新增或恢復 Docker Compose 流程；本專案使用 Apple `container` scripts 管理本機 infra。
+
+## 常用指令
+
+```bash
+pnpm install
+pnpm infra:up
+pnpm infra:down
+pnpm db:migrate
+pnpm dev
+pnpm build
+pnpm test
+```
+
+如果只驗證單一 workspace：
+
+```bash
+pnpm --filter api build
+pnpm --filter api test
+pnpm --filter web build
+pnpm --filter web test
+```
+
+## Infra
+
+`pnpm infra:up` 會透過 `scripts/container-up.sh` 啟動：
+
+- `rag-postgres`
+- `rag-elasticsearch`
+- `rag-neo4j`
+
+`pnpm infra:down` 會停止並移除上述容器。
+
+資料目錄在 `.container-data/`，已被 git ignore。
+
+## 開發注意事項
+
+- Prisma schema 位於 `api/prisma/schema.prisma`。
+- Prisma migration 位於 `api/prisma/migrations/`。
+- API module 結構維持在 `api/src/*`，依功能切分 module/service/controller/dto。
+- Web UI 以工具型產品為主，避免 marketing landing page。
+- ReactFlow Studio 位於 `web/src/components/StudioClient.tsx` 與 `web/src/app/studio/page.tsx`。
+- OpenAI-compatible provider 設定透過 `.env`，沒有 API key 時後端應維持 mock/fallback 可跑。
+
+## 驗證要求
+
+修改完成後至少跑：
+
+```bash
+pnpm build
+pnpm test
+```
+
+若改動只影響單一 workspace，可跑對應 `--filter` 指令，但 final response 要說明實際跑過哪些驗證。
+
+## Git 與檔案
+
+- 不要 revert 使用者既有變更，除非使用者明確要求。
+- 不要 commit，除非使用者明確要求。
+- 不要把 `.container-data/`、`node_modules/`、`api/dist/`、`web/.next/` 納入版本控制。
