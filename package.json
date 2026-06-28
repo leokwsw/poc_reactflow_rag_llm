@@ -10,8 +10,8 @@
     "test": "pnpm --recursive test",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:studio": "pnpm --filter api db:studio",
-    "infra:up": "sh scripts/container-up.sh",
-    "infra:down": "sh scripts/container-down.sh"
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
   },
   "engines": {
     "node": ">=20.0.0",

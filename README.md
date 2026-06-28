@@ -7,7 +7,7 @@ Monorepo PoC for Native RAG, Graph RAG, Elasticsearch retrieval, Neo4j graph ret
 - `api/`: NestJS, Prisma, PostgreSQL, Elasticsearch, Neo4j, TypeScript
 - `web/`: Next.js App Router, ReactFlow, TypeScript
 - Workspace: pnpm
-- Local containers: Apple `container`
+- Local containers: Docker Compose
 
 ## Quick Start
 
@@ -28,15 +28,15 @@ Open:
 
 The PoC can run without a real LLM API key. Provider calls fall back to deterministic local mock responses so the Studio, ingestion flow, and RAG pipeline can be exercised locally.
 
-## Apple Container
+## Docker Compose
 
-This project uses Apple's `container` CLI instead of Docker Compose. The infra scripts start three named containers:
+This project uses Docker Compose for local infrastructure. `pnpm infra:up` starts:
 
 - `rag-postgres`
 - `rag-elasticsearch`
 - `rag-neo4j`
 
-Persistent data is stored under `.container-data/`, which is ignored by git.
+Persistent data is stored in Docker named volumes.
 
 ```bash
 pnpm infra:up

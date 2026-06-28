@@ -12,9 +12,9 @@
 - `api/`: NestJS + Prisma + PostgreSQL + Elasticsearch + Neo4j + TypeScript
 - `web/`: Next.js App Router + ReactFlow + TypeScript
 - Package manager: `pnpm`
-- Local container runtime: Apple `container`
+- Local container runtime: Docker Compose
 
-不要新增或恢復 Docker Compose 流程；本專案使用 Apple `container` scripts 管理本機 infra。
+本專案使用 Docker Compose 管理本機 infra；不要新增 Apple `container` 專用 scripts，除非使用者明確要求。
 
 ## 常用指令
 
@@ -39,15 +39,15 @@ pnpm --filter web test
 
 ## Infra
 
-`pnpm infra:up` 會透過 `scripts/container-up.sh` 啟動：
+`pnpm infra:up` 會透過 `docker compose up -d` 啟動：
 
 - `rag-postgres`
 - `rag-elasticsearch`
 - `rag-neo4j`
 
-`pnpm infra:down` 會停止並移除上述容器。
+`pnpm infra:down` 會透過 `docker compose down` 停止並移除上述容器。
 
-資料目錄在 `.container-data/`，已被 git ignore。
+資料存在 Docker named volumes。
 
 ## 開發注意事項
 
@@ -73,4 +73,4 @@ pnpm test
 
 - 不要 revert 使用者既有變更，除非使用者明確要求。
 - 不要 commit，除非使用者明確要求。
-- 不要把 `.container-data/`、`node_modules/`、`api/dist/`、`web/.next/` 納入版本控制。
+- 不要把 `node_modules/`、`api/dist/`、`web/.next/` 納入版本控制。
