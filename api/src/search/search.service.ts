@@ -24,8 +24,11 @@ export class SearchService implements OnModuleInit {
     private readonly embeddings: EmbeddingsService,
   ) {
     this.indexName = this.config.get<string>('ELASTICSEARCH_INDEX', 'rag_chunks');
+    const username = this.config.get<string>('ELASTICSEARCH_USERNAME', '');
+    const password = this.config.get<string>('ELASTICSEARCH_PASSWORD', '');
     this.client = new Client({
       node: this.config.get<string>('ELASTICSEARCH_NODE', 'http://localhost:9200'),
+      auth: username && password ? { username, password } : undefined,
     });
   }
 

@@ -13,6 +13,8 @@
 - `web/`: Next.js App Router + ReactFlow + TypeScript
 - Package manager: `pnpm`
 - Local container runtime: Docker Compose
+- 預設 PostgreSQL 在 `10.0.0.209:5432`，帳號 `postgres`，密碼 `password`
+- 預設 Elasticsearch 在 `10.0.0.106:9200`，帳號 `elastic`，密碼 `password`
 
 本專案使用 Docker Compose 管理本機 infra；不要新增 Apple `container` 專用 scripts，除非使用者明確要求。
 
@@ -39,11 +41,11 @@ pnpm --filter web test
 
 ## Infra
 
-`pnpm infra:up` 會透過 `docker compose up -d` 啟動：
+`pnpm infra:up` 會透過 `docker compose up -d neo4j` 啟動：
 
-- `rag-postgres`
-- `rag-elasticsearch`
 - `rag-neo4j`
+
+因為 PostgreSQL 與 Elasticsearch 預設使用遠端服務，所以 `pnpm infra:up` 只啟動本機 Neo4j。若要啟動全本機 fallback infra，使用 `pnpm infra:local:up`。
 
 `pnpm infra:down` 會透過 `docker compose down` 停止並移除上述容器。
 

@@ -10,8 +10,9 @@
     "test": "pnpm --recursive test",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:studio": "pnpm --filter api db:studio",
-    "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down"
+    "infra:up": "docker compose up -d neo4j",
+    "infra:down": "docker compose down",
+    "infra:local:up": "docker compose up -d"
   },
   "engines": {
     "node": ">=20.0.0",
