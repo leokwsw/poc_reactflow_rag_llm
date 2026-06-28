@@ -10,7 +10,7 @@ Monorepo PoC for Native RAG, Graph RAG, Elasticsearch retrieval, Neo4j graph ret
 - Local containers: Docker Compose
 - Default external services:
   - PostgreSQL: `10.0.0.209:5432`
-  - Elasticsearch: `10.0.0.106:9200`
+  - Elasticsearch: `10.0.0.106:9200` (`8.11.3`)
 
 ## Quick Start
 
@@ -21,6 +21,8 @@ pnpm infra:up
 pnpm db:migrate
 pnpm dev
 ```
+
+Keep `.env` in the monorepo root. The NestJS API loads both `api/.env` and the root `.env` so `pnpm dev` works from the workspace.
 
 Open:
 
@@ -37,7 +39,7 @@ This project uses Docker Compose for local Neo4j by default because PostgreSQL a
 
 - `rag-neo4j`
 
-The Compose file still includes local PostgreSQL and Elasticsearch for fallback development. Use `pnpm infra:local:up` if you want all three local services:
+The Compose file still includes local PostgreSQL and Elasticsearch `8.11.3` for fallback development. Use `pnpm infra:local:up` if you want all three local services:
 
 ```bash
 pnpm infra:up
@@ -52,4 +54,5 @@ DATABASE_URL="postgresql://postgres:password@10.0.0.209:5432/postgres?schema=pub
 ELASTICSEARCH_NODE="http://10.0.0.106:9200"
 ELASTICSEARCH_USERNAME="elastic"
 ELASTICSEARCH_PASSWORD="password"
+ELASTICSEARCH_INDEX="rag_workflow_chunks"
 ```

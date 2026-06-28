@@ -18,6 +18,7 @@ export class SearchService implements OnModuleInit {
   private readonly indexName: string;
   private readonly client: Client;
   private readonly memoryIndex = new Map<string, IndexedChunk>();
+  private elasticsearchReady = false;
 
   constructor(
     private readonly config: ConfigService,
@@ -48,14 +49,34 @@ export class SearchService implements OnModuleInit {
             },
           },
         });
+        this.elasticsearchReady = true;
+        return;
       }
+
+      const mapping = await this.client.indices.getMapping({ index: this.indexName });
+      if (!this.hasCompatibleMapping(mapping)) {
+        this.elasticsearchReady = false;
+        this.logger.warn(
+          `Elasticsearch index "${this.indexName}" has an incompatible mapping. ` +
+            'Expected fields content:text and embedding:dense_vector dims=1536. ' +
+            'Using in-memory search fallback.',
+        );
+        return;
+      }
+
+      this.elasticsearchReady = true;
     } catch (error) {
-      this.logger.warn(`Elasticsearch unavailable; using in-memory search fallback. ${String(error)}`);
+      this.elasticsearchReady = false;
+      this.logger.warn(`Elasticsearch unavailable; using in-memory search fallback. ${this.formatError(error)}`);
     }
   }
 
   async indexChunk(chunk: IndexedChunk) {
     this.memoryIndex.set(chunk.chunkId, chunk);
+    if (!this.elasticsearchReady) {
+      return;
+    }
+
     try {
       await this.client.index({
         index: this.indexName,
@@ -63,12 +84,16 @@ export class SearchService implements OnModuleInit {
         document: chunk,
       });
     } catch (error) {
-      this.logger.warn(`Could not index chunk ${chunk.chunkId} in Elasticsearch. ${String(error)}`);
+      this.logger.warn(`Could not index chunk ${chunk.chunkId} in Elasticsearch. ${this.formatError(error)}`);
     }
   }
 
   async search(query: string, topK = 5): Promise<RagContext[]> {
     const embedding = await this.embeddings.embed(query);
+    if (!this.elasticsearchReady) {
+      return this.memorySearch(query, embedding, topK);
+    }
+
     try {
       const response = await this.client.search<IndexedChunk>({
         index: this.indexName,
@@ -100,9 +125,42 @@ export class SearchService implements OnModuleInit {
         metadata: hit._source?.metadata,
       }));
     } catch (error) {
-      this.logger.warn(`Elasticsearch query failed; using in-memory search. ${String(error)}`);
+      this.logger.warn(`Elasticsearch query failed; using in-memory search. ${this.formatError(error)}`);
       return this.memorySearch(query, embedding, topK);
     }
+  }
+
+  private hasCompatibleMapping(mapping: unknown) {
+    const indexMapping = mapping as Record<string, { mappings?: { properties?: Record<string, unknown> } }>;
+    const properties = indexMapping[this.indexName]?.mappings?.properties;
+    const content = properties?.content as { type?: string } | undefined;
+    const embedding = properties?.embedding as { type?: string; dims?: number } | undefined;
+
+    return content?.type === 'text' && embedding?.type === 'dense_vector' && embedding?.dims === 1536;
+  }
+
+  private formatError(error: unknown) {
+    const elasticError = error as {
+      name?: string;
+      message?: string;
+      meta?: {
+        statusCode?: number;
+        body?: unknown;
+      };
+    };
+
+    const parts = [elasticError.name ?? error?.constructor?.name ?? 'Error'];
+    if (elasticError.meta?.statusCode) {
+      parts.push(`status=${elasticError.meta.statusCode}`);
+    }
+    if (elasticError.message) {
+      parts.push(elasticError.message);
+    }
+    if (elasticError.meta?.body) {
+      parts.push(JSON.stringify(elasticError.meta.body));
+    }
+
+    return parts.join(' ');
   }
 
   private memorySearch(query: string, embedding: number[], topK: number): RagContext[] {

@@ -11,7 +11,7 @@ importers:
   api:
     dependencies:
       '@elastic/elasticsearch':
-        specifier: ^8.15.0
+        specifier: 8.19.1
         version: 8.19.1
       '@nestjs/common':
         specifier: ^10.4.1

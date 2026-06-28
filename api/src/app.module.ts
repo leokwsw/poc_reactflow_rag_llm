@@ -9,10 +9,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RagModule } from './rag/rag.module';
 import { SearchModule } from './search/search.module';
 import { WorkflowsModule } from './workflows/workflows.module';
+import { envFilePaths } from './config/env';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: envFilePaths(),
+    }),
     PrismaModule,
     ModelsModule,
     EmbeddingsModule,
