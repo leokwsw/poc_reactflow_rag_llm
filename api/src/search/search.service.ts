@@ -35,8 +35,25 @@ export class SearchService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      const exists = await this.client.indices.exists({ index: this.indexName });
-      if (!exists) {
+      try {
+        const mapping = await this.client.indices.getMapping({ index: this.indexName });
+        if (!this.hasCompatibleMapping(mapping)) {
+          this.elasticsearchReady = false;
+          this.logger.warn(
+            `Elasticsearch index "${this.indexName}" has an incompatible mapping. ` +
+              'Expected fields content:text and embedding:dense_vector dims=1536. ' +
+              'Using in-memory search fallback.',
+          );
+          return;
+        }
+
+        this.elasticsearchReady = true;
+        return;
+      } catch (error) {
+        if (!this.isMissingIndexError(error)) {
+          throw error;
+        }
+
         await this.client.indices.create({
           index: this.indexName,
           mappings: {
@@ -52,19 +69,6 @@ export class SearchService implements OnModuleInit {
         this.elasticsearchReady = true;
         return;
       }
-
-      const mapping = await this.client.indices.getMapping({ index: this.indexName });
-      if (!this.hasCompatibleMapping(mapping)) {
-        this.elasticsearchReady = false;
-        this.logger.warn(
-          `Elasticsearch index "${this.indexName}" has an incompatible mapping. ` +
-            'Expected fields content:text and embedding:dense_vector dims=1536. ' +
-            'Using in-memory search fallback.',
-        );
-        return;
-      }
-
-      this.elasticsearchReady = true;
     } catch (error) {
       this.elasticsearchReady = false;
       this.logger.warn(`Elasticsearch unavailable; using in-memory search fallback. ${this.formatError(error)}`);
@@ -161,6 +165,11 @@ export class SearchService implements OnModuleInit {
     }
 
     return parts.join(' ');
+  }
+
+  private isMissingIndexError(error: unknown) {
+    const elasticError = error as { meta?: { statusCode?: number } };
+    return elasticError.meta?.statusCode === 404;
   }
 
   private memorySearch(query: string, embedding: number[], topK: number): RagContext[] {
