@@ -1,3 +1,4 @@
+import {load as parseYaml} from "js-yaml";
 import {createTool, type ToolAuthType, type ToolInput, type ToolKeyValueRow, type ToolMethod} from "@/app/tools/data";
 
 type OpenApiSpec = {
@@ -38,6 +39,7 @@ type OpenApiParameter = {
 
 export type ImportOpenApiInput = {
   spec?: unknown;
+  spec_text?: string;
   spec_url?: string;
   base_url?: string;
   auth_type?: ToolAuthType;
@@ -50,6 +52,22 @@ const HTTP_METHODS = new Set(["get", "post", "put", "patch", "delete", "head", "
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const parseSpecText = (text: string): OpenApiSpec => {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = parseYaml(text);
+  }
+
+  if (!isRecord(parsed)) {
+    throw new Error("OpenAPI spec must be a JSON or YAML object.");
+  }
+
+  return parsed as OpenApiSpec;
+};
 
 const slug = (value: string) =>
   value
@@ -78,10 +96,11 @@ const parseSpec = async (input: ImportOpenApiInput): Promise<OpenApiSpec> => {
     if (!response.ok) {
       throw new Error(`OpenAPI URL returned HTTP ${response.status}.`);
     }
-    return await response.json() as OpenApiSpec;
+    return parseSpecText(await response.text());
   }
+  if (input.spec_text?.trim()) return parseSpecText(input.spec_text.trim());
   if (isRecord(input.spec)) return input.spec as OpenApiSpec;
-  throw new Error("Provide spec JSON or spec_url.");
+  throw new Error("Provide OpenAPI JSON/YAML spec, spec_text, or spec_url.");
 };
 
 const schemaForParameter = (param: OpenApiParameter) => ({
@@ -207,4 +226,3 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
     tools: created,
   };
 }
-

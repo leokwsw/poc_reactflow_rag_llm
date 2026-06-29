@@ -210,12 +210,11 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     setStatus("Importing OpenAPI...");
     setError("");
     try {
-      const spec = importSpecText.trim() ? JSON.parse(importSpecText) as unknown : undefined;
       const response = await fetch("/api/tools/import-openapi", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-          spec,
+          spec_text: importSpecText.trim() || undefined,
           spec_url: importSpecUrl.trim() || undefined,
           base_url: importBaseUrl.trim() || undefined,
           auth_type: importAuthType,
@@ -280,13 +279,13 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
             <div className="mt-3 space-y-2">
               <input
                 className={fieldClass}
-                placeholder="Swagger / OpenAPI JSON URL"
+                placeholder="Swagger / OpenAPI JSON or YAML URL"
                 value={importSpecUrl}
                 onChange={(event) => setImportSpecUrl(event.target.value)}
               />
               <textarea
                 className={`${textAreaClass} min-h-28`}
-                placeholder="Or paste OpenAPI JSON"
+                placeholder="Or paste OpenAPI JSON/YAML"
                 value={importSpecText}
                 onChange={(event) => setImportSpecText(event.target.value)}
               />

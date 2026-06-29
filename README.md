@@ -54,11 +54,11 @@ Tool templates support workflow-style variables inside URL, headers, params, and
 
 When a Tool node runs, it loads the latest tool definition from PostgreSQL, so editing a workspace tool updates future workflow executions without editing existing workflow graphs.
 
-OpenAPI import accepts either `spec_url` or pasted JSON `spec`:
+OpenAPI import accepts `spec_url`, pasted JSON/YAML `spec_text`, or an already parsed JSON `spec` object. URLs may point to either JSON or YAML OpenAPI/Swagger files:
 
 ```json
 {
-  "spec_url": "https://example.com/openapi.json",
+  "spec_url": "https://example.com/openapi.yaml",
   "base_url": "https://api.example.com",
   "auth_type": "bearer",
   "auth_token": "secret-token"

@@ -5,7 +5,10 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") ?? "";
+    const body = contentType.includes("application/json")
+      ? await request.json()
+      : {spec_text: await request.text()};
     const result = await importOpenApiTools(body);
     return NextResponse.json(result, {status: 201});
   } catch (error) {
@@ -15,4 +18,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
