@@ -63,7 +63,7 @@ const workflowNodes = [
 
 function FlowPreview() {
   return (
-    <div className="relative w-full min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-[0_18px_60px_rgba(24,24,27,0.10)]">
+    <div className="relative w-full max-w-[520px] rounded-lg border border-zinc-200 bg-white p-4 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
       <div className="mb-4 flex items-center justify-between border-b border-zinc-100 pb-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">React Flow Canvas</p>
@@ -105,31 +105,31 @@ export default function HomePage() {
   return (
     <div className="bg-white text-zinc-950">
       <section className="border-b border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7faf9_100%)]">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-12 min-[960px]:grid-cols-[minmax(0,0.92fr)_minmax(360px,520px)] min-[960px]:py-16 xl:gap-16">
-          <div className="min-w-0">
-            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-normal text-zinc-950 sm:text-5xl min-[960px]:text-6xl">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 py-14 lg:flex-row lg:justify-between lg:py-20">
+          <div className="w-full max-w-3xl lg:max-w-2xl">
+            <h1 className="text-4xl font-semibold leading-[1.05] tracking-normal text-zinc-950 sm:text-5xl lg:text-6xl">
               Build RAG workflows with visual AI orchestration.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">
-              RAG Workflow is a Next.js production project for composing native RAG, hybrid RAG, graph RAG, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch retrieval, Neo4j and ArangoDB graph context, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
+              EZChat RAG Workflow is a Next.js production project for composing native RAG, hybrid RAG, graph RAG, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch retrieval, Neo4j and ArangoDB graph context, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800" href="/workflow">
+              <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800 sm:w-auto" href="/workflow">
                 Open Workflow
               </Link>
-              <Link className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50" href="/datasets">
+              <Link className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 sm:w-auto" href="/datasets">
                 Manage Datasets
               </Link>
             </div>
             <div className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
               {["Native RAG", "Hybrid RAG", "Graph RAG", "Agentic RAG"].map((item) => (
-                <div key={item} className="min-w-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm">
+                <div key={item} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm">
                   {item}
                 </div>
               ))}
             </div>
           </div>
-          <div className="w-full min-w-0">
+          <div className="flex w-full justify-center lg:w-[520px] lg:shrink-0">
             <FlowPreview />
           </div>
         </div>
