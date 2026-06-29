@@ -3,6 +3,7 @@ import {dbQuery} from "@/app/lib/typeorm-query";
 
 export type ToolMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 export type ToolBodyType = "none" | "json" | "raw" | "x-www-form-urlencoded";
+export type ToolAuthType = "none" | "basic" | "bearer";
 
 export type ToolKeyValueRow = {
   id?: string;
@@ -18,12 +19,20 @@ export type ToolRecord = {
   type: "custom_http";
   method: ToolMethod;
   url: string;
+  base_url: string;
+  path: string;
   headers: ToolKeyValueRow[];
   params: ToolKeyValueRow[];
   body_type: ToolBodyType;
   body_json: string;
   body_raw: string;
   input_schema: Record<string, unknown>;
+  auth_type: ToolAuthType;
+  auth_username: string;
+  auth_password: string;
+  auth_token: string;
+  openapi_import_id: string;
+  openapi_operation_id: string;
   enabled: boolean;
   skip_ssl_verification: boolean;
   created_at: string;
@@ -93,12 +102,19 @@ const sanitizeBodyType = (value: unknown): ToolBodyType => {
     : "none";
 };
 
+const sanitizeAuthType = (value: unknown): ToolAuthType => {
+  const authType = typeof value === "string" ? value.toLowerCase() : "none";
+  return authType === "basic" || authType === "bearer" ? authType : "none";
+};
+
 const normalizeToolInput = (input: Partial<ToolInput>): ToolInput => ({
   id: typeof input.id === "string" && input.id.trim() ? input.id.trim() : undefined,
   name: String(input.name ?? "").trim(),
   description: String(input.description ?? "").trim(),
   method: sanitizeMethod(input.method),
   url: String(input.url ?? "").trim(),
+  base_url: String(input.base_url ?? "").trim(),
+  path: String(input.path ?? "").trim(),
   headers: sanitizeRows(input.headers),
   params: sanitizeRows(input.params),
   body_type: sanitizeBodyType(input.body_type),
@@ -107,6 +123,12 @@ const normalizeToolInput = (input: Partial<ToolInput>): ToolInput => ({
   input_schema: input.input_schema && typeof input.input_schema === "object" && !Array.isArray(input.input_schema)
     ? input.input_schema
     : {type: "object", properties: {}},
+  auth_type: sanitizeAuthType(input.auth_type),
+  auth_username: String(input.auth_username ?? ""),
+  auth_password: String(input.auth_password ?? ""),
+  auth_token: String(input.auth_token ?? ""),
+  openapi_import_id: String(input.openapi_import_id ?? ""),
+  openapi_operation_id: String(input.openapi_operation_id ?? ""),
   enabled: input.enabled !== false,
   skip_ssl_verification: Boolean(input.skip_ssl_verification),
 });
@@ -118,6 +140,8 @@ const toolFromRow = (row: Record<string, unknown>): ToolRecord => ({
   type: "custom_http",
   method: sanitizeMethod(row.method),
   url: String(row.url ?? ""),
+  base_url: String(row.base_url ?? ""),
+  path: String(row.path ?? ""),
   headers: sanitizeRows(row.headers),
   params: sanitizeRows(row.params),
   body_type: sanitizeBodyType(row.body_type),
@@ -126,6 +150,12 @@ const toolFromRow = (row: Record<string, unknown>): ToolRecord => ({
   input_schema: row.input_schema && typeof row.input_schema === "object"
     ? row.input_schema as Record<string, unknown>
     : {type: "object", properties: {}},
+  auth_type: sanitizeAuthType(row.auth_type),
+  auth_username: String(row.auth_username ?? ""),
+  auth_password: String(row.auth_password ?? ""),
+  auth_token: String(row.auth_token ?? ""),
+  openapi_import_id: String(row.openapi_import_id ?? ""),
+  openapi_operation_id: String(row.openapi_operation_id ?? ""),
   enabled: Boolean(row.enabled ?? true),
   skip_ssl_verification: Boolean(row.skip_ssl_verification ?? false),
   created_at: toIso(row.created_at),
@@ -143,12 +173,20 @@ export const ensureToolsSchema = async () => {
         type text NOT NULL DEFAULT 'custom_http',
         method text NOT NULL DEFAULT 'GET',
         url text NOT NULL DEFAULT '',
+        base_url text NOT NULL DEFAULT '',
+        path text NOT NULL DEFAULT '',
         headers jsonb NOT NULL DEFAULT '[]',
         params jsonb NOT NULL DEFAULT '[]',
         body_type text NOT NULL DEFAULT 'none',
         body_json text NOT NULL DEFAULT '',
         body_raw text NOT NULL DEFAULT '',
         input_schema jsonb NOT NULL DEFAULT '{"type":"object","properties":{}}',
+        auth_type text NOT NULL DEFAULT 'none',
+        auth_username text NOT NULL DEFAULT '',
+        auth_password text NOT NULL DEFAULT '',
+        auth_token text NOT NULL DEFAULT '',
+        openapi_import_id text NOT NULL DEFAULT '',
+        openapi_operation_id text NOT NULL DEFAULT '',
         enabled boolean NOT NULL DEFAULT true,
         skip_ssl_verification boolean NOT NULL DEFAULT false,
         created_at timestamptz NOT NULL,
@@ -156,6 +194,14 @@ export const ensureToolsSchema = async () => {
       );
       CREATE INDEX IF NOT EXISTS tools_enabled_name_idx ON ${tableName}(enabled, name);
     `);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS base_url text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS path text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS auth_type text NOT NULL DEFAULT 'none'`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS auth_username text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS auth_password text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS auth_token text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS openapi_import_id text NOT NULL DEFAULT ''`);
+    await dbQuery(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS openapi_operation_id text NOT NULL DEFAULT ''`);
   })();
 
   await schemaReady;
@@ -183,20 +229,50 @@ export async function createTool(input: Partial<ToolInput>) {
   const id = tool.id || `tool-${crypto.randomUUID()}`;
   await dbQuery(
     `INSERT INTO ${tableName}
-      (id, name, description, type, method, url, headers, params, body_type, body_json, body_raw, input_schema, enabled, skip_ssl_verification, created_at, updated_at)
-     VALUES ($1, $2, $3, 'custom_http', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $14)`,
+      (id, name, description, type, method, url, base_url, path, headers, params, body_type, body_json, body_raw, input_schema, auth_type, auth_username, auth_password, auth_token, openapi_import_id, openapi_operation_id, enabled, skip_ssl_verification, created_at, updated_at)
+     VALUES ($1, $2, $3, 'custom_http', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $22)
+     ON CONFLICT (id) DO UPDATE SET
+       name = EXCLUDED.name,
+       description = EXCLUDED.description,
+       method = EXCLUDED.method,
+       url = EXCLUDED.url,
+       base_url = EXCLUDED.base_url,
+       path = EXCLUDED.path,
+       headers = EXCLUDED.headers,
+       params = EXCLUDED.params,
+       body_type = EXCLUDED.body_type,
+       body_json = EXCLUDED.body_json,
+       body_raw = EXCLUDED.body_raw,
+       input_schema = EXCLUDED.input_schema,
+       auth_type = EXCLUDED.auth_type,
+       auth_username = EXCLUDED.auth_username,
+       auth_password = EXCLUDED.auth_password,
+       auth_token = EXCLUDED.auth_token,
+       openapi_import_id = EXCLUDED.openapi_import_id,
+       openapi_operation_id = EXCLUDED.openapi_operation_id,
+       enabled = EXCLUDED.enabled,
+       skip_ssl_verification = EXCLUDED.skip_ssl_verification,
+       updated_at = EXCLUDED.updated_at`,
     [
       id,
       tool.name,
       tool.description,
       tool.method,
       tool.url,
+      tool.base_url,
+      tool.path,
       JSON.stringify(tool.headers),
       JSON.stringify(tool.params),
       tool.body_type,
       tool.body_json,
       tool.body_raw,
       JSON.stringify(tool.input_schema),
+      tool.auth_type,
+      tool.auth_username,
+      tool.auth_password,
+      tool.auth_token,
+      tool.openapi_import_id,
+      tool.openapi_operation_id,
       tool.enabled,
       tool.skip_ssl_verification,
       timestamp,
@@ -215,9 +291,11 @@ export async function updateTool(toolId: string, input: Partial<ToolInput>) {
   const timestamp = new Date().toISOString();
   await dbQuery(
     `UPDATE ${tableName}
-     SET name = $2, description = $3, method = $4, url = $5, headers = $6, params = $7,
-         body_type = $8, body_json = $9, body_raw = $10, input_schema = $11,
-         enabled = $12, skip_ssl_verification = $13, updated_at = $14
+     SET name = $2, description = $3, method = $4, url = $5, base_url = $6, path = $7, headers = $8, params = $9,
+         body_type = $10, body_json = $11, body_raw = $12, input_schema = $13,
+         auth_type = $14, auth_username = $15, auth_password = $16, auth_token = $17,
+         openapi_import_id = $18, openapi_operation_id = $19,
+         enabled = $20, skip_ssl_verification = $21, updated_at = $22
      WHERE id = $1`,
     [
       toolId,
@@ -225,12 +303,20 @@ export async function updateTool(toolId: string, input: Partial<ToolInput>) {
       tool.description,
       tool.method,
       tool.url,
+      tool.base_url,
+      tool.path,
       JSON.stringify(tool.headers),
       JSON.stringify(tool.params),
       tool.body_type,
       tool.body_json,
       tool.body_raw,
       JSON.stringify(tool.input_schema),
+      tool.auth_type,
+      tool.auth_username,
+      tool.auth_password,
+      tool.auth_token,
+      tool.openapi_import_id,
+      tool.openapi_operation_id,
       tool.enabled,
       tool.skip_ssl_verification,
       timestamp,
@@ -281,6 +367,12 @@ function buildToolHeaders(tool: ToolRecord, values: Record<string, unknown>) {
   const headers = new Headers();
   for (const header of enabledRows(tool.headers, values)) {
     headers.set(header.name, header.value);
+  }
+  if (tool.auth_type === "basic" && tool.auth_username) {
+    headers.set("authorization", `Basic ${Buffer.from(`${tool.auth_username}:${tool.auth_password}`).toString("base64")}`);
+  }
+  if (tool.auth_type === "bearer" && tool.auth_token) {
+    headers.set("authorization", `Bearer ${interpolate(tool.auth_token, values)}`);
   }
   return headers;
 }
@@ -348,4 +440,3 @@ export async function executeTool(tool: ToolRecord, values: Record<string, unkno
     url: response.url,
   };
 }
-

@@ -37,10 +37,12 @@ Existing PostgreSQL tables are mapped as one-file-per-entity TypeORM classes in 
 
 Workspace tools live at `/tools`, following the same broad model as Dify workspace tools: define reusable tools once, then select them from workflow nodes.
 
-The current implementation supports Custom HTTP Tools:
+The current implementation imports OpenAPI / Swagger operations into Custom HTTP Tools:
 
 - CRUD API: `GET/POST /api/tools`, `GET/PUT/DELETE /api/tools/[toolId]`
-- Tool definition: method, URL, headers, params, body, input schema, enabled flag
+- OpenAPI import API: `POST /api/tools/import-openapi`
+- Imported definition: operation name, description, HTTP method, OpenAPI path, URL, headers, params, body, input schema, enabled flag
+- Auth per imported tool: None, Basic, or Bearer
 - Dynamic workflow node: add a `Tool` node, select a tool, and map node inputs into `arg.*`
 
 Tool templates support workflow-style variables inside URL, headers, params, and body:
@@ -51,6 +53,19 @@ Tool templates support workflow-style variables inside URL, headers, params, and
 ```
 
 When a Tool node runs, it loads the latest tool definition from PostgreSQL, so editing a workspace tool updates future workflow executions without editing existing workflow graphs.
+
+OpenAPI import accepts either `spec_url` or pasted JSON `spec`:
+
+```json
+{
+  "spec_url": "https://example.com/openapi.json",
+  "base_url": "https://api.example.com",
+  "auth_type": "bearer",
+  "auth_token": "secret-token"
+}
+```
+
+Path parameters such as `/users/{id}` become `{{#arg.id#}}`; query/header parameters become input mappings generated from the OpenAPI parameter schema.
 
 ## RAG Backends
 

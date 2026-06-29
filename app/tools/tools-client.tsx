@@ -1,7 +1,7 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import type {ToolBodyType, ToolKeyValueRow, ToolMethod, ToolRecord} from "@/app/tools/data";
+import type {ToolAuthType, ToolBodyType, ToolKeyValueRow, ToolMethod, ToolRecord} from "@/app/tools/data";
 
 type ToolDraft = Omit<ToolRecord, "created_at" | "updated_at" | "type"> & {
   input_schema_text: string;
@@ -16,6 +16,8 @@ const newTool = (): ToolDraft => ({
   description: "",
   method: "GET",
   url: "https://api.example.com",
+  base_url: "https://api.example.com",
+  path: "",
   headers: [],
   params: [],
   body_type: "none",
@@ -23,6 +25,12 @@ const newTool = (): ToolDraft => ({
   body_raw: "",
   input_schema: {type: "object", properties: {}},
   input_schema_text: JSON.stringify({type: "object", properties: {}}, null, 2),
+  auth_type: "none",
+  auth_username: "",
+  auth_password: "",
+  auth_token: "",
+  openapi_import_id: "",
+  openapi_operation_id: "",
   enabled: true,
   skip_ssl_verification: false,
 });
@@ -37,12 +45,20 @@ const draftToPayload = (draft: ToolDraft) => ({
   description: draft.description,
   method: draft.method,
   url: draft.url,
+  base_url: draft.base_url,
+  path: draft.path,
   headers: draft.headers,
   params: draft.params,
   body_type: draft.body_type,
   body_json: draft.body_json,
   body_raw: draft.body_raw,
   input_schema: JSON.parse(draft.input_schema_text || "{}") as Record<string, unknown>,
+  auth_type: draft.auth_type,
+  auth_username: draft.auth_username,
+  auth_password: draft.auth_password,
+  auth_token: draft.auth_token,
+  openapi_import_id: draft.openapi_import_id,
+  openapi_operation_id: draft.openapi_operation_id,
   enabled: draft.enabled,
   skip_ssl_verification: draft.skip_ssl_verification,
 });
@@ -120,6 +136,13 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
   const [draft, setDraft] = useState<ToolDraft>(() => selectedTool ? toDraft(selectedTool) : newTool());
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [importSpecUrl, setImportSpecUrl] = useState("");
+  const [importSpecText, setImportSpecText] = useState("");
+  const [importBaseUrl, setImportBaseUrl] = useState("");
+  const [importAuthType, setImportAuthType] = useState<ToolAuthType>("none");
+  const [importUsername, setImportUsername] = useState("");
+  const [importPassword, setImportPassword] = useState("");
+  const [importToken, setImportToken] = useState("");
 
   const selectTool = (tool: ToolRecord) => {
     setSelectedId(tool.id);
@@ -183,6 +206,34 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     setStatus("Deleted");
   };
 
+  const importOpenApi = async () => {
+    setStatus("Importing OpenAPI...");
+    setError("");
+    try {
+      const spec = importSpecText.trim() ? JSON.parse(importSpecText) as unknown : undefined;
+      const response = await fetch("/api/tools/import-openapi", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          spec,
+          spec_url: importSpecUrl.trim() || undefined,
+          base_url: importBaseUrl.trim() || undefined,
+          auth_type: importAuthType,
+          auth_username: importUsername,
+          auth_password: importPassword,
+          auth_token: importToken,
+        }),
+      });
+      const result = (await response.json().catch(() => ({}))) as {count?: number; tools?: ToolRecord[]; error?: string};
+      if (!response.ok) throw new Error(result.error ?? `Import failed with status ${response.status}.`);
+      await refreshTools(result.tools?.[0]?.id);
+      setStatus(`Imported ${result.count ?? 0} tools`);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "OpenAPI import failed.");
+      setStatus("");
+    }
+  };
+
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
       <div className="mx-auto grid max-w-7xl grid-cols-[320px_minmax(0,1fr)] gap-5">
@@ -223,6 +274,54 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                 <span className="mt-1 block truncate text-xs text-zinc-500">{tool.method} {tool.url}</span>
               </button>
             ))}
+          </div>
+          <div className="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+            <h2 className="text-sm font-semibold text-zinc-900">Import OpenAPI</h2>
+            <div className="mt-3 space-y-2">
+              <input
+                className={fieldClass}
+                placeholder="Swagger / OpenAPI JSON URL"
+                value={importSpecUrl}
+                onChange={(event) => setImportSpecUrl(event.target.value)}
+              />
+              <textarea
+                className={`${textAreaClass} min-h-28`}
+                placeholder="Or paste OpenAPI JSON"
+                value={importSpecText}
+                onChange={(event) => setImportSpecText(event.target.value)}
+              />
+              <input
+                className={fieldClass}
+                placeholder="Override base URL"
+                value={importBaseUrl}
+                onChange={(event) => setImportBaseUrl(event.target.value)}
+              />
+              <select
+                className={fieldClass}
+                value={importAuthType}
+                onChange={(event) => setImportAuthType(event.target.value as ToolAuthType)}
+              >
+                <option value="none">Auth: None</option>
+                <option value="basic">Auth: Basic</option>
+                <option value="bearer">Auth: Bearer</option>
+              </select>
+              {importAuthType === "basic" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <input className={fieldClass} placeholder="Username" value={importUsername} onChange={(event) => setImportUsername(event.target.value)} />
+                  <input className={fieldClass} placeholder="Password" type="password" value={importPassword} onChange={(event) => setImportPassword(event.target.value)} />
+                </div>
+              ) : null}
+              {importAuthType === "bearer" ? (
+                <input className={fieldClass} placeholder="Bearer token or {{#arg.token#}}" value={importToken} onChange={(event) => setImportToken(event.target.value)} />
+              ) : null}
+              <button
+                className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+                type="button"
+                onClick={() => void importOpenApi()}
+              >
+                Import APIs
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -289,6 +388,55 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
               </label>
             </section>
 
+            <section className="grid grid-cols-2 gap-4">
+              <label>
+                <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Base URL</span>
+                <input className={fieldClass} value={draft.base_url} onChange={(event) => setDraft({...draft, base_url: event.target.value})} />
+              </label>
+              <label>
+                <span className="mb-1.5 block text-xs font-semibold text-zinc-500">OpenAPI Path</span>
+                <input className={fieldClass} value={draft.path} onChange={(event) => setDraft({...draft, path: event.target.value})} />
+              </label>
+              <label>
+                <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Operation ID</span>
+                <input className={fieldClass} value={draft.openapi_operation_id} onChange={(event) => setDraft({...draft, openapi_operation_id: event.target.value})} />
+              </label>
+              <label>
+                <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Import ID</span>
+                <input className={fieldClass} value={draft.openapi_import_id} onChange={(event) => setDraft({...draft, openapi_import_id: event.target.value})} />
+              </label>
+            </section>
+
+            <section className="grid gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <h3 className="text-sm font-semibold text-zinc-800">Authentication</h3>
+              <label>
+                <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Auth Type</span>
+                <select className={fieldClass} value={draft.auth_type} onChange={(event) => setDraft({...draft, auth_type: event.target.value as ToolAuthType})}>
+                  <option value="none">None</option>
+                  <option value="basic">Basic</option>
+                  <option value="bearer">Bearer</option>
+                </select>
+              </label>
+              {draft.auth_type === "basic" ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <label>
+                    <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Username</span>
+                    <input className={fieldClass} value={draft.auth_username} onChange={(event) => setDraft({...draft, auth_username: event.target.value})} />
+                  </label>
+                  <label>
+                    <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Password</span>
+                    <input className={fieldClass} type="password" value={draft.auth_password} onChange={(event) => setDraft({...draft, auth_password: event.target.value})} />
+                  </label>
+                </div>
+              ) : null}
+              {draft.auth_type === "bearer" ? (
+                <label>
+                  <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Bearer Token</span>
+                  <input className={fieldClass} value={draft.auth_token} onChange={(event) => setDraft({...draft, auth_token: event.target.value})} />
+                </label>
+              ) : null}
+            </section>
+
             <section className="grid gap-4 lg:grid-cols-2">
               <div>
                 <h3 className="mb-2 text-sm font-semibold text-zinc-800">Headers</h3>
@@ -337,4 +485,3 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     </div>
   );
 }
-
