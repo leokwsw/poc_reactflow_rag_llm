@@ -11,20 +11,43 @@ const stack = [
 
 const capabilities = [
   {
-    title: "Hybrid RAG",
-    text: "Combines dense vector search with BM25 keyword retrieval, then feeds grounded context into workflow LLM nodes.",
-  },
-  {
-    title: "Graph RAG",
-    text: "Extracts lightweight triples from dataset chunks and queries Neo4j or ArangoDB for relationship-aware context.",
-  },
-  {
     title: "Dynamic Tools",
     text: "Imports OpenAPI Swagger JSON/YAML into generated HTTP tools, with fixed input mappings derived from the spec.",
   },
   {
     title: "Model Routing",
     text: "Stores dynamic model profiles for OpenAI, Groq, xAI/Grok, Ollama, DeepSeek, OpenRouter, LM Studio, and compatible APIs.",
+  },
+];
+
+const ragModes = [
+  {
+    title: "Native RAG",
+    text: "Indexes chunks from uploaded or connected knowledge sources, retrieves grounded context, and sends citations into workflow LLM nodes.",
+  },
+  {
+    title: "Hybrid RAG",
+    text: "Combines dense vector similarity with BM25 keyword retrieval through Elasticsearch for higher recall and better exact-match grounding.",
+  },
+  {
+    title: "Graph RAG",
+    text: "Builds entity and relationship context in Neo4j or ArangoDB so answers can follow connections across people, concepts, documents, and events.",
+  },
+  {
+    title: "Conversational RAG",
+    text: "Uses chat history and the current user intent together, so follow-up questions can retrieve context without losing the conversation thread.",
+  },
+  {
+    title: "Feedback-based RAG",
+    text: "Captures answer feedback and retrieval signals that developers can use to tune ranking, source quality, and future workflow behavior.",
+  },
+  {
+    title: "Agentic RAG",
+    text: "Lets agent nodes plan retrieval steps, call tools, inspect intermediate results, and decide when additional context is needed.",
+  },
+  {
+    title: "Adaptive RAG",
+    text: "Chooses between native, hybrid, graph, tool-assisted, or model-only paths based on the question, source availability, and workflow state.",
   },
 ];
 
@@ -88,7 +111,7 @@ export default function HomePage() {
               Build RAG workflows with visual AI orchestration.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">
-              EZChat RAG Workflow is a Next.js production project for composing retrieval, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch hybrid search, Neo4j and ArangoDB graph retrieval, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
+              EZChat RAG Workflow is a Next.js production project for composing native RAG, hybrid RAG, graph RAG, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch retrieval, Neo4j and ArangoDB graph context, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800" href="/workflow">
@@ -99,7 +122,7 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-              {["Hybrid RAG", "Graph RAG", "Agentic RAG", "OpenAPI Tools"].map((item) => (
+              {["Native RAG", "Hybrid RAG", "Graph RAG", "Agentic RAG"].map((item) => (
                 <div key={item} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm">
                   {item}
                 </div>
@@ -107,6 +130,25 @@ export default function HomePage() {
             </div>
           </div>
           <FlowPreview />
+        </div>
+      </section>
+
+      <section className="border-b border-zinc-200 px-6 py-14">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-semibold leading-tight text-zinc-950">RAG modes supported</h2>
+            <p className="mt-4 text-sm leading-6 text-zinc-600">
+              The project is designed to compare and compose different retrieval strategies in one workflow, from standard document grounding to graph traversal, agent planning, and adaptive routing.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {ragModes.map((item) => (
+              <div key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-zinc-950">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
