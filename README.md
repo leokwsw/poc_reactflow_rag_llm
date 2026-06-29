@@ -64,6 +64,8 @@ The Tools page only supports importing APIs from OpenAPI/Swagger JSON or YAML. T
 
 Manual tool creation and manual tool updates are disabled; generated method, URL, path, operation ID, import ID, enabled state, body, and schema fields come from the OpenAPI document.
 
+The Tool list supports replacing an existing OpenAPI import with updated JSON/YAML, deleting an entire imported group, or deleting individual generated tools.
+
 Path parameters such as `/users/{id}` become `{{#arg.id#}}`; query/header parameters become input mappings generated from the OpenAPI parameter schema.
 
 ## RAG Backends

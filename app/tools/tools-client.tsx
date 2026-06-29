@@ -37,6 +37,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
   const [queryValue, setQueryValue] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [editingImportId, setEditingImportId] = useState("");
 
   const importGroups = useMemo(() => {
     const groups = new Map<string, ToolRecord[]>();
@@ -46,6 +47,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     }
     return Array.from(groups.entries()).map(([importId, groupTools]) => ({
       importId,
+      isOpenApiGroup: groupTools.some((tool) => tool.openapi_import_id),
       tools: groupTools.sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }, [tools]);
@@ -84,6 +86,8 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           name: name.trim(),
+          import_id: editingImportId || undefined,
+          replace: Boolean(editingImportId),
           spec_text: specText.trim(),
           auth_method: authMethod,
           header_auth_type: authMethod === "header" ? headerAuthType : undefined,
@@ -99,9 +103,63 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
       const result = (await response.json().catch(() => ({}))) as {count?: number; error?: string};
       if (!response.ok) throw new Error(result.error ?? `Import failed with status ${response.status}.`);
       await refreshTools();
-      setStatus(`Imported ${result.count ?? 0} tools`);
+      setStatus(`${editingImportId ? "Updated" : "Imported"} ${result.count ?? 0} tools`);
+      setEditingImportId("");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "OpenAPI import failed.");
+      setStatus("");
+    }
+  };
+
+  const startUpdate = (importId: string) => {
+    setEditingImportId(importId);
+    setName(importId);
+    setSpecText("");
+    setStatus(`Update ${importId}: paste the latest OpenAPI Swagger JSON/YAML.`);
+    setError("");
+  };
+
+  const cancelUpdate = () => {
+    setEditingImportId("");
+    setName("");
+    setSpecText("");
+    setStatus("");
+    setError("");
+  };
+
+  const deleteImportGroup = async (importId: string) => {
+    if (!window.confirm(`Delete all tools in ${importId}?`)) return;
+    setStatus(`Deleting ${importId}...`);
+    setError("");
+    try {
+      const response = await fetch("/api/tools/import-openapi", {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({import_id: importId}),
+      });
+      const result = (await response.json().catch(() => ({}))) as {error?: string};
+      if (!response.ok) throw new Error(result.error ?? `Delete failed with status ${response.status}.`);
+      await refreshTools();
+      if (editingImportId === importId) cancelUpdate();
+      setStatus(`Deleted ${importId}`);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Delete failed.");
+      setStatus("");
+    }
+  };
+
+  const deleteTool = async (tool: ToolRecord) => {
+    if (!window.confirm(`Delete ${tool.name}?`)) return;
+    setStatus(`Deleting ${tool.name}...`);
+    setError("");
+    try {
+      const response = await fetch(`/api/tools/${tool.id}`, {method: "DELETE"});
+      const result = (await response.json().catch(() => ({}))) as {error?: string};
+      if (!response.ok) throw new Error(result.error ?? `Delete failed with status ${response.status}.`);
+      await refreshTools();
+      setStatus(`Deleted ${tool.name}`);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Delete failed.");
       setStatus("");
     }
   };
@@ -112,7 +170,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
         <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Tools</p>
-            <h1 className="text-xl font-semibold text-zinc-950">Import OpenAPI Swagger</h1>
+            <h1 className="text-xl font-semibold text-zinc-950">{editingImportId ? "Update OpenAPI Swagger" : "Import OpenAPI Swagger"}</h1>
             {status ? <p className="mt-1 text-sm text-zinc-500">{status}</p> : null}
             {error ? <p className="mt-1 text-sm text-red-600">{error}</p> : null}
           </div>
@@ -122,6 +180,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
               <span className="mb-1.5 block text-xs font-semibold text-zinc-500">Name</span>
               <input
                 className={fieldClass}
+                disabled={Boolean(editingImportId)}
                 placeholder="Internal API"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -189,8 +248,17 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
               type="button"
               onClick={() => void importOpenApi()}
             >
-              Import APIs
+              {editingImportId ? "Update APIs" : "Import APIs"}
             </button>
+            {editingImportId ? (
+              <button
+                className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                type="button"
+                onClick={cancelUpdate}
+              >
+                Cancel Update
+              </button>
+            ) : null}
           </div>
         </section>
 
@@ -212,7 +280,27 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
               <div key={group.importId}>
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <h3 className="truncate text-sm font-semibold text-zinc-900">{group.importId}</h3>
-                  <span className="text-xs text-zinc-500">{group.tools.length} APIs</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-500">{group.tools.length} APIs</span>
+                    {group.isOpenApiGroup ? (
+                      <>
+                        <button
+                          className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"
+                          type="button"
+                          onClick={() => startUpdate(group.importId)}
+                        >
+                          Update
+                        </button>
+                        <button
+                          className="rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                          type="button"
+                          onClick={() => void deleteImportGroup(group.importId)}
+                        >
+                          Delete Group
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="overflow-hidden rounded-lg border border-zinc-200">
                   <table className="w-full table-fixed text-left text-sm">
@@ -222,6 +310,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                         <th className="px-3 py-2">Name</th>
                         <th className="px-3 py-2">Path</th>
                         <th className="w-32 px-3 py-2">Auth</th>
+                        <th className="w-24 px-3 py-2">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
@@ -231,6 +320,15 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                           <td className="truncate px-3 py-2 text-zinc-900">{tool.name}</td>
                           <td className="truncate px-3 py-2 font-mono text-xs text-zinc-600">{tool.path}</td>
                           <td className="truncate px-3 py-2 text-xs text-zinc-500">{authSummary(tool)}</td>
+                          <td className="px-3 py-2">
+                            <button
+                              className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                              type="button"
+                              onClick={() => void deleteTool(tool)}
+                            >
+                              Delete
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

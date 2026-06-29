@@ -1,5 +1,5 @@
 import {load as parseYaml} from "js-yaml";
-import {createTool, type ToolAuthType, type ToolInput, type ToolKeyValueRow, type ToolMethod} from "@/app/tools/data";
+import {createTool, deleteToolsByImportId, type ToolAuthType, type ToolInput, type ToolKeyValueRow, type ToolMethod} from "@/app/tools/data";
 
 type OpenApiSpec = {
   openapi?: string;
@@ -38,6 +38,8 @@ type OpenApiParameter = {
 };
 
 export type ImportOpenApiInput = {
+  import_id?: string;
+  replace?: boolean;
   name?: string;
   spec?: unknown;
   spec_text?: string;
@@ -234,7 +236,7 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
   const spec = await parseSpec(input);
   const baseUrl = ensureBaseUrl(spec, input.base_url);
   const importName = input.name?.trim() || spec.info?.title || "OpenAPI Tools";
-  const importId = slug(importName || input.spec_url || `openapi-${Date.now()}`) || `openapi-${Date.now()}`;
+  const importId = input.import_id?.trim() || slug(importName || input.spec_url || `openapi-${Date.now()}`) || `openapi-${Date.now()}`;
   const authRows = authRowsForImport(input);
   const auth = {
     auth_type: authTypeForImport(input),
@@ -242,7 +244,7 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
     auth_password: input.auth_password ?? "",
     auth_token: input.auth_token ?? "",
   };
-  const created = [];
+  const toolInputs: Array<Partial<ToolInput>> = [];
 
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
     if (!isRecord(pathItem)) continue;
@@ -250,7 +252,7 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
       if (!HTTP_METHODS.has(rawMethod) || !isRecord(rawOperation)) continue;
       const method = rawMethod.toUpperCase() as ToolMethod;
       const operation = rawOperation as OpenApiOperation;
-      const tool = await createTool(buildToolInput({
+      toolInputs.push(buildToolInput({
         spec,
         baseUrl,
         importId,
@@ -260,8 +262,17 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
         auth,
         authRows,
       }));
-      if (tool) created.push(tool);
     }
+  }
+
+  if (input.replace) {
+    await deleteToolsByImportId(importId);
+  }
+
+  const created = [];
+  for (const toolInput of toolInputs) {
+    const tool = await createTool(toolInput);
+    if (tool) created.push(tool);
   }
 
   return {
