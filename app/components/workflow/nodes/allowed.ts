@@ -3,6 +3,7 @@ export const ALLOWED_CUSTOM_NODE_TYPES = [
   "end",
   "llm",
   "agent",
+  "tool",
   "questionClassifier",
   "knowledgeRetrieval",
   "ifElse",

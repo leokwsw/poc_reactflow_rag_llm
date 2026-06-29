@@ -50,6 +50,15 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       body_binary: "",
       skip_ssl_verification: false,
     };
+  } else if (type === "tool") {
+    data = {
+      ...data,
+      label: "Tool",
+      tool_id: "",
+      input_mapping: [
+        {id: crypto.randomUUID(), enabled: true, name: "query", value: "{{#sys.query#}}"},
+      ],
+    };
   } else if (type === "llm") {
     data = {
       ...data,

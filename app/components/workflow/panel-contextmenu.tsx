@@ -33,6 +33,7 @@ export default function PanelContextMenu({
         { type: "end", label: "結束", description: "整理並輸出工作流的最終答案或指定欄位。"},
         { type: "llm", label: "LLM", description: "呼叫語言模型，按提示詞生成回應或中間結果。"},
         { type: "agent", label: "Agent", description: "讓 AI 代理根據指令自主推理，並可配合工具完成任務。"},
+        { type: "tool", label: "Tool", description: "從 Workspace Tools 選擇最新工具定義，動態呼叫外部能力。"},
         { type: "questionClassifier", label: "問題分類", description: "分析輸入問題，將它分到預設類別並引導後續分支。"},
         { type: "knowledgeRetrieval", label: "知識檢索", description: "從已建立的知識庫搜尋相關內容，提供上下文予後續節點。"},
         { type: "ifElse", label: "If / Else", description: "根據條件判斷走不同分支，處理路由及例外情況。"},

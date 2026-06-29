@@ -7,6 +7,7 @@ import LlmNode from '@/app/components/workflow/nodes/llm/ui'
 import NoteNode from '@/app/components/workflow/nodes/note/ui'
 import QuestionClassifierNode from '@/app/components/workflow/nodes/question-classifier/ui'
 import StartNode from '@/app/components/workflow/nodes/start/ui'
+import ToolNode from '@/app/components/workflow/nodes/tool/ui'
 import Custom from '@/app/components/workflow/nodes'
 import CustomEdge from '@/app/components/workflow/edges'
 import type { CustomNodeType as AllowedCustomNodeType } from '@/app/components/workflow/nodes/allowed'
@@ -31,6 +32,7 @@ export const NodeComponentMap: Record<
   end: EndNode as ComponentType<Partial<NodeProps>>,
   llm: LlmNode as ComponentType<Partial<NodeProps>>,
   agent: AgentNode as ComponentType<Partial<NodeProps>>,
+  tool: ToolNode as ComponentType<Partial<NodeProps>>,
   questionClassifier: QuestionClassifierNode as ComponentType<
     Partial<NodeProps>
   >,

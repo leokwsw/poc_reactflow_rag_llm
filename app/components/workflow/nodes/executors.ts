@@ -7,6 +7,7 @@ import { executeLlmNode } from "@/app/components/workflow/nodes/llm/execution";
 import { executeNoteNode } from "@/app/components/workflow/nodes/note/execution";
 import { executeQuestionClassifierNode } from "@/app/components/workflow/nodes/question-classifier/execution";
 import { executeStartNode } from "@/app/components/workflow/nodes/start/execution";
+import { executeToolNode } from "@/app/components/workflow/nodes/tool/execution";
 import type { CustomNodeType } from "@/app/components/workflow/nodes/allowed";
 import type { NodeExecutionContext, NodeExecutionResult } from "@/app/components/workflow/nodes/execution-types";
 
@@ -17,6 +18,7 @@ export const nodeExecutors: Record<CustomNodeType, NodeExecutor> = {
   end: executeEndNode,
   llm: executeLlmNode,
   agent: executeAgentNode,
+  tool: executeToolNode,
   http: executeHttpNode,
   ifElse: executeIfElseNode,
   knowledgeRetrieval: executeKnowledgeRetrievalNode,

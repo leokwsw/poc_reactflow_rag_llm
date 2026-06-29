@@ -33,6 +33,25 @@ You can also set `DATABASE_URL` instead of the individual `POSTGRES_*` values. I
 
 Existing PostgreSQL tables are mapped as one-file-per-entity TypeORM classes in `app/lib/entities/`: `datasets`, `documents`, `chunks`, `tasks`, `embeddings`, `workflow_graphs`, `workflow_runs`, `mcp_servers`, and `model_configs`.
 
+## Workspace Tools
+
+Workspace tools live at `/tools`, following the same broad model as Dify workspace tools: define reusable tools once, then select them from workflow nodes.
+
+The current implementation supports Custom HTTP Tools:
+
+- CRUD API: `GET/POST /api/tools`, `GET/PUT/DELETE /api/tools/[toolId]`
+- Tool definition: method, URL, headers, params, body, input schema, enabled flag
+- Dynamic workflow node: add a `Tool` node, select a tool, and map node inputs into `arg.*`
+
+Tool templates support workflow-style variables inside URL, headers, params, and body:
+
+```text
+{{#arg.query#}}
+{{#input.query#}}
+```
+
+When a Tool node runs, it loads the latest tool definition from PostgreSQL, so editing a workspace tool updates future workflow executions without editing existing workflow graphs.
+
 ## RAG Backends
 
 The Knowledge Retrieval workflow node supports hybrid RAG and optional Graph RAG:

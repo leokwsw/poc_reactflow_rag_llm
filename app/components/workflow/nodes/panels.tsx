@@ -11,6 +11,7 @@ import type { CustomNodeType } from "@/app/components/workflow/nodes/allowed";
 import type { NodePanelProps } from "@/app/components/workflow/nodes/panel-types";
 import QuestionClassifierPanel from "@/app/components/workflow/nodes/question-classifier/panel";
 import StartPanel from "@/app/components/workflow/nodes/start/panel";
+import ToolPanel from "@/app/components/workflow/nodes/tool/panel";
 import type { ComponentType } from "react";
 
 export const nodeSettingsPanelMap: Record<CustomNodeType, ComponentType<NodePanelProps>> = {
@@ -18,6 +19,7 @@ export const nodeSettingsPanelMap: Record<CustomNodeType, ComponentType<NodePane
   end: EndPanel,
   llm: LlmPanel,
   agent: AgentPanel,
+  tool: ToolPanel,
   questionClassifier: QuestionClassifierPanel,
   knowledgeRetrieval: KnowledgeRetrievalPanel,
   ifElse: IfElsePanel,
