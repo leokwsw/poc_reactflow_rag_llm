@@ -3,7 +3,7 @@ import AppNavigation from "@/app/components/app-navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EZChat RAG Workflow",
+  title: "RAG Workflow",
   description: "Visual RAG workflow orchestration with Next.js, React Flow, PostgreSQL, Elasticsearch, Neo4j, ArangoDB, and dynamic OpenAPI tools.",
 };
 

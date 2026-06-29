@@ -1,6 +1,6 @@
 /**
  * Builds an Elasticsearch body with top-level `knn`, hybrid `bool` filters, and `match` on text —
- * same shape as ezchat_rag_sys `service.py` `_generate_es_query`.
+ * same shape as rag_sys `service.py` `_generate_es_query`.
  * Indexed docs: `{ text, metadata, vector, enabled, deleted }` (see `queue.ts` / Python RAG index).
  */
 export type GenerateRagEsQueryParams = {

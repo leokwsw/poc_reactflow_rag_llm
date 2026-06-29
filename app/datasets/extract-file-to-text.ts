@@ -1,5 +1,5 @@
 /**
- * Mirrors routing in ezchat_rag_sys `file_extractor/service.py` → `extract_file_to_text`,
+ * Mirrors routing in rag_sys `file_extractor/service.py` → `extract_file_to_text`,
  * using Node equivalents for each extractor type.
  */
 import fs from "node:fs";
@@ -143,7 +143,7 @@ const printableLatin1 = (filePath: string): string => {
 };
 
 /**
- * Route by extension like `extract_file_to_text` in ezchat_rag_sys `service.py`.
+ * Route by extension like `extract_file_to_text` in rag_sys `service.py`.
  * PPTX: Python converts via local HTTP service then PDF; here we parse PPTX directly with officeparser.
  * Images: Python converts to PDF then extracts; not used by current upload allow-list — omitted.
  */

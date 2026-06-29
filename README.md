@@ -1,24 +1,67 @@
-# poc_reactflow_rag_llm
+# RAG Workflow
+
+RAG Workflow is a production-oriented Next.js app for building and running visual AI workflows. It combines a React Flow workflow editor, chat-triggered workflow execution, dataset ingestion, Native/Hybrid/Graph RAG, dynamic OpenAPI tools, MCP integrations, and model profile management.
+
+## What This Project Does
+
+- **Chat**: create conversations, bind each conversation to one workflow, and trigger workflow runs from a chat interface.
+- **Workflow Studio**: visually compose Start, LLM, Agent, Tool, HTTP, Knowledge Retrieval, If/Else, Note, and End nodes with React Flow.
+- **RAG**: ingest documents and external sources, chunk and embed content, index chunks in Elasticsearch, and optionally index graph facts in Neo4j or ArangoDB.
+- **Tools**: import OpenAPI / Swagger JSON or YAML into reusable workflow tools.
+- **Models**: manage dynamic model profiles for OpenAI, Grok/xAI, Groq, Ollama, Xinference, DeepSeek, OpenRouter, LM Studio, and OpenAI-compatible APIs.
+- **MCP**: store MCP server connections and inspect/call MCP tools.
+
+## Tech Stack
+
+- Next.js App Router
+- React 19
+- React Flow
+- PostgreSQL
+- TypeORM entity mappings plus local schema bootstrap helpers
+- Elasticsearch
+- Neo4j
+- ArangoDB
+- OpenAPI / Swagger JSON and YAML parsing
+- MCP HTTP integrations
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-## TypeORM
+Useful checks:
 
-TypeORM is configured for PostgreSQL in `app/lib/typeorm.ts` and reuses the existing database environment variables:
+```bash
+npm run lint
+npm run build
+```
+
+## Main Routes
+
+- `/` - project landing page
+- `/chat` - conversation list and chat workflow runner
+- `/chat/[conversationId]` - direct conversation view
+- `/workflow` - workflow list
+- `/workflow/[workflowId]` - React Flow workflow studio
+- `/datasets` - dataset list
+- `/datasets/new` - dataset creation and document/source ingestion
+- `/tools` - OpenAPI Swagger import and tool group management
+- `/model` - dynamic model profile CRUD
+- `/mcp` - MCP server CRUD
+- `/mcp-inspector` - MCP tool inspection and test calls
+- `/playground` - developer workflow execution playground
+
+## Data Storage
+
+PostgreSQL is the source of truth for app metadata and runtime records.
+
+Configured in `app/lib/typeorm.ts`:
 
 ```bash
 POSTGRES_HOST=10.0.0.209
@@ -29,32 +72,63 @@ POSTGRES_DATABASE=postgres
 POSTGRES_SCHEMA=public
 ```
 
-You can also set `DATABASE_URL` instead of the individual `POSTGRES_*` values. Import `getDataSource` from `@/app/lib/typeorm` in server-only code.
+`DATABASE_URL` can be used instead of individual `POSTGRES_*` variables.
 
-Existing PostgreSQL tables are mapped as one-file-per-entity TypeORM classes in `app/lib/entities/`: `datasets`, `documents`, `chunks`, `tasks`, `embeddings`, `workflow_graphs`, `workflow_runs`, `mcp_servers`, and `model_configs`.
+Important tables include:
+
+- `workflow_graphs`
+- `workflow_runs`
+- `conversations`
+- `conversation_messages`
+- `datasets`
+- `documents`
+- `chunks`
+- `tasks`
+- `embeddings`
+- `mcp_servers`
+- `model_configs`
+
+The project no longer uses JSON seed files under `data/`. Uploaded files may still be stored under `data/uploads/`.
+
+## Chat Workflow Execution
+
+Chat conversations are stored in PostgreSQL. Each conversation is bound to one workflow.
+
+When a user sends a chat message:
+
+1. A user message is saved.
+2. A pending assistant message is created.
+3. The selected workflow is executed with the user message as `query`.
+4. Recent completed conversation messages are passed as `conversation_history`.
+5. Workflow events stream back through SSE.
+6. The workflow run is saved in `workflow_runs`.
+7. The assistant message is completed and linked to `workflow_run_id`.
+
+Primary APIs:
+
+- `GET /api/conversations`
+- `POST /api/conversations`
+- `GET /api/conversations/[conversationId]`
+- `PATCH /api/conversations/[conversationId]`
+- `DELETE /api/conversations/[conversationId]`
+- `GET /api/conversations/[conversationId]/messages`
+- `POST /api/conversations/[conversationId]/messages`
+
+## Workflow Execution
+
+The workflow runner lives in `app/lib/workflow-runner.ts`.
+
+The developer playground and chat both rely on the same execution model. `/api/workflow/run` accepts a workflow payload and streams Server-Sent Events. Chat uses its own conversation message endpoint, then calls the same runner internally.
+
+The default workflow is generated in code from `app/components/workflow/default-data.ts`; it is not loaded from a JSON file.
 
 ## Workspace Tools
 
-Workspace tools live at `/tools`, following the same broad model as Dify workspace tools: define reusable tools once, then select them from workflow nodes.
+Workspace tools live at `/tools`.
 
-The current implementation imports OpenAPI / Swagger operations into Custom HTTP Tools:
+The Tools page only supports OpenAPI / Swagger JSON or YAML imports. It does not support manually entering method, URL, base URL, OpenAPI path, operation ID, import ID, enabled state, or schema fields.
 
-- CRUD API: `GET/POST /api/tools`, `GET/PUT/DELETE /api/tools/[toolId]`
-- OpenAPI import API: `POST /api/tools/import-openapi`
-- Imported definition: operation name, description, HTTP method, OpenAPI path, URL, headers, params, body, input schema, enabled flag
-- Auth per imported tool: None, Basic, or Bearer
-- Dynamic workflow node: add a `Tool` node, select a tool, and map node inputs into `arg.*`
-
-Tool templates support workflow-style variables inside URL, headers, params, and body:
-
-```text
-{{#arg.query#}}
-{{#input.query#}}
-```
-
-When a Tool node runs, it loads the latest tool definition from PostgreSQL, so editing a workspace tool updates future workflow executions without editing existing workflow graphs.
-
-The Tools page only supports importing APIs from OpenAPI/Swagger JSON or YAML. The visible import fields are:
+Visible import fields:
 
 - Name
 - OpenAPI Swagger JSON/YAML
@@ -62,23 +136,35 @@ The Tools page only supports importing APIs from OpenAPI/Swagger JSON or YAML. T
 - Header Auth: Basic, Bearer, or Custom
 - Query Auth: query name and value
 
-Manual tool creation and manual tool updates are disabled; generated method, URL, path, operation ID, import ID, enabled state, body, and schema fields come from the OpenAPI document.
+Tool list behavior:
 
-The Tool list supports replacing an existing OpenAPI import with updated JSON/YAML and deleting an entire imported group. Single generated tools cannot be deleted independently.
+- Updating an OpenAPI import replaces generated tool definitions for that import group.
+- Deleting is allowed at the imported group level.
+- Deleting a single generated tool is intentionally disabled.
+- Workflow Tool input mapping is generated from the OpenAPI operation schema and cannot be manually added or removed.
 
-Path parameters such as `/users/{id}` become `{{#arg.id#}}`; query/header parameters become input mappings generated from the OpenAPI parameter schema.
+Key APIs:
+
+- `GET /api/tools`
+- `POST /api/tools/import-openapi`
+- `GET /api/tools/[toolId]`
+- `PUT /api/tools/[toolId]` returns 405 for manual updates
+- `DELETE /api/tools/[toolId]` returns 405 for single-tool deletes
 
 ## RAG Backends
 
-The Knowledge Retrieval workflow node supports hybrid RAG and optional Graph RAG:
+Knowledge Retrieval supports Native RAG, Hybrid RAG, Graph RAG, Conversational RAG, Feedback-based RAG, Agentic RAG, and Adaptive RAG.
 
-- Elasticsearch stores chunk text and dense vectors, then combines vector KNN with BM25 keyword retrieval.
-- Neo4j can store extracted chunk triples as `(:Entity)-[:RELATED_TO]->(:Entity)` relations.
-- ArangoDB can store the same graph shape in `kg_entities`, `kg_edges`, and `kg_chunks`.
+Retrieval sources:
 
-During dataset ingestion, chunks are embedded and indexed in Elasticsearch. If Graph RAG is enabled, the same chunk text is converted into simple subject-predicate-object triples and upserted into the configured graph database. Graph write failures are logged as warnings and do not block Elasticsearch ingestion.
+- Elasticsearch vector search
+- Elasticsearch BM25 keyword search
+- Neo4j graph traversal
+- ArangoDB graph traversal
 
-Graph RAG is disabled by default. Enable either backend in `.env`:
+Graph RAG is optional and fails soft during indexing/search if a backend is unavailable.
+
+Enable Neo4j:
 
 ```bash
 GRAPH_RAG_NEO4J_ENABLED=true
@@ -86,7 +172,11 @@ NEO4J_URI=http://localhost:7474
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=password
 NEO4J_DATABASE=neo4j
+```
 
+Enable ArangoDB:
+
+```bash
 GRAPH_RAG_ARANGODB_ENABLED=true
 ARANGODB_URL=http://localhost:8529
 ARANGODB_USERNAME=root
@@ -96,18 +186,6 @@ ARANGODB_ENTITY_COLLECTION=kg_entities
 ARANGODB_EDGE_COLLECTION=kg_edges
 ARANGODB_CHUNK_COLLECTION=kg_chunks
 ```
-
-The graph extraction layer lives in `app/lib/graph-rag.ts`, so the heuristic triple extraction can later be replaced with a stronger txt2kg or LLM extraction pipeline without changing the workflow node contract.
-
-### RAG Modes
-
-Knowledge Retrieval supports these modes from the node panel:
-
-- Hybrid: combines vector, BM25, Neo4j, and ArangoDB result sets.
-- Conversational: sends recent workflow run turns as retrieval context.
-- Feedback: reads `rag_feedback` records and boosts or suppresses chunks.
-- Agentic: decomposes a query into multiple subqueries and merges results.
-- Adaptive: enables retrieval sources based on query intent, such as graph-heavy or keyword-heavy questions.
 
 Feedback can be written through:
 
@@ -123,9 +201,19 @@ curl -X POST http://localhost:3000/api/rag/feedback \
   }'
 ```
 
-### Multi-Source Documents
+## Multi-Source Documents
 
-`POST /api/datasets` accepts normal staged file uploads and a `sources` array. Sources are converted to `.txt` documents, then processed by the same chunking, embedding, Elasticsearch, and Graph RAG pipeline.
+`POST /api/datasets` accepts staged file uploads and a `sources` array. Sources are converted to text documents and processed by the same chunking, embedding, Elasticsearch, and Graph RAG pipeline.
+
+Supported source types:
+
+- `website`
+- `youtube`
+- `audio`
+- `notion`
+- `text`
+
+Example:
 
 ```json
 {
@@ -140,121 +228,60 @@ curl -X POST http://localhost:3000/api/rag/feedback \
 }
 ```
 
-Website sources are fetched directly. YouTube and audio sources use optional transcript services:
+Optional transcript/source environment variables:
 
 ```bash
 YOUTUBE_TRANSCRIPT_API_URL=https://your-service/transcript/youtube
 AUDIO_TRANSCRIPTION_API_URL=https://your-service/transcript/audio
 NOTION_TOKEN=secret_...
+NOTION_VERSION=2022-06-28
 ```
 
-## Deploy With PM2
+## Docker Helpers
 
-This project includes `ecosystem.config.cjs` for `pm2 deploy`.
+Docker compose files live under `docker/`:
 
-### 1. Install PM2 locally and on the server
+- `docker/elastic-search/`
+- `docker/neo4j-apoc/`
+- `docker/arangodb/`
+
+Use these for local search and graph RAG dependencies.
+
+## Deployment With PM2
+
+This project includes `ecosystem.config.cjs` for PM2 deploy.
+
+Install PM2 locally and on the server:
 
 ```bash
 npm install -g pm2
 ```
 
-The remote server must also have Node.js, npm, git, and PM2 installed.
+Edit `ecosystem.config.cjs`:
 
-### 2. Edit `ecosystem.config.cjs`
+- `deploy.production.user`
+- `deploy.production.host`
+- `deploy.production.repo`
+- `deploy.production.ref`
+- `deploy.production.path`
 
-Update these values:
-
-- `deploy.production.user`: SSH user on the server
-- `deploy.production.host`: server IP or domain
-- `deploy.production.repo`: git SSH URL for this repository
-- `deploy.production.ref`: branch to deploy, for example `origin/main`
-- `deploy.production.path`: deployment directory on the server
-
-Example:
-
-```js
-deploy: {
-  production: {
-    user: "deploy",
-    host: "example.com",
-    ref: "origin/main",
-    repo: "git@github.com:your-user/poc_reactflow_rag_llm.git",
-    path: "/var/www/poc_reactflow_rag_llm",
-    "post-deploy": "npm install && npm run build && pm2 reload ecosystem.config.cjs --env production",
-  },
-}
-```
-
-### 3. Prepare environment variables on the server
-
-PM2 deploy checks out the git repo, so local untracked files like `.env` are not uploaded automatically.
-
-After the first setup, create the production `.env` file on the server:
-
-```bash
-ssh deploy@example.com
-mkdir -p /var/www/poc_reactflow_rag_llm/shared
-nano /var/www/poc_reactflow_rag_llm/shared/.env
-```
-
-Use `.env.example` as the template:
-
-```bash
-ELASTICSEARCH_HOSTNAME=localhost
-ELASTICSEARCH_PORT=9200
-ELASTICSEARCH_USERNAME=elastic
-ELASTICSEARCH_PASSWORD=changeme
-ELASTICSEARCH_PROTOCOL=http
-```
-
-Then link it into the current release:
-
-```bash
-ln -sfn /var/www/poc_reactflow_rag_llm/shared/.env /var/www/poc_reactflow_rag_llm/current/.env
-```
-
-### 4. First-time setup
-
-Run this from your local machine:
+First-time setup:
 
 ```bash
 pm2 deploy ecosystem.config.cjs production setup
 ```
 
-Then create/link the `.env` file as shown above, and deploy:
+Create the production `.env` on the server, then deploy:
 
 ```bash
 pm2 deploy ecosystem.config.cjs production
 ```
 
-### 5. Deploy future updates
-
-Commit and push your changes first:
-
-```bash
-git push origin main
-pm2 deploy ecosystem.config.cjs production
-```
-
-The `post-deploy` command will install dependencies, build the Next.js app, and reload the PM2 process:
-
-```bash
-npm install && npm run build && pm2 reload ecosystem.config.cjs --env production
-```
-
-### 6. Useful PM2 commands
-
-Run these on the server:
+Useful server commands:
 
 ```bash
 pm2 status
 pm2 logs poc-reactflow-rag-llm
 pm2 restart poc-reactflow-rag-llm
 pm2 save
-```
-
-Rollback to the previous release from your local machine:
-
-```bash
-pm2 deploy ecosystem.config.cjs production revert 1
 ```

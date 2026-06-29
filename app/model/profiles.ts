@@ -130,6 +130,6 @@ export function modelProviderFor(value: unknown) {
   return MODEL_PROVIDERS.find((provider) => provider.value === value) ?? MODEL_PROVIDERS[0];
 }
 
-export const DEFAULT_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/lite";
-export const DEFAULT_EMBEDDING_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/embedding";
-export const DEFAULT_RERANKING_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/reranking";
+export const DEFAULT_MODEL_PROFILE_ID: ModelProfileId = "@ai/lite";
+export const DEFAULT_EMBEDDING_MODEL_PROFILE_ID: ModelProfileId = "@ai/embedding";
+export const DEFAULT_RERANKING_MODEL_PROFILE_ID: ModelProfileId = "@ai/reranking";
