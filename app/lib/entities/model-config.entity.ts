@@ -8,6 +8,12 @@ export class ModelConfigEntity {
   @Column({type: "text"})
   label!: string;
 
+  @Column({type: "text", default: "openai"})
+  provider!: string;
+
+  @Column({type: "text", default: "openai"})
+  sdk!: string;
+
   @Column({type: "text", default: "llm"})
   model_type!: string;
 

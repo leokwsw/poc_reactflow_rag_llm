@@ -1,5 +1,5 @@
 import {revalidatePath} from "next/cache";
-import {listModelConfigs, updateModelConfig} from "@/app/model/data";
+import {deleteModelConfig, listModelConfigs, upsertModelConfig, updateModelConfig} from "@/app/model/data";
 import ProviderIcon from "@/app/model/provider-icon";
 import {
   MODEL_PROVIDER_SDKS,
@@ -29,6 +29,7 @@ export default async function ModelPage() {
   async function saveModelConfigAction(formData: FormData) {
     "use server";
     const id = String(formData.get("id") ?? "");
+    const label = String(formData.get("label") ?? "");
     const api_base_url = String(formData.get("api_base_url") ?? "");
     const raw_api_key = String(formData.get("api_key") ?? "");
     const model = String(formData.get("model") ?? "");
@@ -37,6 +38,7 @@ export default async function ModelPage() {
     const sdk = String(formData.get("sdk") ?? "");
 
     await updateModelConfig(id, {
+      label,
       api_base_url,
       api_key: raw_api_key.trim() ? raw_api_key : undefined,
       model,
@@ -44,6 +46,36 @@ export default async function ModelPage() {
       provider: isModelProvider(provider) ? provider : undefined,
       sdk: isModelProviderSdk(sdk) ? sdk : undefined,
     });
+    revalidatePath("/model");
+  }
+
+  async function createModelConfigAction(formData: FormData) {
+    "use server";
+    const id = String(formData.get("id") ?? "");
+    const label = String(formData.get("label") ?? "");
+    const provider = String(formData.get("provider") ?? "");
+    const sdk = String(formData.get("sdk") ?? "");
+    const model_type = String(formData.get("model_type") ?? "");
+    const api_base_url = String(formData.get("api_base_url") ?? "");
+    const model = String(formData.get("model") ?? "");
+    const raw_api_key = String(formData.get("api_key") ?? "");
+
+    await upsertModelConfig(id, {
+      label,
+      api_base_url,
+      api_key: raw_api_key.trim() ? raw_api_key : undefined,
+      model,
+      model_type: isModelType(model_type) ? model_type : undefined,
+      provider: isModelProvider(provider) ? provider : undefined,
+      sdk: isModelProviderSdk(sdk) ? sdk : undefined,
+    });
+    revalidatePath("/model");
+  }
+
+  async function deleteModelConfigAction(formData: FormData) {
+    "use server";
+    const id = String(formData.get("id") ?? "");
+    await deleteModelConfig(id);
     revalidatePath("/model");
   }
 
@@ -58,7 +90,78 @@ export default async function ModelPage() {
           </p>
         </div>
 
+        <form action={createModelConfigAction} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr_1fr_1fr_1fr_auto]">
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Model Slug</span>
+              <input
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                name="id"
+                placeholder="@workspace/fast-chat"
+                required
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Label</span>
+              <input
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                name="label"
+                placeholder="Fast Chat"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Provider</span>
+              <select
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                defaultValue="openai"
+                name="provider"
+              >
+                {MODEL_PROVIDERS.map((item) => (
+                  <option key={item.value} value={item.value}>{item.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Model Type</span>
+              <select
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                defaultValue="llm"
+                name="model_type"
+              >
+                {MODEL_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">SDK</span>
+              <select
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                defaultValue="openai"
+                name="sdk"
+              >
+                {MODEL_PROVIDER_SDKS.map((sdk) => (
+                  <option key={sdk} value={sdk}>{sdk}</option>
+                ))}
+              </select>
+            </label>
+            <input name="api_base_url" type="hidden" value="" />
+            <input name="model" type="hidden" value="" />
+            <input name="api_key" type="hidden" value="" />
+            <div className="flex items-end">
+              <button className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700" type="submit">
+                Add
+              </button>
+            </div>
+          </div>
+        </form>
+
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {configs.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-zinc-200 bg-white px-4 py-12 text-center text-sm text-zinc-500 lg:col-span-3">
+              No model profiles yet. Add a model slug to start.
+            </div>
+          ) : null}
           {configs.map((config) => {
             const provider = modelProviderFor(config.provider);
 
@@ -91,6 +194,18 @@ export default async function ModelPage() {
                       {config.api_key_configured ? "Configured" : "Missing Key"}
                     </span>
                   </div>
+
+                  <label className="block">
+                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                      Label
+                    </span>
+                    <input
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                      defaultValue={config.label}
+                      name="label"
+                      placeholder={config.id}
+                    />
+                  </label>
 
                   <label className="block">
                     <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
@@ -185,12 +300,21 @@ export default async function ModelPage() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-zinc-100 pt-4">
                   <p className="text-xs text-zinc-500">Updated {formatDateTime(config.updated_at)}</p>
-                  <button
-                    className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
-                    type="submit"
-                  >
-                    Save
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                      formAction={deleteModelConfigAction}
+                      type="submit"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
+                      type="submit"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
               </form>
             );

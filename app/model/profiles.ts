@@ -104,23 +104,14 @@ export const MODEL_PROVIDERS = [
 
 export type ModelProvider = (typeof MODEL_PROVIDERS)[number]["value"];
 
-export const MODEL_PROFILES = [
-  { id: "@ezchat/lite", label: "EZChat Lite", model_type: "llm" },
-  { id: "@ezchat/core", label: "EZChat Core", model_type: "llm" },
-  { id: "@ezchat/pro", label: "EZChat Pro", model_type: "llm" },
-  { id: "@ezchat/embedding", label: "EZChat Embedding", model_type: "text_embedding" },
-  { id: "@ezchat/reranking", label: "EZChat Reranking", model_type: "rerank" },
-] as const;
+export type ModelProfileId = string;
 
-export type ModelProfileId = (typeof MODEL_PROFILES)[number]["id"];
-
-const modelProfileIdSet = new Set<string>(MODEL_PROFILES.map((profile) => profile.id));
 const modelTypeSet = new Set<string>(MODEL_TYPES.map((type) => type.value));
 const modelProviderSet = new Set<string>(MODEL_PROVIDERS.map((provider) => provider.value));
 const modelProviderSdkSet = new Set<string>(MODEL_PROVIDER_SDKS);
 
 export function isModelProfileId(value: unknown): value is ModelProfileId {
-  return typeof value === "string" && modelProfileIdSet.has(value);
+  return typeof value === "string" && value.trim() === value && /^[A-Za-z0-9@][A-Za-z0-9._/@:-]{0,127}$/.test(value);
 }
 
 export function isModelType(value: unknown): value is ModelType {
@@ -142,5 +133,3 @@ export function modelProviderFor(value: unknown) {
 export const DEFAULT_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/lite";
 export const DEFAULT_EMBEDDING_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/embedding";
 export const DEFAULT_RERANKING_MODEL_PROFILE_ID: ModelProfileId = "@ezchat/reranking";
-
-export const CHAT_MODEL_PROFILES = MODEL_PROFILES.filter((profile) => profile.model_type === "llm");
