@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ModelProviderKind } from '@prisma/client';
 import OpenAI from 'openai';
+import { toPrismaJson } from '../common/json';
+import { PrismaService } from '../prisma/prisma.service';
 
 export interface ProviderConfig {
   baseUrl: string;
@@ -12,7 +15,10 @@ export interface ProviderConfig {
 
 @Injectable()
 export class ModelsService {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   getProviderConfig(): ProviderConfig {
     return {
@@ -87,12 +93,17 @@ export class ModelsService {
     };
   }
 
-  listProviders() {
+  async listProviders() {
     const provider = this.getProviderConfig();
-    return [
+    const databaseProviders = await this.prisma.modelProvider.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: { modelConfigs: true },
+    });
+    const envProviders = [
       {
         id: 'env-llm',
         name: 'OpenAI-compatible Chat',
+        provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
         kind: 'llm',
@@ -102,6 +113,7 @@ export class ModelsService {
       {
         id: 'env-embedding',
         name: 'OpenAI-compatible Embedding',
+        provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
         kind: 'embedding',
@@ -111,6 +123,7 @@ export class ModelsService {
       {
         id: 'env-rerank',
         name: 'Optional Reranker',
+        provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
         kind: 'rerank',
@@ -118,5 +131,47 @@ export class ModelsService {
         enabled: Boolean(provider.rerankModel),
       },
     ];
+    return [...databaseProviders, ...envProviders];
+  }
+
+  createProvider(input: {
+    name: string;
+    provider?: string;
+    baseUrl: string;
+    apiKeyRef?: string;
+    kind: ModelProviderKind;
+    model: string;
+    enabled?: boolean;
+    config?: Record<string, unknown>;
+  }) {
+    return this.prisma.modelProvider.create({
+      data: {
+        name: input.name,
+        provider: input.provider ?? 'openai-compatible',
+        baseUrl: input.baseUrl,
+        apiKeyRef: input.apiKeyRef ?? '',
+        kind: input.kind,
+        model: input.model,
+        enabled: input.enabled ?? true,
+        config: toPrismaJson(input.config ?? {}),
+      },
+      include: { modelConfigs: true },
+    });
+  }
+
+  createModelConfig(
+    providerId: string,
+    input: { name: string; kind: ModelProviderKind; model: string; parameters?: Record<string, unknown>; enabled?: boolean },
+  ) {
+    return this.prisma.modelConfig.create({
+      data: {
+        providerId,
+        name: input.name,
+        kind: input.kind,
+        model: input.model,
+        parameters: toPrismaJson(input.parameters ?? {}),
+        enabled: input.enabled ?? true,
+      },
+    });
   }
 }

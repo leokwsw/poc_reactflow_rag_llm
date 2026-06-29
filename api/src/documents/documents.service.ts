@@ -24,6 +24,9 @@ export class DocumentsService {
         title: dto.title,
         content: dto.content,
         sourceType: dto.sourceType ?? 'text',
+        sourceUri: dto.sourceUri,
+        mimeType: dto.mimeType,
+        collectionId: dto.collectionId,
         metadata: toPrismaJson(dto.metadata ?? {}),
       },
     });
@@ -32,7 +35,7 @@ export class DocumentsService {
   list() {
     return this.prisma.document.findMany({
       orderBy: { updatedAt: 'desc' },
-      include: { chunks: { select: { id: true } } },
+      include: { collection: true, chunks: { select: { id: true } } },
     });
   }
 

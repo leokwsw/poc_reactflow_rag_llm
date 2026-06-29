@@ -32,6 +32,7 @@ import {
   Maximize,
   MoreHorizontal,
   PanelRightClose,
+  Plug,
   Play,
   Plus,
   Redo2,
@@ -50,7 +51,7 @@ import { api, type RagMode } from '@/lib/api';
 type StudioNodeData = {
   title: string;
   subtitle?: string;
-  icon: 'input' | 'docs' | 'graph' | 'rerank' | 'llm' | 'output';
+  icon: 'input' | 'docs' | 'graph' | 'rerank' | 'llm' | 'output' | 'http' | 'tool';
   accent: 'green' | 'purple' | 'blue' | 'orange';
   rows: Array<{ label: string; value: string }>;
 };
@@ -64,6 +65,8 @@ const iconMap = {
   rerank: Boxes,
   llm: Sparkles,
   output: Braces,
+  http: Plug,
+  tool: Workflow,
 };
 
 function StudioNodeCard({ data, selected }: NodeProps<StudioFlowNode>) {
@@ -118,12 +121,12 @@ const initialNodes: StudioFlowNode[] = [
     type: 'studio',
     position: { x: 265, y: 88 },
     data: {
-      title: 'Document Retriever',
+      title: 'Knowledge Base',
       icon: 'docs',
       accent: 'purple',
       rows: [
-        { label: 'Vector Store', value: 'docs' },
-        { label: 'enterprise_docs', value: '' },
+        { label: 'Collection', value: 'enterprise_docs' },
+        { label: 'Search + Rerank', value: 'hybrid' },
       ],
     },
   },
@@ -165,7 +168,35 @@ const initialNodes: StudioFlowNode[] = [
       accent: 'purple',
       rows: [
         { label: 'Model', value: 'response' },
-        { label: 'gpt-4o-mini', value: '' },
+        { label: 'gpt-4o-mini', value: 'MCP tools' },
+      ],
+    },
+  },
+  {
+    id: 'httpCall',
+    type: 'studio',
+    position: { x: 850, y: 335 },
+    data: {
+      title: 'HTTP Call',
+      icon: 'http',
+      accent: 'blue',
+      rows: [
+        { label: 'Method', value: 'POST' },
+        { label: 'Endpoint', value: '/tickets' },
+      ],
+    },
+  },
+  {
+    id: 'customTool',
+    type: 'studio',
+    position: { x: 1095, y: 335 },
+    data: {
+      title: 'Custom Tool',
+      icon: 'tool',
+      accent: 'orange',
+      rows: [
+        { label: 'OpenAPI', value: 'Ops API' },
+        { label: 'Operation', value: 'listTickets' },
       ],
     },
   },
@@ -189,6 +220,9 @@ const initialEdges: Edge[] = [
   { id: 'e-graph-rerank', source: 'graphRetriever', target: 'reranker' },
   { id: 'e-rerank-llm', source: 'reranker', target: 'llm' },
   { id: 'e-llm-output', source: 'llm', target: 'output' },
+  { id: 'e-llm-http', source: 'llm', target: 'httpCall' },
+  { id: 'e-http-tool', source: 'httpCall', target: 'customTool' },
+  { id: 'e-tool-output', source: 'customTool', target: 'output' },
 ].map((edge) => ({
   ...edge,
   type: 'smoothstep',
@@ -198,10 +232,12 @@ const initialEdges: Edge[] = [
 
 const traceSteps = [
   { id: 'input', label: 'Input', time: '124ms', tone: 'green' },
-  { id: 'documentRetriever', label: 'Document Retriever', time: '532ms', tone: 'green' },
+  { id: 'documentRetriever', label: 'Knowledge Base', time: '532ms', tone: 'green' },
   { id: 'graphRetriever', label: 'Graph Retriever', time: '412ms', tone: 'blue' },
   { id: 'reranker', label: 'Reranker', time: '610ms', tone: 'orange' },
   { id: 'llm', label: 'LLM', time: '512ms', tone: 'purple' },
+  { id: 'httpCall', label: 'HTTP Call', time: '220ms', tone: 'blue' },
+  { id: 'customTool', label: 'Custom Tool', time: '180ms', tone: 'orange' },
   { id: 'output', label: 'Output', time: '140ms', tone: 'green' },
 ];
 

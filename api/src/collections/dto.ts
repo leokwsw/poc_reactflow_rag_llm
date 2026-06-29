@@ -1,17 +1,29 @@
 import { IsObject, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class CreateDocumentDto {
+export class CreateCollectionDto {
+  @IsString()
+  @MinLength(1)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, unknown>;
+}
+
+export class AddCollectionDocumentDto {
   @IsString()
   @MinLength(1)
   title!: string;
 
   @IsString()
-  @MinLength(1)
   content!: string;
 
-  @IsOptional()
   @IsString()
-  sourceType?: string;
+  sourceType!: string;
 
   @IsOptional()
   @IsString()
@@ -20,10 +32,6 @@ export class CreateDocumentDto {
   @IsOptional()
   @IsString()
   mimeType?: string;
-
-  @IsOptional()
-  @IsString()
-  collectionId?: string;
 
   @IsOptional()
   @IsObject()

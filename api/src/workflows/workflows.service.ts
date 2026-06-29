@@ -52,17 +52,44 @@ export class WorkflowsService {
     });
   }
 
-  async run(id: string, dto: RunWorkflowDto) {
+  async run(id: string, dto: RunWorkflowDto, context?: { conversationId?: string; messageId?: string }) {
     const workflow = await this.get(id);
     const run = await this.prisma.workflowRun.create({
       data: {
         workflowId: workflow.id,
+        conversationId: context?.conversationId,
+        messageId: context?.messageId,
         input: toPrismaJson(dto.input),
         status: WorkflowRunStatus.running,
       },
     });
 
     try {
+      await this.prisma.workflowLog.create({
+        data: {
+          runId: run.id,
+          level: 'info',
+          message: 'Workflow run started',
+          data: toPrismaJson({ workflowId: id, conversationId: context?.conversationId }),
+        },
+      });
+
+      const nodes = Array.isArray(workflow.nodes) ? workflow.nodes : [];
+      for (const node of nodes as Array<Record<string, unknown>>) {
+        await this.prisma.workflowNodeRun.create({
+          data: {
+            runId: run.id,
+            nodeId: String(node.id ?? 'unknown'),
+            nodeType: String(node.type ?? (node.data as Record<string, unknown> | undefined)?.type ?? 'unknown'),
+            label: String((node.data as Record<string, unknown> | undefined)?.label ?? node.id ?? 'Node'),
+            input: toPrismaJson({ query: dto.input.query ?? '' }),
+            status: WorkflowRunStatus.completed,
+            output: toPrismaJson({ simulated: true }),
+            finishedAt: new Date(),
+          },
+        });
+      }
+
       const output = await this.rag.query({
         query: dto.input.query ?? '',
         mode: dto.input.mode ?? 'hybrid',

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Database, FileText, GitBranch, Settings, Sparkles } from 'lucide-react';
+import { Bot, Braces, Database, FileText, GitBranch, Plug, Settings, Sparkles } from 'lucide-react';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -9,10 +9,13 @@ export const metadata: Metadata = {
 };
 
 const navItems = [
+  { href: '/chats', label: 'Chats', icon: Bot },
   { href: '/studio', label: 'Studio', icon: GitBranch },
-  { href: '/documents', label: 'Documents', icon: FileText },
+  { href: '/collections', label: 'Collections', icon: FileText },
   { href: '/playground', label: 'Playground', icon: Sparkles },
   { href: '/settings/models', label: 'Models', icon: Database },
+  { href: '/mcp', label: 'MCP', icon: Plug },
+  { href: '/tools', label: 'Tools', icon: Braces },
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

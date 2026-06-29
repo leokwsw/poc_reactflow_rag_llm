@@ -27,16 +27,55 @@ enum WorkflowRunStatus {
   failed
 }
 
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum IngestionJobStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum CustomToolAuthType {
+  none
+  apiKey
+  bearer
+  basic
+}
+
+model Collection {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  metadata    Json           @default("{}")
+  documents   Document[]
+  workflows   Workflow[]
+  jobs        IngestionJob[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
 model Document {
   id         String         @id @default(cuid())
+  collectionId String?
+  collection Collection?    @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   title      String
   sourceType String
+  sourceUri  String?
+  mimeType   String?
   status     DocumentStatus @default(DRAFT)
   content    String
   metadata   Json           @default("{}")
   chunks     Chunk[]
+  jobs       IngestionJob[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+
+  @@index([collectionId])
 }
 
 model Chunk {
@@ -55,36 +94,203 @@ model Chunk {
 model ModelProvider {
   id        String            @id @default(cuid())
   name      String
+  provider  String            @default("openai-compatible")
   baseUrl   String
   apiKeyRef String
   kind      ModelProviderKind
   model     String
+  config    Json              @default("{}")
   enabled   Boolean           @default(true)
+  modelConfigs ModelConfig[]
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
 
+model ModelConfig {
+  id         String            @id @default(cuid())
+  providerId String
+  provider   ModelProvider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name       String
+  kind       ModelProviderKind
+  model      String
+  parameters Json              @default("{}")
+  enabled    Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([providerId])
+}
+
 model Workflow {
   id          String        @id @default(cuid())
+  collectionId String?
+  collection  Collection?   @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   name        String
   description String?
   nodes       Json
   edges       Json
+  settings    Json          @default("{}")
+  conversations Conversation[]
   runs        WorkflowRun[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  @@index([collectionId])
 }
 
 model WorkflowRun {
   id         String            @id @default(cuid())
   workflowId String
   workflow   Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  messageId  String?
+  message    Message?          @relation(fields: [messageId], references: [id], onDelete: SetNull)
   input      Json
   output     Json?
   status     WorkflowRunStatus @default(queued)
   trace      Json?
+  nodeRuns   WorkflowNodeRun[]
+  logs       WorkflowLog[]
   startedAt  DateTime          @default(now())
   finishedAt DateTime?
 
   @@index([workflowId])
+  @@index([conversationId])
+  @@index([messageId])
+}
+
+model WorkflowNodeRun {
+  id        String            @id @default(cuid())
+  runId     String
+  run       WorkflowRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId    String
+  nodeType  String
+  label     String?
+  input     Json              @default("{}")
+  output    Json?
+  status    WorkflowRunStatus @default(queued)
+  error     String?
+  startedAt DateTime          @default(now())
+  finishedAt DateTime?
+
+  @@index([runId])
+  @@index([nodeId])
+}
+
+model WorkflowLog {
+  id        String      @id @default(cuid())
+  runId     String
+  run       WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId    String?
+  level     String      @default("info")
+  message   String
+  data      Json        @default("{}")
+  createdAt DateTime    @default(now())
+
+  @@index([runId])
+  @@index([nodeId])
+}
+
+model Conversation {
+  id          String        @id @default(cuid())
+  workflowId  String
+  workflow    Workflow      @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  title       String
+  metadata    Json          @default("{}")
+  messages    Message[]
+  runs        WorkflowRun[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([workflowId])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  metadata       Json          @default("{}")
+  workflowRuns   WorkflowRun[]
+  createdAt      DateTime      @default(now())
+
+  @@index([conversationId])
+}
+
+model IngestionJob {
+  id           String             @id @default(cuid())
+  collectionId String?
+  collection   Collection?        @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  documentId   String?
+  document     Document?          @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  sourceType   String
+  sourceUri    String?
+  status       IngestionJobStatus @default(queued)
+  error        String?
+  stats        Json               @default("{}")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  finishedAt   DateTime?
+
+  @@index([collectionId])
+  @@index([documentId])
+}
+
+model McpServer {
+  id          String    @id @default(cuid())
+  name        String
+  identifier  String    @unique
+  serverUrl   String
+  headers     Json      @default("{}")
+  enabled     Boolean   @default(true)
+  tools       McpTool[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model McpTool {
+  id          String    @id @default(cuid())
+  serverId    String
+  server      McpServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  inputSchema Json      @default("{}")
+  enabled     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([serverId, name])
+  @@index([serverId])
+}
+
+model CustomTool {
+  id          String             @id @default(cuid())
+  name        String
+  description String?
+  baseUrl     String?
+  authType    CustomToolAuthType @default(none)
+  authConfig  Json               @default("{}")
+  openapiSpec Json
+  operations  CustomToolOperation[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model CustomToolOperation {
+  id          String     @id @default(cuid())
+  toolId      String
+  tool        CustomTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  operationId String
+  method      String
+  path        String
+  summary     String?
+  schema      Json       @default("{}")
+  enabled     Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([toolId, operationId])
+  @@index([toolId])
 }

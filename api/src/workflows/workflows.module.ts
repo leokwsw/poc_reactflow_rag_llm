@@ -7,5 +7,6 @@ import { WorkflowsService } from './workflows.service';
   imports: [RagModule],
   controllers: [WorkflowsController],
   providers: [WorkflowsService],
+  exports: [WorkflowsService],
 })
 export class WorkflowsModule {}

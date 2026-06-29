@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ChatModule } from './chat/chat.module';
+import { CollectionsModule } from './collections/collections.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { CustomToolsModule } from './custom-tools/custom-tools.module';
 import { DocumentsModule } from './documents/documents.module';
 import { EmbeddingsModule } from './embeddings/embeddings.module';
 import { GraphModule } from './graph/graph.module';
+import { McpModule } from './mcp/mcp.module';
 import { ModelsModule } from './models/models.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RagModule } from './rag/rag.module';
@@ -22,9 +26,13 @@ import { envFilePaths } from './config/env';
     EmbeddingsModule,
     SearchModule,
     GraphModule,
+    CollectionsModule,
     DocumentsModule,
     RagModule,
     WorkflowsModule,
+    ConversationsModule,
+    McpModule,
+    CustomToolsModule,
     ChatModule,
   ],
 })

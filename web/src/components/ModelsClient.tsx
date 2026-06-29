@@ -16,6 +16,12 @@ type Provider = {
 export function ModelsClient() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [testResult, setTestResult] = useState<unknown>();
+  const [name, setName] = useState('OpenRouter Chat');
+  const [provider, setProvider] = useState('openrouter');
+  const [baseUrl, setBaseUrl] = useState('https://openrouter.ai/api/v1');
+  const [apiKeyRef, setApiKeyRef] = useState('OPENROUTER_API_KEY');
+  const [kind, setKind] = useState<'llm' | 'embedding' | 'rerank'>('llm');
+  const [model, setModel] = useState('openai/gpt-4o-mini');
 
   const refresh = async () => {
     setProviders(await api.listProviders());
@@ -27,6 +33,11 @@ export function ModelsClient() {
 
   const test = async () => {
     setTestResult(await api.testProvider());
+  };
+
+  const create = async () => {
+    await api.createProvider({ name, provider, baseUrl, apiKeyRef, kind, model });
+    await refresh();
   };
 
   return (
@@ -66,6 +77,47 @@ export function ModelsClient() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2 className="panel-title">Create Provider</h2>
+          <button className="button primary" onClick={create}>Create</button>
+        </div>
+        <div className="panel-body form-grid">
+          <div className="field">
+            <label>Name</label>
+            <input className="input" value={name} onChange={(event) => setName(event.target.value)} />
+          </div>
+          <div className="field">
+            <label>Provider</label>
+            <select className="select" value={provider} onChange={(event) => setProvider(event.target.value)}>
+              {['openai', 'grok', 'openrouter', 'xiaomi', 'alibaba', 'ollama', 'lm-studio', 'openai-compatible'].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>Kind</label>
+            <select className="select" value={kind} onChange={(event) => setKind(event.target.value as 'llm' | 'embedding' | 'rerank')}>
+              <option value="llm">LLM</option>
+              <option value="embedding">Embedding</option>
+              <option value="rerank">Reranking</option>
+            </select>
+          </div>
+          <div className="field">
+            <label>Base URL</label>
+            <input className="input" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
+          </div>
+          <div className="field">
+            <label>API Key Ref</label>
+            <input className="input" value={apiKeyRef} onChange={(event) => setApiKeyRef(event.target.value)} />
+          </div>
+          <div className="field">
+            <label>Model</label>
+            <input className="input" value={model} onChange={(event) => setModel(event.target.value)} />
+          </div>
         </div>
       </section>
 
