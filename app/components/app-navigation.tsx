@@ -7,7 +7,6 @@ const navItems = [
   {href: "/workflow", label: "Workflow"},
   {href: "/datasets", label: "Datasets"},
   {href: "/tools", label: "Tools"},
-  {href: "/templates", label: "Templates"},
   {href: "/playground", label: "Playground"},
   {href: "/model", label: "Model"},
   {href: "/mcp", label: "MCP"},

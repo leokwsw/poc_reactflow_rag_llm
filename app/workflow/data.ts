@@ -233,37 +233,6 @@ export const createWorkflow = async (title?: string) => {
   return workflow;
 };
 
-export const createWorkflowFromTemplate = async (input: {
-  title: string;
-  description: string;
-  graph: WorkflowDataType;
-}) => {
-  await ensureWorkflowSchema();
-  const timestamp = new Date().toISOString();
-  const workflow: WorkflowRecord = {
-    id: `workflow-${randomUUID()}`,
-    title: input.title.trim() || "Untitled Workflow",
-    description: input.description,
-    graph: sanitizeWorkflowGraph(input.graph),
-    created_at: timestamp,
-    updated_at: timestamp,
-  };
-  await dbQuery(
-    `INSERT INTO ${tableName("workflow_graphs")}
-       (id, title, description, graph, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [
-      workflow.id,
-      workflow.title,
-      workflow.description,
-      JSON.stringify(workflow.graph),
-      workflow.created_at,
-      workflow.updated_at,
-    ],
-  );
-  return workflow;
-};
-
 export const cloneWorkflow = async (workflowId: string) => {
   await ensureWorkflowSchema();
   const source = await getWorkflowById(workflowId);

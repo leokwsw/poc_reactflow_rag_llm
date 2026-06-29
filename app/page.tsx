@@ -63,7 +63,7 @@ const workflowNodes = [
 
 function FlowPreview() {
   return (
-    <div className="relative rounded-lg border border-zinc-200 bg-white p-4 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
+    <div className="relative w-full max-w-[520px] rounded-lg border border-zinc-200 bg-white p-4 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
       <div className="mb-4 flex items-center justify-between border-b border-zinc-100 pb-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">React Flow Canvas</p>
@@ -105,19 +105,19 @@ export default function HomePage() {
   return (
     <div className="bg-white text-zinc-950">
       <section className="border-b border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7faf9_100%)]">
-        <div className="mx-auto grid min-h-[calc(100vh-3.5rem)] max-w-7xl grid-cols-1 items-center gap-10 px-6 py-14 lg:grid-cols-[minmax(0,1fr)_520px] lg:py-20">
-          <div>
-            <h1 className="max-w-4xl text-4xl font-semibold leading-[1.05] tracking-normal text-zinc-950 sm:text-5xl lg:text-6xl">
+        <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-7xl flex-col items-center gap-10 px-6 py-14 min-[960px]:flex-row min-[960px]:justify-between min-[960px]:py-20">
+          <div className="w-full max-w-3xl min-[960px]:max-w-2xl">
+            <h1 className="text-4xl font-semibold leading-[1.05] tracking-normal text-zinc-950 sm:text-5xl min-[960px]:text-6xl">
               Build RAG workflows with visual AI orchestration.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">
               EZChat RAG Workflow is a Next.js production project for composing native RAG, hybrid RAG, graph RAG, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch retrieval, Neo4j and ArangoDB graph context, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800" href="/workflow">
+              <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800 sm:w-auto" href="/workflow">
                 Open Workflow
               </Link>
-              <Link className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50" href="/datasets">
+              <Link className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 sm:w-auto" href="/datasets">
                 Manage Datasets
               </Link>
             </div>
@@ -129,7 +129,9 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <FlowPreview />
+          <div className="flex w-full justify-center min-[960px]:w-[520px] min-[960px]:shrink-0">
+            <FlowPreview />
+          </div>
         </div>
       </section>
 
