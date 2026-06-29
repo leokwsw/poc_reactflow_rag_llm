@@ -4,6 +4,7 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 
 const navItems = [
+  {href: "/chat", label: "Chat"},
   {href: "/workflow", label: "Workflow"},
   {href: "/datasets", label: "Datasets"},
   {href: "/tools", label: "Tools"},

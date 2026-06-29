@@ -211,10 +211,10 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
+              {href: "/chat", label: "Chat"},
               {href: "/workflow", label: "Workflow"},
               {href: "/datasets", label: "Datasets"},
               {href: "/tools", label: "Tools"},
-              {href: "/model", label: "Models"},
             ].map((item) => (
               <Link key={item.href} className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10" href={item.href}>
                 {item.label}

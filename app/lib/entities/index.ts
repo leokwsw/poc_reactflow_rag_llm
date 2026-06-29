@@ -4,6 +4,8 @@ import {DatasetTaskEntity} from "@/app/lib/entities/dataset-task.entity";
 import {DatasetEntity} from "@/app/lib/entities/dataset.entity";
 import {DocumentChunkEntity} from "@/app/lib/entities/document-chunk.entity";
 import {EmbeddingEntity} from "@/app/lib/entities/embedding.entity";
+import {ConversationEntity} from "@/app/lib/entities/conversation.entity";
+import {ConversationMessageEntity} from "@/app/lib/entities/conversation-message.entity";
 import {McpServerEntity} from "@/app/lib/entities/mcp-server.entity";
 import {ModelConfigEntity} from "@/app/lib/entities/model-config.entity";
 import {WorkflowGraphEntity} from "@/app/lib/entities/workflow-graph.entity";
@@ -14,6 +16,8 @@ export {DatasetTaskEntity} from "@/app/lib/entities/dataset-task.entity";
 export {DatasetEntity} from "@/app/lib/entities/dataset.entity";
 export {DocumentChunkEntity} from "@/app/lib/entities/document-chunk.entity";
 export {EmbeddingEntity} from "@/app/lib/entities/embedding.entity";
+export {ConversationEntity} from "@/app/lib/entities/conversation.entity";
+export {ConversationMessageEntity} from "@/app/lib/entities/conversation-message.entity";
 export {McpServerEntity} from "@/app/lib/entities/mcp-server.entity";
 export {ModelConfigEntity} from "@/app/lib/entities/model-config.entity";
 export {WorkflowGraphEntity} from "@/app/lib/entities/workflow-graph.entity";
@@ -25,6 +29,8 @@ export const typeormEntities: NonNullable<DataSourceOptions["entities"]> = [
   DocumentChunkEntity,
   DatasetTaskEntity,
   EmbeddingEntity,
+  ConversationEntity,
+  ConversationMessageEntity,
   WorkflowGraphEntity,
   WorkflowRunEntity,
   McpServerEntity,

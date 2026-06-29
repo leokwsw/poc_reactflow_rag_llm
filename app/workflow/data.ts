@@ -307,6 +307,15 @@ export const listWorkflowRuns = async (workflowId: string, limit = 20) => {
   return rows.map(runFromRow);
 };
 
+export const getWorkflowRunById = async (runId: string) => {
+  await ensureWorkflowSchema();
+  const {rows} = await dbQuery(
+    `SELECT * FROM ${tableName("workflow_runs")} WHERE id = $1`,
+    [runId],
+  );
+  return rows[0] ? runFromRow(rows[0]) : undefined;
+};
+
 export const saveWorkflowRun = async (run: {
   workflow_id: string;
   status: WorkflowRunRecord["status"];
