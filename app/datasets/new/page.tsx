@@ -30,6 +30,14 @@ export type UploadFileRef = {
   mime: string;
 };
 
+type ModelOption = {
+  id: string;
+  label: string;
+  model_type: string;
+  provider?: string;
+  model?: string;
+};
+
 
 export default function NewDatasetPage() {
   const router = useRouter();
@@ -41,6 +49,11 @@ export default function NewDatasetPage() {
   const [chunkSizeWords, setChunkSizeWords] = useState(1024);
   const [overlapWords, setOverlapWords] = useState(50);
 
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [embeddingModelId, setEmbeddingModelId] = useState(DEFAULT_EMBEDDING_MODEL_PROFILE_ID);
+  const [rerankingModelId, setRerankingModelId] = useState(DEFAULT_RERANKING_MODEL_PROFILE_ID);
   const [rerankTopK, setRerankTopK] = useState(3);
   const [rerankScore, setRerankScore] = useState(0.5);
 
@@ -55,6 +68,9 @@ export default function NewDatasetPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragDepthRef = useRef(0);
 
+  const embeddingModels = models.filter((model) => model.model_type === "text_embedding");
+  const rerankingModels = models.filter((model) => model.model_type === "rerank");
+
   useEffect(() => {
     if (step !== 3 || !redirectUrl) return;
     const id = window.setTimeout(() => {
@@ -62,6 +78,54 @@ export default function NewDatasetPage() {
     }, 3000);
     return () => window.clearTimeout(id);
   }, [step, redirectUrl, router]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadModels = async () => {
+      setModelsLoading(true);
+      setModelsError(null);
+      try {
+        const res = await fetch("/api/models", {
+          headers: {Accept: "application/json"},
+          signal: controller.signal,
+        });
+        const payload = (await res.json().catch(() => ({}))) as {models?: ModelOption[]; error?: string};
+
+        if (!res.ok) {
+          throw new Error(payload.error ?? `Could not load models (${res.status}).`);
+        }
+
+        const nextModels = Array.isArray(payload.models) ? payload.models : [];
+        setModels(nextModels);
+
+        const nextEmbeddingModels = nextModels.filter((model) => model.model_type === "text_embedding");
+        const nextRerankingModels = nextModels.filter((model) => model.model_type === "rerank");
+
+        setEmbeddingModelId((current) =>
+          nextEmbeddingModels.some((model) => model.id === current)
+            ? current
+            : nextEmbeddingModels[0]?.id ?? DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
+        );
+        setRerankingModelId((current) =>
+          nextRerankingModels.some((model) => model.id === current)
+            ? current
+            : nextRerankingModels[0]?.id ?? DEFAULT_RERANKING_MODEL_PROFILE_ID,
+        );
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setModelsError(err instanceof Error ? err.message : "Could not load models.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setModelsLoading(false);
+        }
+      }
+    };
+
+    void loadModels();
+
+    return () => controller.abort();
+  }, []);
 
   const mergeIncoming = useCallback((incoming: File[]) => {
     let skippedInvalid = 0;
@@ -165,6 +229,18 @@ export default function NewDatasetPage() {
       setError("Overlap must be at least 0 and smaller than chunk size.");
       return;
     }
+    if (modelsLoading) {
+      setError("Model profiles are still loading.");
+      return;
+    }
+    if (!embeddingModels.some((model) => model.id === embeddingModelId)) {
+      setError("Select a text embedding model profile from the Model page before starting ingestion.");
+      return;
+    }
+    if (!rerankingModels.some((model) => model.id === rerankingModelId)) {
+      setError("Select a rerank model profile from the Model page before starting ingestion.");
+      return;
+    }
 
     setBusy(true);
     const stagedFiles: UploadFileRef[] = [];
@@ -211,10 +287,10 @@ export default function NewDatasetPage() {
           files: stagedFiles,
           chunk_config: {chunk_size_words: cs, overlap_words: ov},
           embedding_config: {
-            model: DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
+            model: embeddingModelId,
           },
           reranking_config: {
-            model: DEFAULT_RERANKING_MODEL_PROFILE_ID,
+            model: rerankingModelId,
             top_k: Math.max(1, Math.floor(Number(rerankTopK))),
             score: Math.min(1, Math.max(0, Number(rerankScore))),
           },
@@ -423,20 +499,59 @@ export default function NewDatasetPage() {
 
               <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
                 <legend className="px-1 text-sm font-semibold text-zinc-800">Embedding</legend>
-                <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
-                  <p className="text-xs font-medium text-zinc-500">Central profile</p>
-                  <p className="mt-1 text-sm font-semibold text-zinc-900">{DEFAULT_EMBEDDING_MODEL_PROFILE_ID}</p>
-                </div>
-                <p className="text-xs text-zinc-500">Configure API base URL, key, and provider model in the Model page.</p>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">Model profile</span>
+                  <select
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
+                    disabled={busy || modelsLoading || embeddingModels.length === 0}
+                    value={embeddingModelId}
+                    onChange={(e) => setEmbeddingModelId(e.target.value)}
+                  >
+                    {embeddingModels.length > 0 ? (
+                      embeddingModels.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.label || model.id} · {model.id}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={DEFAULT_EMBEDDING_MODEL_PROFILE_ID}>
+                        {modelsLoading ? "Loading embedding models..." : "No text embedding model profiles"}
+                      </option>
+                    )}
+                  </select>
+                </label>
+                <p className="text-xs text-zinc-500">
+                  Loaded from Model List API. Configure API base URL, key, and provider model in the Model page.
+                </p>
               </fieldset>
 
               <fieldset className="grid gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
                 <legend className="px-1 text-sm font-semibold text-zinc-800">Reranking</legend>
-                <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2">
-                  <p className="text-xs font-medium text-zinc-500">Central profile</p>
-                  <p className="mt-1 text-sm font-semibold text-zinc-900">{DEFAULT_RERANKING_MODEL_PROFILE_ID}</p>
-                </div>
-                <p className="text-xs text-zinc-500">Configure API base URL, key, and provider model in the Model page.</p>
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-zinc-700">Model profile</span>
+                  <select
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
+                    disabled={busy || modelsLoading || rerankingModels.length === 0}
+                    value={rerankingModelId}
+                    onChange={(e) => setRerankingModelId(e.target.value)}
+                  >
+                    {rerankingModels.length > 0 ? (
+                      rerankingModels.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.label || model.id} · {model.id}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={DEFAULT_RERANKING_MODEL_PROFILE_ID}>
+                        {modelsLoading ? "Loading reranking models..." : "No rerank model profiles"}
+                      </option>
+                    )}
+                  </select>
+                </label>
+                <p className="text-xs text-zinc-500">
+                  Loaded from Model List API. Configure API base URL, key, and provider model in the Model page.
+                </p>
+                {modelsError ? <p className="text-xs text-amber-700">{modelsError}</p> : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-1.5">
                     <span className="text-xs font-medium text-zinc-700">Top K</span>
