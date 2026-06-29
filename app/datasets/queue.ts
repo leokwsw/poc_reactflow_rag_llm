@@ -8,7 +8,6 @@ import {
   getDocumentById,
   insertTask,
   ModelConfig,
-  readJsonFile,
   readTasks,
   updateDocumentRecord,
   updateTaskRecord,
@@ -73,11 +72,11 @@ const processTask = async (taskId: string) => {
   await updateTaskRecord(task.id, {status: "processing"});
 
   try {
-    const fallbackConfig = readJsonFile<ModelConfig>("model-base.json", {
+    const fallbackConfig: ModelConfig = {
       api_base_url: "",
       api_key: "",
       model: "local-deterministic",
-    });
+    };
     const dataset = await getDatasetById(task.dataset_id);
     const embeddingConfig = dataset?.embedding_config ?? fallbackConfig;
     const chunkSize = dataset?.chunk_config?.chunk_size ?? 1024;

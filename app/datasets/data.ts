@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 import {dbQuery, withDbTransaction} from "@/app/lib/typeorm-query";
 import {
@@ -67,18 +66,6 @@ export type DocumentChunk = {
   enabled: boolean;
 };
 
-type DatasetsJson = {
-  datasets: Dataset[];
-};
-
-type DocumentsJson = {
-  documents: DatasetDocument[];
-};
-
-type ChunksJson = {
-  chunks: DocumentChunk[];
-};
-
 export type DatasetTask = {
   id: string;
   dataset_id: string;
@@ -99,14 +86,6 @@ export type EmbeddingRecord = {
   provider: "api" | "local";
   elasticsearch_saved: boolean;
   created_at: string;
-};
-
-type TasksJson = {
-  tasks: DatasetTask[];
-};
-
-type EmbeddingsJson = {
-  embeddings: EmbeddingRecord[];
 };
 
 const normalizeDatasetModelConfig = (value: unknown, fallbackModel: string): ModelConfig => {
@@ -131,15 +110,6 @@ export const dataPath = (...segments: string[]) => path.join(process.cwd(), "dat
 
 export const documentGridColumns = "minmax(360px, 1fr) 120px 120px 150px 120px";
 export const chunkGridColumns = "90px minmax(520px, 1fr) 160px 180px";
-
-export const readJsonFile = <T,>(fileName: string, fallback: T): T => {
-  const filePath = dataPath(fileName);
-  if (!fs.existsSync(filePath)) {
-    return fallback;
-  }
-
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-};
 
 let schemaReady: Promise<void> | null = null;
 
@@ -223,99 +193,6 @@ const taskFromRow = (row: Record<string, unknown>): DatasetTask => ({
   updated_at: toIso(row.updated_at),
 });
 
-const migrateJsonIfEmpty = async () => {
-  const {rows} = await dbQuery<{count: string}>(`SELECT COUNT(*)::text AS count FROM ${tableName("datasets")}`);
-  if (Number(rows[0]?.count ?? 0) > 0) return;
-
-  const datasets = readJsonFile<DatasetsJson>("0-datasets.json", {datasets: []}).datasets;
-  const documents = readJsonFile<DocumentsJson>("1-documents.json", {documents: []}).documents;
-  const chunks = readJsonFile<ChunksJson>("2-chunk.json", {chunks: []}).chunks;
-  const tasks = readJsonFile<TasksJson>("3-tasks.json", {tasks: []}).tasks;
-  const embeddings = readJsonFile<EmbeddingsJson>("4-embeddings.json", {embeddings: []}).embeddings;
-
-  await withDbTransaction(async (client) => {
-    for (const dataset of datasets) {
-      await client.query(
-        `INSERT INTO ${tableName("datasets")}
-          (id, title, description, created_at, updated_at, embedding_config, reranking_config, chunk_config, language_hint, separators, keep_separators)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-         ON CONFLICT (id) DO NOTHING`,
-        [
-          dataset.id,
-          dataset.title,
-          dataset.description,
-          dataset.created_at,
-          dataset.updated_at,
-          JSON.stringify(normalizeDatasetModelConfig(dataset.embedding_config, DEFAULT_EMBEDDING_MODEL_PROFILE_ID)),
-          JSON.stringify(normalizeDatasetRerankingConfig(dataset.reranking_config)),
-          JSON.stringify(dataset.chunk_config),
-          dataset.language_hint ?? "chinese",
-          dataset.separators ?? "\n\n",
-          dataset.keep_separators ?? true,
-        ],
-      );
-    }
-    for (const document of documents) {
-      await client.query(
-        `INSERT INTO ${tableName("documents")}
-          (id, file_name, dataset_id, file_size, created_at, updated_time, uploaded_time, deleted, deleted_at, upload_source, mime_type, ext, storage_page, status, enabled)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-         ON CONFLICT (id) DO NOTHING`,
-        [
-          document.id,
-          document.file_name,
-          document.dataset_id,
-          document.file_size,
-          document.created_at,
-          document.updated_time,
-          document.uploaded_time,
-          document.deleted,
-          document.deleted_at || null,
-          document.upload_source,
-          document.mime_type,
-          document.ext,
-          document.storage_page,
-          document.status,
-          document.enabled,
-        ],
-      );
-    }
-    for (const chunk of chunks) {
-      await client.query(
-        `INSERT INTO ${tableName("chunks")} (id, file_id, text, position, metadata, es_document_id, enabled)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (id) DO UPDATE SET text = EXCLUDED.text, metadata = EXCLUDED.metadata, es_document_id = EXCLUDED.es_document_id`,
-        [chunk.id, chunk.file_id, chunk.text, chunk.position, JSON.stringify(chunk.metadata), chunk.es_document_id, chunk.enabled],
-      );
-    }
-    for (const task of tasks) {
-      await client.query(
-        `INSERT INTO ${tableName("tasks")} (id, dataset_id, document_ids, file_paths, status, error, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (id) DO NOTHING`,
-        [task.id, task.dataset_id, task.document_ids, task.file_paths, task.status, task.error ?? null, task.created_at, task.updated_at],
-      );
-    }
-    for (const embedding of embeddings) {
-      await client.query(
-        `INSERT INTO ${tableName("embeddings")} (id, chunk_id, dataset_id, file_id, vector, provider, elasticsearch_saved, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (id) DO UPDATE SET vector = EXCLUDED.vector, elasticsearch_saved = EXCLUDED.elasticsearch_saved`,
-        [
-          embedding.id,
-          embedding.chunk_id,
-          embedding.dataset_id,
-          embedding.file_id,
-          JSON.stringify(embedding.vector),
-          embedding.provider,
-          embedding.elasticsearch_saved,
-          embedding.created_at,
-        ],
-      );
-    }
-  });
-};
-
 export const ensureDatasetSchema = async () => {
   schemaReady ??= (async () => {
     await dbQuery(`CREATE SCHEMA IF NOT EXISTS ${postgresSchema}`);
@@ -384,7 +261,6 @@ export const ensureDatasetSchema = async () => {
       CREATE INDEX IF NOT EXISTS embeddings_chunk_id_idx ON ${tableName("embeddings")}(chunk_id);
       CREATE INDEX IF NOT EXISTS embeddings_dataset_id_idx ON ${tableName("embeddings")}(dataset_id);
     `);
-    await migrateJsonIfEmpty();
   })();
 
   await schemaReady;

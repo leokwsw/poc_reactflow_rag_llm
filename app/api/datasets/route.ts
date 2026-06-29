@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {revalidatePath} from "next/cache";
 import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
-import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
+import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
 import {prepareDatasetSource, type DatasetSourceInput} from "@/app/lib/multimodal-sources";
 import {
@@ -35,15 +35,7 @@ const toSlug = (value: string) =>
 
 const badRequest = (message: string) => NextResponse.json({error: message}, {status: 400});
 
-const defaultModelBase = (): ModelConfig =>
-  readJsonFile<ModelConfig>("model-base.json", {
-    api_base_url: "",
-    api_key: "",
-    model: "local-deterministic",
-  });
-
 export const mergeModelConfig = (raw: unknown, fallbackModel = DEFAULT_EMBEDDING_MODEL_PROFILE_ID): ModelConfig => {
-  const base = defaultModelBase();
   if (!raw || typeof raw !== "object") {
     return {
       api_base_url: "",
@@ -55,7 +47,7 @@ export const mergeModelConfig = (raw: unknown, fallbackModel = DEFAULT_EMBEDDING
   return {
     api_base_url: "",
     api_key: "",
-    model: isModelProfileId(o.model) ? o.model : (isModelProfileId(base.model) ? base.model : fallbackModel),
+    model: isModelProfileId(o.model) ? o.model : fallbackModel,
   };
 };
 

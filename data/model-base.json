@@ -1,5 +1,0 @@
-{
-  "apiBaseUrl": "https://omlx-server.octopus-tech.com/v1",
-  "apiKey": "octopusPass",
-  "model": "gpt-oss-120b-MXFP4-Q8"
-}

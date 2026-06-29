@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import {randomUUID} from "node:crypto";
 import {dbQuery} from "@/app/lib/typeorm-query";
 import {defaultData} from "@/app/components/workflow/default-data";
@@ -32,14 +30,6 @@ export type WorkflowRunRecord = {
 };
 
 let schemaReady: Promise<void> | null = null;
-
-const dataPath = (...segments: string[]) => path.join(process.cwd(), "data", ...segments);
-
-const readJsonFile = <T,>(fileName: string, fallback: T): T => {
-  const filePath = dataPath(fileName);
-  if (!fs.existsSync(filePath)) return fallback;
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-};
 
 const quoteIdentifier = (value: string) => {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
@@ -104,7 +94,7 @@ const workflowFromRow = (row: Record<string, unknown>): WorkflowRecord => ({
   last_run_at: row.last_run_at ? toIso(row.last_run_at) : null,
 });
 
-const migrateJsonIfEmpty = async () => {
+const seedDefaultWorkflowIfEmpty = async () => {
   const {rows} = await dbQuery<{count: string}>(
     `SELECT COUNT(*)::text AS count FROM ${tableName("workflow_graphs")}`,
   );
@@ -120,34 +110,12 @@ const migrateJsonIfEmpty = async () => {
     [
       workflowId,
       "Default Workflow",
-      "Seeded from data/graph.json",
+      "Default starter workflow",
       JSON.stringify(sanitizeWorkflowGraph(defaultData)),
       timestamp,
       timestamp,
     ],
   );
-
-  const trace = readJsonFile<WorkflowTraceItem[]>("trace.json", []);
-  if (trace.length > 0) {
-    await dbQuery(
-      `INSERT INTO ${tableName("workflow_runs")}
-         (id, workflow_id, status, query, input, result, trace, error, created_at, finished_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT (id) DO NOTHING`,
-      [
-        "run-seed-trace",
-        workflowId,
-        "completed",
-        "",
-        JSON.stringify({source: "data/trace.json"}),
-        JSON.stringify({output: "", outputs: {}, trace}),
-        JSON.stringify(trace),
-        null,
-        timestamp,
-        timestamp,
-      ],
-    );
-  }
 };
 
 export const ensureWorkflowSchema = async () => {
@@ -177,7 +145,7 @@ export const ensureWorkflowSchema = async () => {
       CREATE INDEX IF NOT EXISTS workflow_runs_workflow_created_idx
         ON ${tableName("workflow_runs")}(workflow_id, created_at DESC);
     `);
-    await migrateJsonIfEmpty();
+    await seedDefaultWorkflowIfEmpty();
   })();
 
   await schemaReady;
