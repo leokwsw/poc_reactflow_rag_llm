@@ -330,6 +330,11 @@ export async function deleteTool(toolId: string) {
   await dbQuery(`DELETE FROM ${tableName} WHERE id = $1`, [toolId]);
 };
 
+export async function deleteToolsByImportId(importId: string) {
+  await ensureToolsSchema();
+  await dbQuery(`DELETE FROM ${tableName} WHERE openapi_import_id = $1`, [importId]);
+};
+
 const interpolate = (template: string, values: Record<string, unknown>) =>
   template.replace(/\{\{#\s*([^#}]+?)\s*#\}\}/g, (_, path: string) => {
     const parts = path.trim().split(".");

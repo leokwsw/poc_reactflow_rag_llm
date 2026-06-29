@@ -1,6 +1,7 @@
 import {getInputValue, interpolateTemplate} from "@/app/components/workflow/nodes/_base/execution-helpers";
 import type {NodeExecutionContext, NodeExecutionResult} from "@/app/components/workflow/nodes/execution-types";
 import {executeTool, getToolById} from "@/app/tools/data";
+import type {ToolRecord} from "@/app/tools/data";
 
 type InputMappingRow = {
   enabled?: boolean;
@@ -22,11 +23,22 @@ const renderMappingValue = (value: string | undefined, context: NodeExecutionCon
   return interpolateTemplate(raw, context);
 };
 
-function buildArgs(data: ToolNodeData, context: NodeExecutionContext) {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const allowedInputNames = (tool: ToolRecord) => {
+  const properties = isRecord(tool.input_schema?.properties) ? tool.input_schema.properties : {};
+  return new Set(Object.keys(properties));
+};
+
+function buildArgs(tool: ToolRecord, data: ToolNodeData, context: NodeExecutionContext) {
   const args: Record<string, unknown> = {};
+  const allowedNames = allowedInputNames(tool);
   for (const row of data.input_mapping ?? []) {
     if (row.enabled === false || !row.name?.trim()) continue;
-    args[row.name.trim()] = renderMappingValue(row.value, context);
+    const name = row.name.trim();
+    if (!allowedNames.has(name)) continue;
+    args[name] = renderMappingValue(row.value, context);
   }
   return args;
 }
@@ -43,7 +55,7 @@ export async function executeToolNode(context: NodeExecutionContext): Promise<No
     throw new Error(`Tool "${toolId}" was not found.`);
   }
 
-  const args = buildArgs(data, context);
+  const args = buildArgs(tool, data, context);
   const result = await executeTool(tool, {arg: args, input: context.input, nodeOutputs: context.nodeOutputs});
 
   return {
@@ -64,4 +76,3 @@ export async function executeToolNode(context: NodeExecutionContext): Promise<No
     traceOutput: result,
   };
 }
-

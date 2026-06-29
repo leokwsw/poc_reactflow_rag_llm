@@ -55,9 +55,7 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       ...data,
       label: "Tool",
       tool_id: "",
-      input_mapping: [
-        {id: crypto.randomUUID(), enabled: true, name: "query", value: "{{#sys.query#}}"},
-      ],
+      input_mapping: [],
     };
   } else if (type === "llm") {
     data = {
