@@ -148,22 +148,6 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     }
   };
 
-  const deleteTool = async (tool: ToolRecord) => {
-    if (!window.confirm(`Delete ${tool.name}?`)) return;
-    setStatus(`Deleting ${tool.name}...`);
-    setError("");
-    try {
-      const response = await fetch(`/api/tools/${tool.id}`, {method: "DELETE"});
-      const result = (await response.json().catch(() => ({}))) as {error?: string};
-      if (!response.ok) throw new Error(result.error ?? `Delete failed with status ${response.status}.`);
-      await refreshTools();
-      setStatus(`Deleted ${tool.name}`);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Delete failed.");
-      setStatus("");
-    }
-  };
-
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(360px,460px)_minmax(0,1fr)] gap-5">
@@ -310,7 +294,6 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                         <th className="px-3 py-2">Name</th>
                         <th className="px-3 py-2">Path</th>
                         <th className="w-32 px-3 py-2">Auth</th>
-                        <th className="w-24 px-3 py-2">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
@@ -320,15 +303,6 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                           <td className="truncate px-3 py-2 text-zinc-900">{tool.name}</td>
                           <td className="truncate px-3 py-2 font-mono text-xs text-zinc-600">{tool.path}</td>
                           <td className="truncate px-3 py-2 text-xs text-zinc-500">{authSummary(tool)}</td>
-                          <td className="px-3 py-2">
-                            <button
-                              className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
-                              type="button"
-                              onClick={() => void deleteTool(tool)}
-                            >
-                              Delete
-                            </button>
-                          </td>
                         </tr>
                       ))}
                     </tbody>

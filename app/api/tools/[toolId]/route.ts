@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {deleteTool, getToolById} from "@/app/tools/data";
+import {getToolById} from "@/app/tools/data";
 
 export const runtime = "nodejs";
 
@@ -28,12 +28,6 @@ export async function PUT() {
   return errorResponse("Manual tool updates are disabled. Re-import OpenAPI Swagger JSON/YAML instead.", 405);
 }
 
-export async function DELETE(_: Request, context: RouteContext) {
-  try {
-    const {toolId} = await context.params;
-    await deleteTool(toolId);
-    return NextResponse.json({success: true});
-  } catch (error) {
-    return errorResponse(error);
-  }
+export async function DELETE() {
+  return errorResponse("Deleting a single generated tool is disabled. Delete the OpenAPI import group instead.", 405);
 }
