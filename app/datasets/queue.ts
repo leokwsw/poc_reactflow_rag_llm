@@ -17,6 +17,7 @@ import {
 } from "@/app/datasets/data";
 import {extractFileToText} from "@/app/datasets/extract-file-to-text";
 import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {upsertGraphChunk} from "@/app/lib/graph-rag";
 import {createTextSplitter} from "@/app/lib/text-splitter";
 import {resolveModelConfig} from "@/app/model/data";
 
@@ -161,6 +162,18 @@ const processTask = async (taskId: string) => {
           es_document_id: esResponse._id,
           enabled: true,
         };
+
+        const graphResult = await upsertGraphChunk({
+          id: chunk.id,
+          datasetId: task.dataset_id,
+          fileId: document.id,
+          fileName: document.file_name,
+          text: doc.pageContent,
+          position: i,
+        });
+        for (const warning of graphResult.warnings) {
+          console.warn(warning);
+        }
 
         const embedding: EmbeddingRecord = {
           id: esResponse._id,

@@ -33,6 +33,37 @@ You can also set `DATABASE_URL` instead of the individual `POSTGRES_*` values. I
 
 Existing PostgreSQL tables are mapped as one-file-per-entity TypeORM classes in `app/lib/entities/`: `datasets`, `documents`, `chunks`, `tasks`, `embeddings`, `workflow_graphs`, `workflow_runs`, `mcp_servers`, and `model_configs`.
 
+## RAG Backends
+
+The Knowledge Retrieval workflow node supports hybrid RAG and optional Graph RAG:
+
+- Elasticsearch stores chunk text and dense vectors, then combines vector KNN with BM25 keyword retrieval.
+- Neo4j can store extracted chunk triples as `(:Entity)-[:RELATED_TO]->(:Entity)` relations.
+- ArangoDB can store the same graph shape in `kg_entities`, `kg_edges`, and `kg_chunks`.
+
+During dataset ingestion, chunks are embedded and indexed in Elasticsearch. If Graph RAG is enabled, the same chunk text is converted into simple subject-predicate-object triples and upserted into the configured graph database. Graph write failures are logged as warnings and do not block Elasticsearch ingestion.
+
+Graph RAG is disabled by default. Enable either backend in `.env`:
+
+```bash
+GRAPH_RAG_NEO4J_ENABLED=true
+NEO4J_URI=http://localhost:7474
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=password
+NEO4J_DATABASE=neo4j
+
+GRAPH_RAG_ARANGODB_ENABLED=true
+ARANGODB_URL=http://localhost:8529
+ARANGODB_USERNAME=root
+ARANGODB_PASSWORD=password
+ARANGODB_DATABASE=_system
+ARANGODB_ENTITY_COLLECTION=kg_entities
+ARANGODB_EDGE_COLLECTION=kg_edges
+ARANGODB_CHUNK_COLLECTION=kg_chunks
+```
+
+The graph extraction layer lives in `app/lib/graph-rag.ts`, so the heuristic triple extraction can later be replaced with a stronger txt2kg or LLM extraction pipeline without changing the workflow node contract.
+
 ## Deploy With PM2
 
 This project includes `ecosystem.config.cjs` for `pm2 deploy`.

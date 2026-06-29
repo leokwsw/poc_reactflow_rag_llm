@@ -97,6 +97,8 @@ export function createNodeData(type: CustomNodeType): Record<string, unknown> {
       label: "Knowledge Retrieval",
       query: "{{#sys.query#}}",
       datasets: [],
+      retrieval_sources: ["vector", "bm25", "neo4j", "arangodb"],
+      graph_engines: ["neo4j", "arangodb"],
     };
   } else if (type === "note") {
     data = {

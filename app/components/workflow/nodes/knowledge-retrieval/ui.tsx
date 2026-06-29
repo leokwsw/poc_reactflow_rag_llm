@@ -11,10 +11,12 @@ type KnowledgeRetrievalNodeData = WorkflowNodeDataBase & {
     id: string;
     name: string;
   }>;
+  retrieval_sources?: string[];
 };
 
 export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetrievalNodeData>) {
   const datasets = data.datasets ?? [];
+  const sources = data.retrieval_sources?.length ? data.retrieval_sources : ["vector", "bm25", "neo4j", "arangodb"];
 
   return (
     <BaseNode
@@ -34,6 +36,13 @@ export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetr
             ))}
           </div>
         )}
+      </NodeSection>
+      <NodeSection label="Sources">
+        <div className="flex flex-wrap gap-1.5">
+          {sources.map((source) => (
+            <NodeToken key={source}>{source}</NodeToken>
+          ))}
+        </div>
       </NodeSection>
     </BaseNode>
   );

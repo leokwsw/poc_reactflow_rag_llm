@@ -5,6 +5,7 @@ import {mergeModelConfig, mergeRerankingConfig} from "@/app/api/datasets/route";
 import {embedText} from "@/app/datasets/queue";
 import {generateRagElasticsearchQuery} from "@/app/components/workflow/nodes/knowledge-retrieval/generate-es-query";
 import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
+import {queryGraphRag, type GraphRagResult} from "@/app/lib/graph-rag";
 import type {estypes} from "@elastic/elasticsearch"
 
 type Dataset = {
@@ -15,10 +16,13 @@ type Dataset = {
 type KnowledgeRetrievalInputData = {
   datasets?: Dataset[];
   query?: string;
+  retrieval_sources?: RetrievalSource[];
+  graph_engines?: GraphEngine[];
 };
 
 type QualityTier = "high" | "medium" | "low";
-type RetrievalSource = "vector" | "bm25";
+type RetrievalSource = "vector" | "bm25" | "neo4j" | "arangodb";
+type GraphEngine = "neo4j" | "arangodb";
 type SourceRankMap = Partial<Record<RetrievalSource, number>>;
 type SourceScoreMap = Partial<Record<RetrievalSource, number>>;
 
@@ -46,8 +50,12 @@ type ElasticSearchHitSource = {
 
 const roundToFourDecimals = (value: number) => Math.round(value * 10_000) / 10_000;
 const RRF_K = 60;
-const BM25_WEIGHT = 0.4;
-const VECTOR_WEIGHT = 0.6;
+const SOURCE_WEIGHTS: Record<RetrievalSource, number> = {
+  bm25: 0.3,
+  vector: 0.5,
+  neo4j: 0.1,
+  arangodb: 0.1,
+};
 
 const getHitsTotalValue = (total: estypes.SearchTotalHits | number | undefined) => {
   if (typeof total === "number") return total;
@@ -60,7 +68,7 @@ const getQualityTier = (scoreRatio: number): QualityTier => {
   return "low";
 };
 
-const getSourceWeight = (source: RetrievalSource) => source === "bm25" ? BM25_WEIGHT : VECTOR_WEIGHT;
+const getSourceWeight = (source: RetrievalSource) => SOURCE_WEIGHTS[source];
 
 const buildBm25SearchBody = (body: Record<string, unknown>): Record<string, unknown> => ({
   query: body.query,
@@ -101,6 +109,40 @@ const createOutputChunk = (
   };
 };
 
+const createGraphOutputChunk = (
+  result: GraphRagResult,
+  rank: number,
+): KnowledgeRetrievalOutputChunk => {
+  const source = result.engine;
+  const scoreRatio = Math.max(0, Math.min(1, result.score || 0));
+  const finalScore = getSourceWeight(source) * scoreRatio;
+  const relation = `${result.subject} --${result.predicate}--> ${result.object}`;
+  const supportingText = result.text?.trim();
+
+  return {
+    text: supportingText ? `${relation}\n\n${supportingText}` : relation,
+    metadata: {
+      source: source === "neo4j" ? "Neo4j Graph RAG" : "ArangoDB Graph RAG",
+      graph_engine: source,
+      subject: result.subject,
+      predicate: result.predicate,
+      object: result.object,
+      chunk_id: result.chunk_id,
+      file_id: result.file_id,
+      file_name: result.file_name,
+    },
+    score: roundToFourDecimals(finalScore),
+    rank,
+    score_ratio: roundToFourDecimals(finalScore),
+    quality_tier: getQualityTier(finalScore),
+    retrieval_sources: [source],
+    source_scores: {[source]: result.score},
+    source_score_ratios: {[source]: roundToFourDecimals(scoreRatio)},
+    source_ranks: {[source]: rank},
+    rrf_score: 1 / (RRF_K + rank),
+  };
+};
+
 const getScoreStats = (hitsList: estypes.SearchHit<ElasticSearchHitSource>[]) => {
   const scores = hitsList.map((hit) => hit._score ?? 0);
   const minScore = scores.length > 0 ? Math.min(...scores) : 0;
@@ -133,9 +175,8 @@ const mergeRetrievalResults = (
     const sourceScoreRatios = {...current.source_score_ratios, ...chunk.source_score_ratios};
     const sourceRanks = {...current.source_ranks, ...chunk.source_ranks};
     const rrfScore = (current.rrf_score ?? 0) + (chunk.rrf_score ?? 0);
-    const bm25ScoreRatio = sourceScoreRatios.bm25 ?? 0;
-    const vectorScoreRatio = sourceScoreRatios.vector ?? 0;
-    const scoreRatio = (BM25_WEIGHT * bm25ScoreRatio) + (VECTOR_WEIGHT * vectorScoreRatio);
+    const scoreRatio = (Object.keys(SOURCE_WEIGHTS) as RetrievalSource[])
+      .reduce((sum, source) => sum + (SOURCE_WEIGHTS[source] * (sourceScoreRatios[source] ?? 0)), 0);
 
     merged.set(key, {
       ...current,
@@ -162,6 +203,14 @@ const mergeRetrievalResults = (
 export async function executeKnowledgeRetrievalNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const data = (context.node.data ?? {}) as KnowledgeRetrievalInputData;
   const datasets = data.datasets ?? [];
+  const configuredSources = data.retrieval_sources?.length
+    ? data.retrieval_sources
+    : ["vector", "bm25", "neo4j", "arangodb"];
+  const useVector = configuredSources.includes("vector");
+  const useBm25 = configuredSources.includes("bm25");
+  const graphEngines = data.graph_engines?.length
+    ? data.graph_engines
+    : configuredSources.filter((source): source is GraphEngine => source === "neo4j" || source === "arangodb");
   const rawQuery = (data.query ?? "").trim();
   const wrapped = rawQuery.match(/^\{\{#\s*([^#}]+?)\s*#\}\}\s*$/);
   const queryTemplate = wrapped
@@ -179,24 +228,26 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
   for (const dataset of datasets) {
     const o = await getDatasetById(dataset.id);
     if (o) {
-      const embedding_config = mergeModelConfig(o.embedding_config);
-      const embedded = await embedText(resolvedQuery, embedding_config);
-      queryVectorDimensions[dataset.id] = embedded.vector.length;
       const rerankCfg = mergeRerankingConfig(o.reranking_config);
       const k = Math.max(10, rerankCfg.top_k);
-      const allowedFileIds = allDocuments
-        .filter(
-          (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
-        )
-        .map((doc) => doc.id);
+      if (useVector || useBm25) {
+        const embedding_config = mergeModelConfig(o.embedding_config);
+        const embedded = await embedText(resolvedQuery, embedding_config);
+        queryVectorDimensions[dataset.id] = embedded.vector.length;
+        const allowedFileIds = allDocuments
+          .filter(
+            (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
+          )
+          .map((doc) => doc.id);
 
-      esQueries[dataset.id] = generateRagElasticsearchQuery({
-        question: resolvedQuery,
-        queryVector: embedded.vector,
-        allowedFileIds,
-        k,
-        numCandidates: Math.max(k * 10, 100),
-      });
+        esQueries[dataset.id] = generateRagElasticsearchQuery({
+          question: resolvedQuery,
+          queryVector: embedded.vector,
+          allowedFileIds,
+          k,
+          numCandidates: Math.max(k * 10, 100),
+        });
+      }
     }
   }
 
@@ -204,11 +255,13 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
 
   const vectorObjResult: Array<{key: string; chunk: KnowledgeRetrievalOutputChunk}> = [];
   const bm25ObjResult: Array<{key: string; chunk: KnowledgeRetrievalOutputChunk}> = [];
+  const graphObjResult: Array<{key: string; chunk: KnowledgeRetrievalOutputChunk}> = [];
   let hitsTotal = 0;
   let hitsMaxScore = 1.0;
   const scoreStats: Record<string, {min_score: number; avg_score: number; score_gap: number}> = {};
+  const warnings: string[] = [];
 
-  if (client && Object.keys(esQueries).length > 0) {
+  if ((useVector || useBm25) && client && Object.keys(esQueries).length > 0) {
     for (const [datasetId, body] of Object.entries(esQueries)) {
       const indexStatus = await ensureRagChunksIndex(client, queryVectorDimensions[datasetId] ?? 0);
       if (!indexStatus.isDenseVector) {
@@ -217,7 +270,7 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
         );
       }
 
-      if (indexStatus.isDenseVector) {
+      if (useVector && indexStatus.isDenseVector) {
         const esResult = await client.search<ElasticSearchHitSource>({
           index: RAG_CHUNKS_INDEX,
           ...body,
@@ -236,26 +289,44 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
         }
       }
 
-      const bm25Result = await client.search<ElasticSearchHitSource>({
-        index: RAG_CHUNKS_INDEX,
-        ...buildBm25SearchBody(body),
-      });
-      const bm25HitsList = bm25Result.hits.hits;
-      hitsTotal += getHitsTotalValue(bm25Result.hits.total);
-      const bm25MaxScore = bm25Result.hits.max_score ?? 1.0;
-      hitsMaxScore = Math.max(hitsMaxScore, bm25MaxScore);
-      scoreStats[`${datasetId}:bm25`] = getScoreStats(bm25HitsList);
-
-      for (const [index, hit] of bm25HitsList.entries()) {
-        bm25ObjResult.push({
-          key: getHitMergeKey(hit),
-          chunk: createOutputChunk(hit, index + 1, bm25MaxScore, "bm25"),
+      if (useBm25) {
+        const bm25Result = await client.search<ElasticSearchHitSource>({
+          index: RAG_CHUNKS_INDEX,
+          ...buildBm25SearchBody(body),
         });
+        const bm25HitsList = bm25Result.hits.hits;
+        hitsTotal += getHitsTotalValue(bm25Result.hits.total);
+        const bm25MaxScore = bm25Result.hits.max_score ?? 1.0;
+        hitsMaxScore = Math.max(hitsMaxScore, bm25MaxScore);
+        scoreStats[`${datasetId}:bm25`] = getScoreStats(bm25HitsList);
+
+        for (const [index, hit] of bm25HitsList.entries()) {
+          bm25ObjResult.push({
+            key: getHitMergeKey(hit),
+            chunk: createOutputChunk(hit, index + 1, bm25MaxScore, "bm25"),
+          });
+        }
       }
     }
   }
 
-  const mergedResult = mergeRetrievalResults([...vectorObjResult, ...bm25ObjResult]);
+  if (graphEngines.length > 0 && datasets.length > 0) {
+    const graphResult = await queryGraphRag({
+      datasetIds: datasets.map((dataset) => dataset.id).filter(Boolean),
+      query: resolvedQuery,
+      engines: graphEngines,
+      limit: Math.max(10, Math.max(vectorObjResult.length, bm25ObjResult.length, 10)),
+    });
+    warnings.push(...graphResult.warnings);
+    for (const [index, result] of graphResult.results.entries()) {
+      graphObjResult.push({
+        key: `${result.engine}:${result.chunk_id ?? ""}:${result.subject}:${result.predicate}:${result.object}`,
+        chunk: createGraphOutputChunk(result, index + 1),
+      });
+    }
+  }
+
+  const mergedResult = mergeRetrievalResults([...vectorObjResult, ...bm25ObjResult, ...graphObjResult]);
 
   return {
     output: {
@@ -266,7 +337,11 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
       score_stats: scoreStats,
       vector_result_count: vectorObjResult.length,
       bm25_result_count: bm25ObjResult.length,
+      graph_result_count: graphObjResult.length,
+      graph_engines: graphEngines,
+      retrieval_sources: configuredSources,
+      warnings,
     },
-    detail: `datasets=${datasets.length}`,
+    detail: `datasets=${datasets.length}, sources=${configuredSources.join("+")}`,
   };
 }

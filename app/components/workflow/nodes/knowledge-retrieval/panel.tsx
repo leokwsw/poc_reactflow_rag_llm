@@ -14,7 +14,12 @@ type KnowledgeRetrievalNodeData = {
   label?: string;
   query?: string;
   datasets?: Dataset[];
+  retrieval_sources?: RetrievalSource[];
+  graph_engines?: GraphEngine[];
 };
+
+type RetrievalSource = "vector" | "bm25" | "neo4j" | "arangodb";
+type GraphEngine = "neo4j" | "arangodb";
 
 type ApiDataset = {
   id: string;
@@ -43,6 +48,13 @@ function IconTrash({className}: {className?: string}) {
 
 const selectLightClass =
   "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
+
+const retrievalOptions: Array<{value: RetrievalSource; label: string; description: string}> = [
+  {value: "vector", label: "Vector", description: "Elasticsearch dense-vector KNN"},
+  {value: "bm25", label: "BM25", description: "Elasticsearch keyword search"},
+  {value: "neo4j", label: "Neo4j", description: "Graph relation traversal"},
+  {value: "arangodb", label: "ArangoDB", description: "AQL graph relation traversal"},
+];
 
 /** 從節點資料讀出單一變數運算式（僅支援 `{{#a.b#}}` 或純 `a.b`）。 */
 function parseQueryVariableExpression(template: string | undefined): string {
@@ -123,6 +135,10 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
 
   const selectedIds = useMemo(() => new Set(datasets.map((d) => d.id).filter(Boolean)), [datasets]);
   const availableToAdd = useMemo(() => selectOptions.filter((d) => !selectedIds.has(d.id)), [selectOptions, selectedIds]);
+  const retrievalSources = useMemo<RetrievalSource[]>(
+    () => data.retrieval_sources?.length ? data.retrieval_sources : ["vector", "bm25", "neo4j", "arangodb"],
+    [data.retrieval_sources],
+  );
 
   const queryVariableOptions = useMemo(() => {
     const upstream = getContextOptions(allNodes, allEdges, node.id);
@@ -163,6 +179,17 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
     setEditingIndex((cur) => (cur === index ? null : cur != null && cur > index ? cur - 1 : cur));
   };
 
+  const toggleRetrievalSource = (source: RetrievalSource) => {
+    const next = retrievalSources.includes(source)
+      ? retrievalSources.filter((item) => item !== source)
+      : [...retrievalSources, source];
+    const safeNext = next.length > 0 ? next : [source];
+    patchNodeData({
+      retrieval_sources: safeNext,
+      graph_engines: safeNext.filter((item): item is GraphEngine => item === "neo4j" || item === "arangodb"),
+    });
+  };
+
   return (
     <div className="space-y-4">
       <PanelField label="Label">
@@ -196,6 +223,31 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
           </select>
         </PanelField>
         <p className="text-xs text-gray-500">僅能從清單選擇一個變數作為查詢來源，無法輸入自訂文字。</p>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
+        <div className="border-b border-gray-200 pb-2.5 text-sm font-semibold tracking-wide text-gray-900">
+          Retrieval sources
+        </div>
+        <div className="mt-3 grid gap-2">
+          {retrievalOptions.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition hover:bg-gray-100"
+            >
+              <input
+                checked={retrievalSources.includes(option.value)}
+                className="mt-1 h-4 w-4 accent-indigo-600"
+                type="checkbox"
+                onChange={() => toggleRetrievalSource(option.value)}
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-gray-800">{option.label}</span>
+                <span className="block text-xs text-gray-500">{option.description}</span>
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
