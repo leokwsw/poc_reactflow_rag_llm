@@ -1,11 +1,11 @@
 import {NextResponse} from "next/server";
-import {createTool, listTools} from "@/app/tools/data";
+import {listTools} from "@/app/tools/data";
 
 export const runtime = "nodejs";
 
 const errorResponse = (error: unknown, status = 400) =>
   NextResponse.json(
-    {error: error instanceof Error ? error.message : "Tool request failed."},
+    {error: error instanceof Error ? error.message : typeof error === "string" ? error : "Tool request failed."},
     {status},
   );
 
@@ -14,13 +14,6 @@ export async function GET() {
   return NextResponse.json({tools});
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const tool = await createTool(body);
-    return NextResponse.json({tool}, {status: 201});
-  } catch (error) {
-    return errorResponse(error);
-  }
+export async function POST() {
+  return errorResponse("Manual tool creation is disabled. Import OpenAPI Swagger JSON/YAML instead.", 405);
 }
-

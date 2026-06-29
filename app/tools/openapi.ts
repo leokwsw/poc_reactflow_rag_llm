@@ -38,10 +38,17 @@ type OpenApiParameter = {
 };
 
 export type ImportOpenApiInput = {
+  name?: string;
   spec?: unknown;
   spec_text?: string;
   spec_url?: string;
   base_url?: string;
+  auth_method?: "none" | "header" | "query";
+  header_auth_type?: "basic" | "bearer" | "custom";
+  auth_header_name?: string;
+  auth_header_value?: string;
+  query_auth_name?: string;
+  query_auth_value?: string;
   auth_type?: ToolAuthType;
   auth_username?: string;
   auth_password?: string;
@@ -140,6 +147,32 @@ const row = (name: string, value: string): ToolKeyValueRow => ({
   value,
 });
 
+const authRowsForImport = (input: ImportOpenApiInput) => {
+  const authMethod = input.auth_method ?? "none";
+
+  if (authMethod === "header" && input.header_auth_type === "custom" && input.auth_header_name?.trim()) {
+    return {
+      headers: [row(input.auth_header_name.trim(), input.auth_header_value ?? "")],
+      params: [],
+    };
+  }
+
+  if (authMethod === "query" && input.query_auth_name?.trim()) {
+    return {
+      headers: [],
+      params: [row(input.query_auth_name.trim(), input.query_auth_value ?? "")],
+    };
+  }
+
+  return {headers: [], params: []};
+};
+
+const authTypeForImport = (input: ImportOpenApiInput): ToolAuthType => {
+  if (input.auth_method === "header" && input.header_auth_type === "basic") return "basic";
+  if (input.auth_method === "header" && input.header_auth_type === "bearer") return "bearer";
+  return input.auth_type ?? "none";
+};
+
 const buildToolInput = (options: {
   spec: OpenApiSpec;
   baseUrl: string;
@@ -148,8 +181,12 @@ const buildToolInput = (options: {
   method: ToolMethod;
   operation: OpenApiOperation;
   auth: Pick<ToolInput, "auth_type" | "auth_username" | "auth_password" | "auth_token">;
+  authRows: {
+    headers: ToolKeyValueRow[];
+    params: ToolKeyValueRow[];
+  };
 }): Partial<ToolInput> => {
-  const {spec, baseUrl, importId, path, method, operation, auth} = options;
+  const {spec, baseUrl, importId, path, method, operation, auth, authRows} = options;
   const pathParams = (operation.parameters ?? []).filter((param) => param.in === "path" && param.name);
   const queryParams = (operation.parameters ?? []).filter((param) => param.in === "query" && param.name);
   const headerParams = (operation.parameters ?? []).filter((param) => param.in === "header" && param.name);
@@ -170,10 +207,14 @@ const buildToolInput = (options: {
     base_url: baseUrl,
     path,
     headers: [
+      ...authRows.headers,
       ...headerParams.map((param) => row(param.name!, `{{#arg.${param.name}#}}`)),
       ...(hasJsonBody ? [row("Content-Type", "application/json")] : []),
     ],
-    params: queryParams.map((param) => row(param.name!, `{{#arg.${param.name}#}}`)),
+    params: [
+      ...authRows.params,
+      ...queryParams.map((param) => row(param.name!, `{{#arg.${param.name}#}}`)),
+    ],
     body_type: hasJsonBody ? "json" : "none",
     body_json: hasJsonBody ? "{{#arg.body#}}" : "",
     body_raw: "",
@@ -192,9 +233,11 @@ const buildToolInput = (options: {
 export async function importOpenApiTools(input: ImportOpenApiInput) {
   const spec = await parseSpec(input);
   const baseUrl = ensureBaseUrl(spec, input.base_url);
-  const importId = slug(spec.info?.title ?? input.spec_url ?? `openapi-${Date.now()}`) || `openapi-${Date.now()}`;
+  const importName = input.name?.trim() || spec.info?.title || "OpenAPI Tools";
+  const importId = slug(importName || input.spec_url || `openapi-${Date.now()}`) || `openapi-${Date.now()}`;
+  const authRows = authRowsForImport(input);
   const auth = {
-    auth_type: input.auth_type ?? "none",
+    auth_type: authTypeForImport(input),
     auth_username: input.auth_username ?? "",
     auth_password: input.auth_password ?? "",
     auth_token: input.auth_token ?? "",
@@ -215,6 +258,7 @@ export async function importOpenApiTools(input: ImportOpenApiInput) {
         method,
         operation,
         auth,
+        authRows,
       }));
       if (tool) created.push(tool);
     }
