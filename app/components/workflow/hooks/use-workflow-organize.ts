@@ -17,7 +17,7 @@ type UseWorkflowOrganizeOptions = {
   canOrganize: () => boolean;
   setNodes: (payload: Node[]) => void;
   onBeforeOrganize?: () => void;
-  onAfterOrganize?: () => void;
+  onAfterOrganize?: (nodes: Node[]) => void;
 };
 
 async function getLayoutByDagre(nodes: Node[], edges: Edge[]) {
@@ -215,13 +215,17 @@ export const useWorkflowOrganize = ({
 
     setNodes(nextNodes);
     requestAnimationFrame(() => {
-      reactflow.fitView({
-        padding: 0.2,
-        duration: 250,
+      void Promise.resolve(
+        reactflow.fitView({
+          padding: 0.2,
+          duration: 250,
+        }),
+      ).then(() => {
+        requestAnimationFrame(() => {
+          onAfterOrganize?.(nextNodes);
+        });
       });
     });
-
-    onAfterOrganize?.();
   }, [canOrganize, onBeforeOrganize, store, setNodes, reactflow, onAfterOrganize]);
 
   return {
