@@ -20,7 +20,7 @@ export default function AppNavigation() {
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center border-b border-zinc-200/80 bg-white/95 px-5 shadow-sm backdrop-blur">
       <div className="flex w-full min-w-0 items-center justify-between gap-4">
-        <Link className="text-sm font-semibold text-zinc-950" href="/workflow">
+        <Link className="text-sm font-semibold text-zinc-950" href="/">
           RAG Workflow
         </Link>
         <nav className="flex max-w-full overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-100 p-1">
