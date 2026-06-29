@@ -22,6 +22,10 @@ export type WorkflowTraceItem = {
 export type WorkflowRunInput = {
   query: string;
   files: WorkflowFile[];
+  conversation_history?: Array<{
+    role: "user" | "assistant" | "system";
+    content: string;
+  }>;
 };
 
 export type WorkflowRunResult = {

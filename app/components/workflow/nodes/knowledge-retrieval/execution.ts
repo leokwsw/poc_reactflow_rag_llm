@@ -6,6 +6,18 @@ import {embedText} from "@/app/datasets/queue";
 import {generateRagElasticsearchQuery} from "@/app/components/workflow/nodes/knowledge-retrieval/generate-es-query";
 import {ensureRagChunksIndex, getElasticsearchClient, RAG_CHUNKS_INDEX} from "@/app/lib/elasticsearch";
 import {queryGraphRag, type GraphRagResult} from "@/app/lib/graph-rag";
+import {getRagFeedbackHints} from "@/app/lib/rag-feedback";
+import {
+  adaptRetrievalSources,
+  buildAgenticSubqueries,
+  buildConversationalQuery,
+  getGraphEngines,
+  normalizeRagModes,
+  normalizeRetrievalSources,
+  type GraphEngine,
+  type RagMode,
+  type RetrievalSource,
+} from "@/app/lib/rag-query";
 import type {estypes} from "@elastic/elasticsearch"
 
 type Dataset = {
@@ -18,11 +30,10 @@ type KnowledgeRetrievalInputData = {
   query?: string;
   retrieval_sources?: RetrievalSource[];
   graph_engines?: GraphEngine[];
+  rag_modes?: RagMode[];
 };
 
 type QualityTier = "high" | "medium" | "low";
-type RetrievalSource = "vector" | "bm25" | "neo4j" | "arangodb";
-type GraphEngine = "neo4j" | "arangodb";
 type SourceRankMap = Partial<Record<RetrievalSource, number>>;
 type SourceScoreMap = Partial<Record<RetrievalSource, number>>;
 
@@ -47,6 +58,12 @@ type ElasticSearchHitSource = {
   enabled?: boolean;
   deleted?: boolean;
 }
+
+type SearchPlan = {
+  query: string;
+  sources: RetrievalSource[];
+  graphEngines: GraphEngine[];
+};
 
 const roundToFourDecimals = (value: number) => Math.round(value * 10_000) / 10_000;
 const RRF_K = 60;
@@ -93,10 +110,14 @@ const createOutputChunk = (
   const score = hit._score ?? 0;
   const scoreRatio = maxScore ? score / maxScore : 0;
   const finalScore = getSourceWeight(source) * scoreRatio;
+  const metadata = hit._source?.metadata ?? {};
 
   return {
     text: hit._source?.text ?? "",
-    metadata: hit._source?.metadata ?? {},
+    metadata: {
+      ...metadata,
+      chunk_id: typeof metadata.chunk_id === "string" ? metadata.chunk_id : hit._id,
+    },
     score: roundToFourDecimals(finalScore),
     rank,
     score_ratio: roundToFourDecimals(finalScore),
@@ -200,17 +221,60 @@ const mergeRetrievalResults = (
     }));
 };
 
+const applyFeedbackHints = (
+  chunks: KnowledgeRetrievalOutputChunk[],
+  hints: Awaited<ReturnType<typeof getRagFeedbackHints>>,
+) => {
+  if (hints.length === 0) return chunks;
+  const hintByChunkId = new Map(hints.map((hint) => [hint.chunk_id, hint]));
+
+  return chunks
+    .map((chunk) => {
+      const chunkId = typeof chunk.metadata.chunk_id === "string" ? chunk.metadata.chunk_id : "";
+      const hint = hintByChunkId.get(chunkId);
+      if (!hint) return chunk;
+      const adjustment = Math.min(0.25, (hint.positive_count * 0.04) - (hint.negative_count * 0.05));
+      const score = Math.max(0, Math.min(1, chunk.score + adjustment));
+      return {
+        ...chunk,
+        score: roundToFourDecimals(score),
+        score_ratio: roundToFourDecimals(score),
+        quality_tier: getQualityTier(score),
+        metadata: {
+          ...chunk.metadata,
+          feedback_positive_count: hint.positive_count,
+          feedback_negative_count: hint.negative_count,
+        },
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.rank - b.rank)
+    .map((chunk, index) => ({...chunk, rank: index + 1}));
+};
+
+const buildSearchPlans = (
+  query: string,
+  modes: RagMode[],
+  sources: RetrievalSource[],
+  graphEngines: GraphEngine[],
+): SearchPlan[] => {
+  const adaptiveSources = modes.includes("adaptive") ? adaptRetrievalSources(query, sources) : sources;
+  const subqueries = modes.includes("agentic") ? buildAgenticSubqueries(query) : [query];
+  return subqueries.map((subquery) => {
+    const nextSources = modes.includes("adaptive") ? adaptRetrievalSources(subquery, adaptiveSources) : adaptiveSources;
+    return {
+      query: subquery,
+      sources: nextSources,
+      graphEngines: getGraphEngines(nextSources, graphEngines),
+    };
+  });
+};
+
 export async function executeKnowledgeRetrievalNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const data = (context.node.data ?? {}) as KnowledgeRetrievalInputData;
   const datasets = data.datasets ?? [];
-  const configuredSources = data.retrieval_sources?.length
-    ? data.retrieval_sources
-    : ["vector", "bm25", "neo4j", "arangodb"];
-  const useVector = configuredSources.includes("vector");
-  const useBm25 = configuredSources.includes("bm25");
-  const graphEngines = data.graph_engines?.length
-    ? data.graph_engines
-    : configuredSources.filter((source): source is GraphEngine => source === "neo4j" || source === "arangodb");
+  const ragModes = normalizeRagModes(data.rag_modes);
+  const configuredSources = normalizeRetrievalSources(data.retrieval_sources);
+  const configuredGraphEngines = getGraphEngines(configuredSources, data.graph_engines);
   const rawQuery = (data.query ?? "").trim();
   const wrapped = rawQuery.match(/^\{\{#\s*([^#}]+?)\s*#\}\}\s*$/);
   const queryTemplate = wrapped
@@ -220,36 +284,14 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
       : "{{#sys.query#}}";
   const resolvedQuery =
     interpolateTemplate(queryTemplate, context).trim() || context.input.query;
+  const retrievalQuery = ragModes.includes("conversational")
+    ? buildConversationalQuery(resolvedQuery, context.input)
+    : resolvedQuery;
+  const searchPlans = buildSearchPlans(retrievalQuery, ragModes, configuredSources, configuredGraphEngines);
+  const datasetIds = datasets.map((dataset) => dataset.id).filter(Boolean);
 
-  const esQueries: Record<string, Record<string, unknown>> = {};
   const queryVectorDimensions: Record<string, number> = {};
   const allDocuments = await getDocuments();
-
-  for (const dataset of datasets) {
-    const o = await getDatasetById(dataset.id);
-    if (o) {
-      const rerankCfg = mergeRerankingConfig(o.reranking_config);
-      const k = Math.max(10, rerankCfg.top_k);
-      if (useVector || useBm25) {
-        const embedding_config = mergeModelConfig(o.embedding_config);
-        const embedded = await embedText(resolvedQuery, embedding_config);
-        queryVectorDimensions[dataset.id] = embedded.vector.length;
-        const allowedFileIds = allDocuments
-          .filter(
-            (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
-          )
-          .map((doc) => doc.id);
-
-        esQueries[dataset.id] = generateRagElasticsearchQuery({
-          question: resolvedQuery,
-          queryVector: embedded.vector,
-          allowedFileIds,
-          k,
-          numCandidates: Math.max(k * 10, 100),
-        });
-      }
-    }
-  }
 
   const client = getElasticsearchClient();
 
@@ -261,87 +303,129 @@ export async function executeKnowledgeRetrievalNode(context: NodeExecutionContex
   const scoreStats: Record<string, {min_score: number; avg_score: number; score_gap: number}> = {};
   const warnings: string[] = [];
 
-  if ((useVector || useBm25) && client && Object.keys(esQueries).length > 0) {
-    for (const [datasetId, body] of Object.entries(esQueries)) {
-      const indexStatus = await ensureRagChunksIndex(client, queryVectorDimensions[datasetId] ?? 0);
-      if (!indexStatus.isDenseVector) {
-        console.warn(
-          `Skipping Elasticsearch KNN search for dataset ${datasetId}: ${indexStatus.reason} Recreate the index to enable vector search.`,
-        );
-      }
+  for (const plan of searchPlans) {
+    const useVector = plan.sources.includes("vector");
+    const useBm25 = plan.sources.includes("bm25");
+    const esQueries: Record<string, Record<string, unknown>> = {};
 
-      if (useVector && indexStatus.isDenseVector) {
-        const esResult = await client.search<ElasticSearchHitSource>({
-          index: RAG_CHUNKS_INDEX,
-          ...body,
-        });
-        const hitsList = esResult.hits.hits;
-        hitsTotal += getHitsTotalValue(esResult.hits.total);
-        const vectorMaxScore = esResult.hits.max_score ?? 1.0;
-        hitsMaxScore = Math.max(hitsMaxScore, vectorMaxScore);
-        scoreStats[`${datasetId}:vector`] = getScoreStats(hitsList);
+    for (const dataset of datasets) {
+      const o = await getDatasetById(dataset.id);
+      if (o) {
+        const rerankCfg = mergeRerankingConfig(o.reranking_config);
+        const k = Math.max(10, rerankCfg.top_k);
+        if (useVector || useBm25) {
+          const embedding_config = mergeModelConfig(o.embedding_config);
+          const embedded = await embedText(plan.query, embedding_config);
+          queryVectorDimensions[dataset.id] = embedded.vector.length;
+          const allowedFileIds = allDocuments
+            .filter(
+              (doc) => doc.dataset_id === dataset.id && doc.enabled && doc.deleted !== "true",
+            )
+            .map((doc) => doc.id);
 
-        for (const [index, hit] of hitsList.entries()) {
-          vectorObjResult.push({
-            key: getHitMergeKey(hit),
-            chunk: createOutputChunk(hit, index + 1, vectorMaxScore, "vector"),
-          });
-        }
-      }
-
-      if (useBm25) {
-        const bm25Result = await client.search<ElasticSearchHitSource>({
-          index: RAG_CHUNKS_INDEX,
-          ...buildBm25SearchBody(body),
-        });
-        const bm25HitsList = bm25Result.hits.hits;
-        hitsTotal += getHitsTotalValue(bm25Result.hits.total);
-        const bm25MaxScore = bm25Result.hits.max_score ?? 1.0;
-        hitsMaxScore = Math.max(hitsMaxScore, bm25MaxScore);
-        scoreStats[`${datasetId}:bm25`] = getScoreStats(bm25HitsList);
-
-        for (const [index, hit] of bm25HitsList.entries()) {
-          bm25ObjResult.push({
-            key: getHitMergeKey(hit),
-            chunk: createOutputChunk(hit, index + 1, bm25MaxScore, "bm25"),
+          esQueries[dataset.id] = generateRagElasticsearchQuery({
+            question: plan.query,
+            queryVector: embedded.vector,
+            allowedFileIds,
+            k,
+            numCandidates: Math.max(k * 10, 100),
           });
         }
       }
     }
-  }
 
-  if (graphEngines.length > 0 && datasets.length > 0) {
-    const graphResult = await queryGraphRag({
-      datasetIds: datasets.map((dataset) => dataset.id).filter(Boolean),
-      query: resolvedQuery,
-      engines: graphEngines,
-      limit: Math.max(10, Math.max(vectorObjResult.length, bm25ObjResult.length, 10)),
-    });
-    warnings.push(...graphResult.warnings);
-    for (const [index, result] of graphResult.results.entries()) {
-      graphObjResult.push({
-        key: `${result.engine}:${result.chunk_id ?? ""}:${result.subject}:${result.predicate}:${result.object}`,
-        chunk: createGraphOutputChunk(result, index + 1),
+    if ((useVector || useBm25) && client && Object.keys(esQueries).length > 0) {
+      for (const [datasetId, body] of Object.entries(esQueries)) {
+        const indexStatus = await ensureRagChunksIndex(client, queryVectorDimensions[datasetId] ?? 0);
+        if (!indexStatus.isDenseVector) {
+          console.warn(
+            `Skipping Elasticsearch KNN search for dataset ${datasetId}: ${indexStatus.reason} Recreate the index to enable vector search.`,
+          );
+        }
+
+        if (useVector && indexStatus.isDenseVector) {
+          const esResult = await client.search<ElasticSearchHitSource>({
+            index: RAG_CHUNKS_INDEX,
+            ...body,
+          });
+          const hitsList = esResult.hits.hits;
+          hitsTotal += getHitsTotalValue(esResult.hits.total);
+          const vectorMaxScore = esResult.hits.max_score ?? 1.0;
+          hitsMaxScore = Math.max(hitsMaxScore, vectorMaxScore);
+          scoreStats[`${datasetId}:vector`] = getScoreStats(hitsList);
+
+          for (const [index, hit] of hitsList.entries()) {
+            vectorObjResult.push({
+              key: getHitMergeKey(hit),
+              chunk: createOutputChunk(hit, index + 1, vectorMaxScore, "vector"),
+            });
+          }
+        }
+
+        if (useBm25) {
+          const bm25Result = await client.search<ElasticSearchHitSource>({
+            index: RAG_CHUNKS_INDEX,
+            ...buildBm25SearchBody(body),
+          });
+          const bm25HitsList = bm25Result.hits.hits;
+          hitsTotal += getHitsTotalValue(bm25Result.hits.total);
+          const bm25MaxScore = bm25Result.hits.max_score ?? 1.0;
+          hitsMaxScore = Math.max(hitsMaxScore, bm25MaxScore);
+          scoreStats[`${datasetId}:bm25`] = getScoreStats(bm25HitsList);
+
+          for (const [index, hit] of bm25HitsList.entries()) {
+            bm25ObjResult.push({
+              key: getHitMergeKey(hit),
+              chunk: createOutputChunk(hit, index + 1, bm25MaxScore, "bm25"),
+            });
+          }
+        }
+      }
+    }
+
+    if (plan.graphEngines.length > 0 && datasets.length > 0) {
+      const graphResult = await queryGraphRag({
+        datasetIds,
+        query: plan.query,
+        engines: plan.graphEngines,
+        limit: Math.max(10, Math.max(vectorObjResult.length, bm25ObjResult.length, 10)),
       });
+      warnings.push(...graphResult.warnings);
+      for (const [index, result] of graphResult.results.entries()) {
+        graphObjResult.push({
+          key: `${result.engine}:${result.chunk_id ?? ""}:${result.subject}:${result.predicate}:${result.object}`,
+          chunk: createGraphOutputChunk(result, index + 1),
+        });
+      }
     }
   }
 
-  const mergedResult = mergeRetrievalResults([...vectorObjResult, ...bm25ObjResult, ...graphObjResult]);
+  const feedbackHints = ragModes.includes("feedback")
+    ? await getRagFeedbackHints(datasetIds, resolvedQuery)
+    : [];
+  const mergedResult = applyFeedbackHints(
+    mergeRetrievalResults([...vectorObjResult, ...bm25ObjResult, ...graphObjResult]),
+    feedbackHints,
+  );
 
   return {
     output: {
       result: mergedResult,
       query: resolvedQuery,
+      retrieval_query: retrievalQuery,
       hits_total: hitsTotal,
       hits_max_score: hitsMaxScore,
       score_stats: scoreStats,
       vector_result_count: vectorObjResult.length,
       bm25_result_count: bm25ObjResult.length,
       graph_result_count: graphObjResult.length,
-      graph_engines: graphEngines,
+      graph_engines: configuredGraphEngines,
       retrieval_sources: configuredSources,
+      rag_modes: ragModes,
+      search_plans: searchPlans,
+      feedback_hint_count: feedbackHints.length,
       warnings,
     },
-    detail: `datasets=${datasets.length}, sources=${configuredSources.join("+")}`,
+    detail: `datasets=${datasets.length}, modes=${ragModes.join("+")}, sources=${configuredSources.join("+")}`,
   };
 }

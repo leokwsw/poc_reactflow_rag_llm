@@ -64,6 +64,55 @@ ARANGODB_CHUNK_COLLECTION=kg_chunks
 
 The graph extraction layer lives in `app/lib/graph-rag.ts`, so the heuristic triple extraction can later be replaced with a stronger txt2kg or LLM extraction pipeline without changing the workflow node contract.
 
+### RAG Modes
+
+Knowledge Retrieval supports these modes from the node panel:
+
+- Hybrid: combines vector, BM25, Neo4j, and ArangoDB result sets.
+- Conversational: sends recent workflow run turns as retrieval context.
+- Feedback: reads `rag_feedback` records and boosts or suppresses chunks.
+- Agentic: decomposes a query into multiple subqueries and merges results.
+- Adaptive: enables retrieval sources based on query intent, such as graph-heavy or keyword-heavy questions.
+
+Feedback can be written through:
+
+```bash
+curl -X POST http://localhost:3000/api/rag/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dataset_id": "dataset-id",
+    "chunk_id": "chunk-id",
+    "query": "original user question",
+    "rating": "positive",
+    "note": "useful answer"
+  }'
+```
+
+### Multi-Source Documents
+
+`POST /api/datasets` accepts normal staged file uploads and a `sources` array. Sources are converted to `.txt` documents, then processed by the same chunking, embedding, Elasticsearch, and Graph RAG pipeline.
+
+```json
+{
+  "title": "External Knowledge",
+  "sources": [
+    {"type": "website", "url": "https://example.com/docs"},
+    {"type": "youtube", "url": "https://www.youtube.com/watch?v=..."},
+    {"type": "audio", "url": "https://example.com/audio.mp3"},
+    {"type": "notion", "notion_page_id": "..."},
+    {"type": "text", "title": "Manual note", "text": "Plain text content"}
+  ]
+}
+```
+
+Website sources are fetched directly. YouTube and audio sources use optional transcript services:
+
+```bash
+YOUTUBE_TRANSCRIPT_API_URL=https://your-service/transcript/youtube
+AUDIO_TRANSCRIPTION_API_URL=https://your-service/transcript/audio
+NOTION_TOKEN=secret_...
+```
+
 ## Deploy With PM2
 
 This project includes `ecosystem.config.cjs` for `pm2 deploy`.

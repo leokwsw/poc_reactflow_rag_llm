@@ -12,11 +12,13 @@ type KnowledgeRetrievalNodeData = WorkflowNodeDataBase & {
     name: string;
   }>;
   retrieval_sources?: string[];
+  rag_modes?: string[];
 };
 
 export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetrievalNodeData>) {
   const datasets = data.datasets ?? [];
   const sources = data.retrieval_sources?.length ? data.retrieval_sources : ["vector", "bm25", "neo4j", "arangodb"];
+  const modes = data.rag_modes?.length ? data.rag_modes : ["hybrid"];
 
   return (
     <BaseNode
@@ -41,6 +43,13 @@ export default function KnowledgeRetrievalNode({ data }: NodeProps<KnowledgeRetr
         <div className="flex flex-wrap gap-1.5">
           {sources.map((source) => (
             <NodeToken key={source}>{source}</NodeToken>
+          ))}
+        </div>
+      </NodeSection>
+      <NodeSection label="Modes">
+        <div className="flex flex-wrap gap-1.5">
+          {modes.map((mode) => (
+            <NodeToken key={mode}>{mode}</NodeToken>
           ))}
         </div>
       </NodeSection>

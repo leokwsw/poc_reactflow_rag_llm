@@ -36,6 +36,11 @@ type WorkflowStudioProps = {
   recentRuns: WorkflowRunRecord[];
 };
 
+type ConversationHistoryItem = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 const formatRunTime = (value?: string | null) =>
   value
     ? new Intl.DateTimeFormat("en", {
@@ -223,6 +228,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<WorkflowRunResponse["result"] | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
   const [liveTrace, setLiveTrace] = useState<NonNullable<WorkflowRunResponse["result"]>["trace"]>([]);
   const [runNodeState, setRunNodeState] = useState<{
     activeNodeId?: string | null;
@@ -321,6 +327,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
       formData.append("workflow_id", workflowId);
       formData.append("workflow", JSON.stringify(data));
       formData.append("query", runQuery);
+      formData.append("conversation_history", JSON.stringify(conversationHistory));
       runFiles.forEach((file) => {
         formData.append("files", file);
       });
@@ -398,6 +405,14 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
         if (eventType === "workflow_completed" && payload.result) {
           const result = payload.result as NonNullable<WorkflowRunResponse["result"]>;
           setRunResult(result);
+          setConversationHistory((prev): ConversationHistoryItem[] => {
+            const next: ConversationHistoryItem[] = [
+              ...prev.slice(-8),
+              {role: "user", content: runQuery},
+              {role: "assistant", content: result.output ?? ""},
+            ];
+            return next.filter((item) => item.content.trim());
+          });
           setLiveTrace(result.trace);
           setRunNodeState((prev) => ({
             activeNodeId: null,
@@ -443,7 +458,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
       runStreamAbortRef.current = null;
       setIsRunning(false);
     }
-  }, [data, runFiles, runQuery, workflowId]);
+  }, [conversationHistory, data, runFiles, runQuery, workflowId]);
 
   const handleCopyWorkflowJson = useCallback(async () => {
     try {
@@ -538,14 +553,27 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-zinc-900">Run Workflow</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Conversation turns: {Math.floor(conversationHistory.length / 2)}
+              </p>
             </div>
-            <button
-              className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
-              onClick={handleRun}
-              disabled={isRunning}
-            >
-              {isRunning ? "Running..." : "Play"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={conversationHistory.length === 0 || isRunning}
+                onClick={() => setConversationHistory([])}
+                type="button"
+              >
+                Clear
+              </button>
+              <button
+                className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400"
+                onClick={handleRun}
+                disabled={isRunning}
+              >
+                {isRunning ? "Running..." : "Play"}
+              </button>
+            </div>
           </div>
 
           <label className="mb-3 block">

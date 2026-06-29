@@ -16,8 +16,10 @@ type KnowledgeRetrievalNodeData = {
   datasets?: Dataset[];
   retrieval_sources?: RetrievalSource[];
   graph_engines?: GraphEngine[];
+  rag_modes?: RagMode[];
 };
 
+type RagMode = "hybrid" | "conversational" | "feedback" | "agentic" | "adaptive";
 type RetrievalSource = "vector" | "bm25" | "neo4j" | "arangodb";
 type GraphEngine = "neo4j" | "arangodb";
 
@@ -54,6 +56,14 @@ const retrievalOptions: Array<{value: RetrievalSource; label: string; descriptio
   {value: "bm25", label: "BM25", description: "Elasticsearch keyword search"},
   {value: "neo4j", label: "Neo4j", description: "Graph relation traversal"},
   {value: "arangodb", label: "ArangoDB", description: "AQL graph relation traversal"},
+];
+
+const ragModeOptions: Array<{value: RagMode; label: string; description: string}> = [
+  {value: "hybrid", label: "Hybrid", description: "Fuse vector, BM25, and graph results"},
+  {value: "conversational", label: "Conversational", description: "Use previous turns to rewrite retrieval context"},
+  {value: "feedback", label: "Feedback", description: "Boost or suppress chunks from feedback history"},
+  {value: "agentic", label: "Agentic", description: "Split the question into multiple retrieval subqueries"},
+  {value: "adaptive", label: "Adaptive", description: "Choose retrieval sources from query intent"},
 ];
 
 /** 從節點資料讀出單一變數運算式（僅支援 `{{#a.b#}}` 或純 `a.b`）。 */
@@ -139,6 +149,10 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
     () => data.retrieval_sources?.length ? data.retrieval_sources : ["vector", "bm25", "neo4j", "arangodb"],
     [data.retrieval_sources],
   );
+  const ragModes = useMemo<RagMode[]>(
+    () => data.rag_modes?.length ? data.rag_modes : ["hybrid"],
+    [data.rag_modes],
+  );
 
   const queryVariableOptions = useMemo(() => {
     const upstream = getContextOptions(allNodes, allEdges, node.id);
@@ -190,6 +204,13 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
     });
   };
 
+  const toggleRagMode = (mode: RagMode) => {
+    const next = ragModes.includes(mode)
+      ? ragModes.filter((item) => item !== mode)
+      : [...ragModes, mode];
+    patchNodeData({rag_modes: next.length > 0 ? next : ["hybrid"]});
+  };
+
   return (
     <div className="space-y-4">
       <PanelField label="Label">
@@ -223,6 +244,31 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
           </select>
         </PanelField>
         <p className="text-xs text-gray-500">僅能從清單選擇一個變數作為查詢來源，無法輸入自訂文字。</p>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
+        <div className="border-b border-gray-200 pb-2.5 text-sm font-semibold tracking-wide text-gray-900">
+          RAG modes
+        </div>
+        <div className="mt-3 grid gap-2">
+          {ragModeOptions.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition hover:bg-gray-100"
+            >
+              <input
+                checked={ragModes.includes(option.value)}
+                className="mt-1 h-4 w-4 accent-indigo-600"
+                type="checkbox"
+                onChange={() => toggleRagMode(option.value)}
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-gray-800">{option.label}</span>
+                <span className="block text-xs text-gray-500">{option.description}</span>
+              </span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">

@@ -6,6 +6,7 @@ import {NextResponse} from "next/server";
 import {isValidUploadId, readBlob, readMeta, removeUpload} from "@/app/api/file/store";
 import {createDatasetWithDocuments, dataPath, getDatasets, ModelConfig, readJsonFile} from "@/app/datasets/data";
 import {createTaskId, enqueueDatasetTask} from "@/app/datasets/queue";
+import {prepareDatasetSource, type DatasetSourceInput} from "@/app/lib/multimodal-sources";
 import {
   DEFAULT_EMBEDDING_MODEL_PROFILE_ID,
   DEFAULT_RERANKING_MODEL_PROFILE_ID,
@@ -116,7 +117,18 @@ type PreparedDatasetFile = {
   mime: string;
   extension: string;
   bytes: Buffer;
-  stagingId: string;
+  stagingId?: string;
+  sourceType?: string;
+};
+
+const isDatasetSourceInput = (value: unknown): value is DatasetSourceInput => {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.type === "string" && (
+    typeof item.url === "string" ||
+    typeof item.text === "string" ||
+    typeof item.notion_page_id === "string"
+  );
 };
 
 export async function POST(request: Request) {
@@ -143,22 +155,27 @@ export async function POST(request: Request) {
   const title = typeof o.title === "string" ? o.title.trim() : "";
   const description = typeof o.description === "string" ? o.description.trim() : "";
   const fileRefs = o.files;
+  const sourceRefs = o.sources;
 
   if (!title) {
     return badRequest("Dataset title is required.");
   }
 
-  if (!Array.isArray(fileRefs) || fileRefs.length === 0) {
-    return badRequest("files must be a non-empty array of objects from the file upload API.");
+  if ((!Array.isArray(fileRefs) || fileRefs.length === 0) && (!Array.isArray(sourceRefs) || sourceRefs.length === 0)) {
+    return badRequest("files or sources must be a non-empty array.");
   }
 
-  if (!fileRefs.every(isUploadFileRef)) {
+  if (Array.isArray(fileRefs) && !fileRefs.every(isUploadFileRef)) {
     return badRequest("Each file entry must include id, file_name, file_size, and mime (upload API response shape).");
+  }
+
+  if (Array.isArray(sourceRefs) && !sourceRefs.every(isDatasetSourceInput)) {
+    return badRequest("Each source entry must include type and one of url, text, or notion_page_id.");
   }
 
   const prepared: PreparedDatasetFile[] = [];
 
-  for (const ref of fileRefs) {
+  for (const ref of Array.isArray(fileRefs) ? fileRefs : []) {
     if (!isValidUploadId(ref.id)) {
       return badRequest(`Invalid file id: ${ref.id}.`);
     }
@@ -182,6 +199,18 @@ export async function POST(request: Request) {
       extension,
       bytes,
       stagingId: ref.id,
+    });
+  }
+
+  for (const source of Array.isArray(sourceRefs) ? sourceRefs : []) {
+    const preparedSource = await prepareDatasetSource(source);
+    prepared.push({
+      displayName: preparedSource.displayName,
+      size: preparedSource.bytes.length,
+      mime: preparedSource.mime,
+      extension: preparedSource.extension,
+      bytes: preparedSource.bytes,
+      sourceType: preparedSource.sourceType,
     });
   }
 
@@ -213,7 +242,9 @@ export async function POST(request: Request) {
     const filePath = dataPath(relativePath);
 
     fs.writeFileSync(filePath, item.bytes);
-    await removeUpload(item.stagingId);
+    if (item.stagingId) {
+      await removeUpload(item.stagingId);
+    }
     documentIds.push(documentId);
     filePaths.push(filePath);
     documents.push({
@@ -226,7 +257,7 @@ export async function POST(request: Request) {
       uploaded_time: timestamp,
       deleted: "false",
       deleted_at: "",
-      upload_source: "file",
+      upload_source: item.sourceType ?? "file",
       mime_type: item.mime,
       ext: item.extension,
       storage_page: relativePath,

@@ -1,5 +1,5 @@
 import type { WorkflowDataType } from "@/app/components/workflow/types";
-import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
+import type {WorkflowRunInput, WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
 import { runWorkflow } from "@/app/lib/workflow-runner";
 import {saveWorkflowRun, updateWorkflowGraph} from "@/app/workflow/data";
 
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
         workflowId = String(formData.get("workflow_id") ?? "");
         const workflowRaw = formData.get("workflow");
         query = String(formData.get("query") ?? "");
+        const conversationHistoryRaw = String(formData.get("conversation_history") ?? "");
 
         if (!workflowId) {
           sendEvent(controller, "workflow_error", {
@@ -67,11 +68,32 @@ export async function POST(request: Request) {
               };
             }),
         );
+        const conversation_history: NonNullable<WorkflowRunInput["conversation_history"]> = (() => {
+          if (!conversationHistoryRaw.trim()) return [];
+          try {
+            const parsed = JSON.parse(conversationHistoryRaw) as unknown;
+            if (!Array.isArray(parsed)) return [];
+            return parsed
+              .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+              .map((item) => {
+                const role: "user" | "assistant" | "system" =
+                  item.role === "assistant" || item.role === "system" ? item.role : "user";
+                return {
+                  role,
+                  content: String(item.content ?? ""),
+                };
+              })
+              .filter((item) => item.content.trim());
+          } catch {
+            return [];
+          }
+        })();
 
         sendEvent(controller, "workflow_started", { success: true });
         startedAt = new Date().toISOString();
         runInput = {
           query,
+          conversation_history,
           files: files.map((file) => ({
             name: file.name,
             type: file.type,
@@ -84,6 +106,7 @@ export async function POST(request: Request) {
           {
             query,
             files,
+            conversation_history,
           },
           {
             onEvent(event) {

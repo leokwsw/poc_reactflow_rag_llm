@@ -133,6 +133,7 @@ const processTask = async (taskId: string) => {
 
         extra_metadata["file_id"] = documentId
         extra_metadata["file_name"] = document.file_name
+        extra_metadata["chunk_id"] = chunkId
         // extra_metadata["file_url"] = "File Access Url"
         // extra_metadata["file_category"] = "File Category"
 
