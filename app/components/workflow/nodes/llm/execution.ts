@@ -14,6 +14,13 @@ type LlmNodeConfig = {
   vision_enable?: boolean;
 };
 
+const SDK_WITH_OPTIONAL_KEY = new Set(["ollama", "lmstudio", "xinference", "openai-compatible"]);
+
+const modelHeaders = (apiKey: string) => ({
+  "Content-Type": "application/json",
+  ...(apiKey ? {Authorization: `Bearer ${apiKey}`} : {}),
+});
+
 function hasContextPlaceholder(messages: Array<{ content?: string }>) {
   return messages.some((message) => (message.content ?? "").includes("{{#context#}}"));
 }
@@ -87,7 +94,7 @@ export async function executeLlmNode({
   const api_key = modelConfig.api_key;
   const model = modelConfig.model;
 
-  if (!api_key) {
+  if (!api_key && !SDK_WITH_OPTIONAL_KEY.has(modelConfig.sdk)) {
     throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
@@ -108,10 +115,7 @@ export async function executeLlmNode({
 
   const response = await fetch(`${api_base_url}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${api_key}`,
-    },
+    headers: modelHeaders(api_key),
     body: JSON.stringify({
       model,
       model_profile: modelConfig.id,

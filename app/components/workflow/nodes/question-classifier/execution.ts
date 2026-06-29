@@ -56,6 +56,13 @@ type ClassifierMessage = {
   content: string;
 };
 
+const SDK_WITH_OPTIONAL_KEY = new Set(["ollama", "lmstudio", "xinference", "openai-compatible"]);
+
+const modelHeaders = (apiKey: string) => ({
+  "Content-Type": "application/json",
+  ...(apiKey ? {Authorization: `Bearer ${apiKey}`} : {}),
+});
+
 type ClassifierUsage = {
   prompt_tokens: number;
   prompt_unit_price: string;
@@ -186,15 +193,13 @@ async function pickClassByModel(
   const api_key = modelConfig.api_key;
   const model = modelConfig.model;
 
-  if (!api_key || !model) return null;
+  if (!model) return null;
+  if (!api_key && !SDK_WITH_OPTIONAL_KEY.has(modelConfig.sdk)) return null;
 
   const startedAt = Date.now();
   const response = await fetch(`${api_base_url}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${api_key}`,
-    },
+    headers: modelHeaders(api_key),
     body: JSON.stringify({
       model,
       temperature: 0,

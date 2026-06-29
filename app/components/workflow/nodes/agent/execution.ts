@@ -51,6 +51,12 @@ type ResolvedAgentTool = {
 };
 
 const DEFAULT_SYSTEM_PROMPT = "You are a helpful AI agent. Use tools when they can improve the answer.";
+const SDK_WITH_OPTIONAL_KEY = new Set(["ollama", "lmstudio", "xinference", "openai-compatible"]);
+
+const modelHeaders = (apiKey: string) => ({
+  "Content-Type": "application/json",
+  ...(apiKey ? {Authorization: `Bearer ${apiKey}`} : {}),
+});
 
 function hasContextPlaceholder(messages: AgentMessage[]) {
   return messages.some((message) => (message.content ?? "").includes("{{#context#}}"));
@@ -245,7 +251,7 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
     ?? data.agent_parameters?.maximum_iterations?.value
     ?? 3));
 
-  if (!api_key) {
+  if (!api_key && !SDK_WITH_OPTIONAL_KEY.has(modelConfig.sdk)) {
     throw new Error(`Model profile "${modelConfig.id}" is missing api key, and OPENAI_API_KEY is not set.`);
   }
   if (!model) {
@@ -288,10 +294,7 @@ export async function executeAgentNode(context: NodeExecutionContext): Promise<N
   for (let iteration = 0; iteration < maximumIterations; iteration += 1) {
     const response = await fetch(`${api_base_url}/chat/completions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${api_key}`,
-      },
+      headers: modelHeaders(api_key),
       body: JSON.stringify({
         model,
         model_profile: modelConfig.id,
