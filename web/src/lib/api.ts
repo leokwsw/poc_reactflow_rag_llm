@@ -128,7 +128,7 @@ export const api = {
     });
   },
   listProviders() {
-    return request<Array<{ id: string; name: string; baseUrl: string; kind: string; model: string; enabled: boolean }>>(
+    return request<Array<{ id: string; name: string; provider?: string; baseUrl: string; apiKeyRef?: string; kind: string; model: string; enabled: boolean }>>(
       '/models/providers',
       { cache: 'no-store' },
     );
@@ -145,6 +145,26 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     });
+  },
+  updateProvider(
+    id: string,
+    input: Partial<{
+      name: string;
+      provider: string;
+      baseUrl: string;
+      apiKeyRef: string;
+      kind: 'llm' | 'embedding' | 'rerank';
+      model: string;
+      enabled: boolean;
+    }>,
+  ) {
+    return request(`/models/providers/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    });
+  },
+  deleteProvider(id: string) {
+    return request(`/models/providers/${id}`, { method: 'DELETE' });
   },
   listMcpServers() {
     return request<Array<{ id: string; name: string; identifier: string; serverUrl: string; enabled: boolean; tools: unknown[] }>>(

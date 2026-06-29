@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { IsBoolean, IsIn, IsObject, IsOptional, IsString, MinLength } from 'class-validator';
 import { ModelProviderKind } from '@prisma/client';
 import { ModelsService } from './models.service';
@@ -42,6 +42,43 @@ class CreateModelProviderDto {
   config?: Record<string, unknown>;
 }
 
+class UpdateModelProviderDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  provider?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  baseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  apiKeyRef?: string;
+
+  @IsOptional()
+  @IsIn(['llm', 'embedding', 'rerank'])
+  kind?: ModelProviderKind;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  model?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  config?: Record<string, unknown>;
+}
+
 class CreateModelConfigDto {
   @IsString()
   @MinLength(1)
@@ -75,6 +112,16 @@ export class ModelsController {
   @Post('providers')
   createProvider(@Body() dto: CreateModelProviderDto) {
     return this.models.createProvider(dto);
+  }
+
+  @Patch('providers/:id')
+  updateProvider(@Param('id') id: string, @Body() dto: UpdateModelProviderDto) {
+    return this.models.updateProvider(id, dto);
+  }
+
+  @Delete('providers/:id')
+  deleteProvider(@Param('id') id: string) {
+    return this.models.deleteProvider(id);
   }
 
   @Post('providers/:id/configs')

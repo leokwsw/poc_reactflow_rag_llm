@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ModelProviderKind } from '@prisma/client';
 import OpenAI from 'openai';
@@ -102,7 +102,7 @@ export class ModelsService {
     const envProviders = [
       {
         id: 'env-llm',
-        name: 'OpenAI-compatible Chat',
+        name: 'OpenRouter Chat',
         provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
@@ -112,7 +112,7 @@ export class ModelsService {
       },
       {
         id: 'env-embedding',
-        name: 'OpenAI-compatible Embedding',
+        name: 'OpenRouter Embedding',
         provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
@@ -122,7 +122,7 @@ export class ModelsService {
       },
       {
         id: 'env-rerank',
-        name: 'Optional Reranker',
+        name: 'OpenRouter Reranker',
         provider: 'openai-compatible',
         baseUrl: provider.baseUrl,
         apiKeyRef: 'OPENAI_COMPATIBLE_API_KEY',
@@ -159,6 +159,43 @@ export class ModelsService {
     });
   }
 
+  updateProvider(
+    id: string,
+    input: Partial<{
+      name: string;
+      provider: string;
+      baseUrl: string;
+      apiKeyRef: string;
+      kind: ModelProviderKind;
+      model: string;
+      enabled: boolean;
+      config: Record<string, unknown>;
+    }>,
+  ) {
+    this.assertDatabaseProvider(id);
+    return this.prisma.modelProvider.update({
+      where: { id },
+      data: {
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.provider !== undefined ? { provider: input.provider } : {}),
+        ...(input.baseUrl !== undefined ? { baseUrl: input.baseUrl } : {}),
+        ...(input.apiKeyRef !== undefined ? { apiKeyRef: input.apiKeyRef } : {}),
+        ...(input.kind !== undefined ? { kind: input.kind } : {}),
+        ...(input.model !== undefined ? { model: input.model } : {}),
+        ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+        ...(input.config !== undefined ? { config: toPrismaJson(input.config) } : {}),
+      },
+      include: { modelConfigs: true },
+    });
+  }
+
+  deleteProvider(id: string) {
+    this.assertDatabaseProvider(id);
+    return this.prisma.modelProvider.delete({
+      where: { id },
+    });
+  }
+
   createModelConfig(
     providerId: string,
     input: { name: string; kind: ModelProviderKind; model: string; parameters?: Record<string, unknown>; enabled?: boolean },
@@ -173,5 +210,11 @@ export class ModelsService {
         enabled: input.enabled ?? true,
       },
     });
+  }
+
+  private assertDatabaseProvider(id: string) {
+    if (id.startsWith('env-')) {
+      throw new BadRequestException('Environment providers are read-only. Create a database provider to edit or delete it.');
+    }
   }
 }

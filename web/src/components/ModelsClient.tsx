@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PlugZap, RefreshCw } from 'lucide-react';
+import { Pencil, PlugZap, RefreshCw, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 type Provider = {
   id: string;
   name: string;
+  provider?: string;
   baseUrl: string;
+  apiKeyRef?: string;
   kind: string;
   model: string;
   enabled: boolean;
@@ -22,6 +24,9 @@ export function ModelsClient() {
   const [apiKeyRef, setApiKeyRef] = useState('OPENROUTER_API_KEY');
   const [kind, setKind] = useState<'llm' | 'embedding' | 'rerank'>('llm');
   const [model, setModel] = useState('openai/gpt-4o-mini');
+  const [enabled, setEnabled] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [status, setStatus] = useState('Ready');
 
   const refresh = async () => {
     setProviders(await api.listProviders());
@@ -36,8 +41,56 @@ export function ModelsClient() {
   };
 
   const create = async () => {
+    setStatus('Creating provider');
     await api.createProvider({ name, provider, baseUrl, apiKeyRef, kind, model });
+    setStatus('Provider created');
     await refresh();
+  };
+
+  const loadForEdit = (row: Provider) => {
+    setEditingId(row.id);
+    setName(row.name);
+    setProvider(row.provider ?? 'openai-compatible');
+    setBaseUrl(row.baseUrl);
+    setApiKeyRef(row.apiKeyRef ?? '');
+    setKind(row.kind as 'llm' | 'embedding' | 'rerank');
+    setModel(row.model);
+    setEnabled(row.enabled);
+    setStatus(`Editing ${row.name}`);
+  };
+
+  const save = async () => {
+    if (!editingId) {
+      await create();
+      return;
+    }
+    setStatus('Saving provider');
+    await api.updateProvider(editingId, { name, provider, baseUrl, apiKeyRef, kind, model, enabled });
+    setStatus('Provider updated');
+    setEditingId(null);
+    await refresh();
+  };
+
+  const remove = async (id: string) => {
+    setStatus('Deleting provider');
+    await api.deleteProvider(id);
+    if (editingId === id) {
+      setEditingId(null);
+    }
+    setStatus('Provider deleted');
+    await refresh();
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setName('OpenRouter Chat');
+    setProvider('openrouter');
+    setBaseUrl('https://openrouter.ai/api/v1');
+    setApiKeyRef('OPENROUTER_API_KEY');
+    setKind('llm');
+    setModel('openai/gpt-4o-mini');
+    setEnabled(true);
+    setStatus('Ready');
   };
 
   return (
@@ -58,6 +111,7 @@ export function ModelsClient() {
                 <th>Kind</th>
                 <th>Model</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -73,6 +127,16 @@ export function ModelsClient() {
                   <td>
                     <span className={`status ${provider.enabled ? 'ready' : ''}`}>{provider.enabled ? 'enabled' : 'disabled'}</span>
                   </td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="icon-button" disabled={provider.id.startsWith('env-')} title="Edit provider" onClick={() => loadForEdit(provider)}>
+                        <Pencil size={14} />
+                      </button>
+                      <button className="icon-button danger" disabled={provider.id.startsWith('env-')} title="Delete provider" onClick={() => remove(provider.id)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -82,8 +146,14 @@ export function ModelsClient() {
 
       <section className="panel">
         <div className="panel-header">
-          <h2 className="panel-title">Create Provider</h2>
-          <button className="button primary" onClick={create}>Create</button>
+          <div>
+            <h2 className="panel-title">{editingId ? 'Edit Provider' : 'Create Provider'}</h2>
+            <p className="mini-subtitle">{status}</p>
+          </div>
+          <div className="table-actions">
+            <button className="button ghost" onClick={resetForm}>New</button>
+            <button className="button primary" onClick={save}>{editingId ? 'Save' : 'Create'}</button>
+          </div>
         </div>
         <div className="panel-body form-grid">
           <div className="field">
@@ -118,6 +188,10 @@ export function ModelsClient() {
             <label>Model</label>
             <input className="input" value={model} onChange={(event) => setModel(event.target.value)} />
           </div>
+          <label className="check-row">
+            <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
+            Enabled
+          </label>
         </div>
       </section>
 

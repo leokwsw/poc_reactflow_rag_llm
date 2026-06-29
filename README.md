@@ -55,4 +55,7 @@ ELASTICSEARCH_NODE="http://10.0.0.106:9200"
 ELASTICSEARCH_USERNAME="elastic"
 ELASTICSEARCH_PASSWORD="password"
 ELASTICSEARCH_INDEX="rag_workflow_chunks"
+ELASTICSEARCH_VECTOR_DIMS=1536
 ```
+
+If your embedding provider returns a different vector size, the API will use a dimension-specific Elasticsearch index such as `rag_workflow_chunks_1024d`.

@@ -39,6 +39,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
@@ -285,6 +290,21 @@ button {
 
 .table tr.is-active-row {
   background: #eef6ff;
+}
+
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .two-column {
@@ -564,6 +584,10 @@ button {
 
 .icon-button.muted {
   color: #b4bfcc;
+}
+
+.icon-button.danger {
+  color: var(--danger);
 }
 
 .studio-main {

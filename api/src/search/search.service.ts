@@ -19,12 +19,15 @@ export class SearchService implements OnModuleInit {
   private readonly client: Client;
   private readonly memoryIndex = new Map<string, IndexedChunk>();
   private elasticsearchReady = false;
+  private activeIndexName: string;
+  private activeVectorDims?: number;
 
   constructor(
     private readonly config: ConfigService,
     private readonly embeddings: EmbeddingsService,
   ) {
     this.indexName = this.config.get<string>('ELASTICSEARCH_INDEX', 'rag_chunks');
+    this.activeIndexName = this.indexName;
     const username = this.config.get<string>('ELASTICSEARCH_USERNAME', '');
     const password = this.config.get<string>('ELASTICSEARCH_PASSWORD', '');
     this.client = new Client({
@@ -37,17 +40,19 @@ export class SearchService implements OnModuleInit {
     try {
       try {
         const mapping = await this.client.indices.getMapping({ index: this.indexName });
-        if (!this.hasCompatibleMapping(mapping)) {
+        const mappingInfo = this.getMappingInfo(mapping, this.indexName);
+        if (!mappingInfo.compatible) {
           this.elasticsearchReady = false;
           this.logger.warn(
             `Elasticsearch index "${this.indexName}" has an incompatible mapping. ` +
-              'Expected fields content:text and embedding:dense_vector dims=1536. ' +
+              'Expected fields content:text and embedding:dense_vector. ' +
               'Using in-memory search fallback.',
           );
           return;
         }
 
         this.elasticsearchReady = true;
+        this.activeVectorDims = mappingInfo.dims;
         return;
       } catch (error) {
         if (!this.isMissingIndexError(error)) {
@@ -62,11 +67,12 @@ export class SearchService implements OnModuleInit {
               documentId: { type: 'keyword' },
               content: { type: 'text' },
               metadata: { type: 'object', enabled: true },
-              embedding: { type: 'dense_vector', dims: 1536, index: true, similarity: 'cosine' },
+              embedding: { type: 'dense_vector', dims: this.configuredVectorDims(), index: true, similarity: 'cosine' },
             },
           },
         });
         this.elasticsearchReady = true;
+        this.activeVectorDims = this.configuredVectorDims();
         return;
       }
     } catch (error) {
@@ -77,13 +83,14 @@ export class SearchService implements OnModuleInit {
 
   async indexChunk(chunk: IndexedChunk) {
     this.memoryIndex.set(chunk.chunkId, chunk);
-    if (!this.elasticsearchReady) {
+    const indexName = await this.ensureIndexForVectorDims(chunk.embedding.length);
+    if (!this.elasticsearchReady || !indexName) {
       return;
     }
 
     try {
       await this.client.index({
-        index: this.indexName,
+        index: indexName,
         id: chunk.chunkId,
         document: chunk,
       });
@@ -94,13 +101,14 @@ export class SearchService implements OnModuleInit {
 
   async search(query: string, topK = 5): Promise<RagContext[]> {
     const embedding = await this.embeddings.embed(query);
-    if (!this.elasticsearchReady) {
+    const indexName = await this.ensureIndexForVectorDims(embedding.length);
+    if (!this.elasticsearchReady || !indexName) {
       return this.memorySearch(query, embedding, topK);
     }
 
     try {
       const response = await this.client.search<IndexedChunk>({
-        index: this.indexName,
+        index: indexName,
         size: topK,
         query: {
           bool: {
@@ -134,13 +142,103 @@ export class SearchService implements OnModuleInit {
     }
   }
 
-  private hasCompatibleMapping(mapping: unknown) {
+  private getMappingInfo(mapping: unknown, indexName: string) {
     const indexMapping = mapping as Record<string, { mappings?: { properties?: Record<string, unknown> } }>;
-    const properties = indexMapping[this.indexName]?.mappings?.properties;
+    const properties = indexMapping[indexName]?.mappings?.properties;
     const content = properties?.content as { type?: string } | undefined;
     const embedding = properties?.embedding as { type?: string; dims?: number } | undefined;
 
-    return content?.type === 'text' && embedding?.type === 'dense_vector' && embedding?.dims === 1536;
+    return {
+      compatible: content?.type === 'text' && embedding?.type === 'dense_vector' && typeof embedding?.dims === 'number',
+      dims: embedding?.dims,
+    };
+  }
+
+  private async ensureIndexForVectorDims(dims: number): Promise<string | null> {
+    if (this.elasticsearchReady && this.activeVectorDims === dims) {
+      return this.activeIndexName;
+    }
+
+    try {
+      const baseMapping = await this.client.indices.getMapping({ index: this.indexName });
+      const baseInfo = this.getMappingInfo(baseMapping, this.indexName);
+      if (baseInfo.compatible && baseInfo.dims === dims) {
+        this.activeIndexName = this.indexName;
+        this.activeVectorDims = dims;
+        this.elasticsearchReady = true;
+        return this.activeIndexName;
+      }
+
+      if (baseInfo.compatible && baseInfo.dims !== dims) {
+        const dimensionIndexName = `${this.indexName}_${dims}d`;
+        const ready = await this.ensureDimensionIndex(dimensionIndexName, dims);
+        if (!ready) {
+          return null;
+        }
+        this.activeIndexName = dimensionIndexName;
+        this.activeVectorDims = dims;
+        this.elasticsearchReady = true;
+        this.logger.warn(
+          `Embedding dimension ${dims} does not match "${this.indexName}" mapping dims=${baseInfo.dims}. ` +
+            `Using "${dimensionIndexName}" for Elasticsearch vector search.`,
+        );
+        return this.activeIndexName;
+      }
+
+      this.elasticsearchReady = false;
+      return null;
+    } catch (error) {
+      if (!this.isMissingIndexError(error)) {
+        this.elasticsearchReady = false;
+        this.logger.warn(`Elasticsearch index check failed; using in-memory search. ${this.formatError(error)}`);
+        return null;
+      }
+
+      const ready = await this.ensureDimensionIndex(this.indexName, dims);
+      if (!ready) {
+        return null;
+      }
+      this.activeIndexName = this.indexName;
+      this.activeVectorDims = dims;
+      this.elasticsearchReady = true;
+      return this.activeIndexName;
+    }
+  }
+
+  private async ensureDimensionIndex(indexName: string, dims: number): Promise<boolean> {
+    try {
+      const mapping = await this.client.indices.getMapping({ index: indexName });
+      const info = this.getMappingInfo(mapping, indexName);
+      if (info.compatible && info.dims === dims) {
+        return true;
+      }
+      this.logger.warn(
+        `Elasticsearch index "${indexName}" exists but has incompatible vector dims=${info.dims ?? 'unknown'}; using in-memory search fallback.`,
+      );
+      this.elasticsearchReady = false;
+      return false;
+    } catch (error) {
+      if (!this.isMissingIndexError(error)) {
+        throw error;
+      }
+      await this.client.indices.create({
+        index: indexName,
+        mappings: {
+          properties: {
+            chunkId: { type: 'keyword' },
+            documentId: { type: 'keyword' },
+            content: { type: 'text' },
+            metadata: { type: 'object', enabled: true },
+            embedding: { type: 'dense_vector', dims, index: true, similarity: 'cosine' },
+          },
+        },
+      });
+      return true;
+    }
+  }
+
+  private configuredVectorDims() {
+    return Number(this.config.get<string>('ELASTICSEARCH_VECTOR_DIMS', '1536'));
   }
 
   private formatError(error: unknown) {
