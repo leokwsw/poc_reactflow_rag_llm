@@ -24,6 +24,7 @@ export default function Control(
   return (
     <div className="pointer-events-auto flex flex-col items-center gap-2 rounded-[20px] border border-zinc-200/80 bg-white/92 p-2 text-zinc-500 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)] backdrop-blur">
       <button
+        aria-label="新增節點"
         className={buttonClassName}
         onClick={onOpenAddMenu}
         title="Add Node"
@@ -32,17 +33,22 @@ export default function Control(
       </button>
       <div className="h-px w-6 bg-zinc-200"/>
       <button
+        aria-label="選取模式"
+        aria-pressed={mode === "pointer"}
         className={`${buttonClassName} ${mode === "pointer" ? activeButtonClassName : ""}`.trim()}
         onClick={handleModePointer}>
         <span aria-hidden="true">↖</span>
       </button>
       <button
+        aria-label="移動畫布模式"
+        aria-pressed={mode === "hand"}
         className={`${buttonClassName} ${mode === "hand" ? activeButtonClassName : ""}`.trim()}
         onClick={handleModeHand}>
         <span aria-hidden="true">✋</span>
       </button>
       <div className="h-px w-6 bg-zinc-200"/>
       <button
+        aria-label="自動整理工作流"
         className={buttonClassName}
         onClick={onOrganize}
         title="Workflow Organize"

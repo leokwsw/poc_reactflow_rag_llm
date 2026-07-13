@@ -45,7 +45,7 @@ export default function PanelContextMenu({
 
   return (
     <div
-      className="absolute z-20 inline-flex max-h-[32rem] flex-col overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 shadow-lg"
+      className="workflow-context-menu absolute z-20 inline-flex max-h-[32rem] flex-col overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-lg"
       style={{ left: x, top: y, width: "fit-content", maxWidth: "20rem" }}
       onClick={(event) => event.stopPropagation()}
     >
@@ -58,7 +58,7 @@ export default function PanelContextMenu({
             {group.items.map((item) => (
               <div key={item.type} className="block">
                 <button
-                  className="block w-full rounded px-2 py-1.5 text-left text-sm whitespace-nowrap hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="block w-full rounded-xl px-2.5 py-2 text-left text-sm whitespace-nowrap transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={() => onAddNode(item.type)}
                   disabled={item.disabled}
                   type="button"

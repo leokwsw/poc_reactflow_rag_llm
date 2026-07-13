@@ -22,18 +22,19 @@ export default async function DatasetsPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
+    <div className="collection-page dataset-list-page min-h-full bg-[#f5f7fb] px-6 py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="collection-header flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Knowledge</p>
-            <h1 className="mt-1 text-2xl font-semibold text-zinc-950">Datasets</h1>
+            <h1 className="mt-2 text-3xl font-semibold text-zinc-950">知識庫</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">管理文件、分段、向量索引與 Graph RAG 資料來源。</p>
           </div>
         </div>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="collection-grid grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <Link
-            className="flex min-h-[300px] flex-col justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-400 hover:bg-white hover:shadow-md"
+            className="collection-create-card flex min-h-[300px] flex-col justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-400 hover:bg-white hover:shadow-md"
             href="/datasets/new"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-900 text-2xl font-light leading-none text-white">
@@ -45,7 +46,7 @@ export default async function DatasetsPage() {
 
           {datasets.map((dataset) => (
             <article
-              className="group flex min-h-[300px] flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md"
+              className="collection-card group flex min-h-[300px] flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md"
               key={dataset.id}
             >
               <Link className="min-w-0" href={`/datasets/${dataset.id}`}>

@@ -82,17 +82,17 @@ export default async function ModelPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#f5f7fb] px-6 py-6">
+    <div className="collection-page model-list-page min-h-full bg-[#f5f7fb] px-6 py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5">
-        <div>
+        <div className="collection-header">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">模型</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-950">模型設定檔</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950">模型設定檔</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600">
             集中管理工作流及資料集會用到的模型 API 設定；支援 OpenAI、Grok/xAI、Groq、Ollama、Xinference、DeepSeek、OpenRouter、LM Studio 與 OpenAI API compatible endpoint。
           </p>
         </div>
 
-        <form action={createModelConfigAction} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <form action={createModelConfigAction} className="model-create-form rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="grid gap-3 lg:grid-cols-[1.1fr_1fr_1fr_1fr_1fr_auto]">
             <label className="block">
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Model Slug</span>
@@ -158,7 +158,7 @@ export default async function ModelPage() {
           </div>
         </form>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="collection-grid model-grid grid grid-cols-1 gap-4 lg:grid-cols-3">
           {configs.length === 0 ? (
             <div className="rounded-lg border border-dashed border-zinc-200 bg-white px-4 py-12 text-center text-sm text-zinc-500 lg:col-span-3">
               No model profiles yet. Add a model slug to start.
@@ -170,7 +170,7 @@ export default async function ModelPage() {
             return (
               <form
                 action={saveModelConfigAction}
-                className="flex min-h-[430px] flex-col justify-between rounded-lg border border-zinc-200/80 bg-white p-4 shadow-sm"
+                className="collection-card model-card flex min-h-[430px] flex-col justify-between rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm"
                 key={config.id}
               >
                 <input name="id" type="hidden" value={config.id} />

@@ -190,7 +190,7 @@ export default function HomePage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {sources.map((source) => (
-                <span key={source} className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700">
+                <span key={source} className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700">
                   {source}
                 </span>
               ))}

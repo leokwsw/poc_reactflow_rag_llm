@@ -216,7 +216,7 @@ export default function EndPanel({ node, patchNodeData, allNodes = [] }: NodePan
                   <span className="min-w-0 truncate font-medium text-zinc-700">
                     {getNodeDisplayLabel(token.source, labelMap)}
                   </span>
-                  <span className="shrink-0 rounded-md bg-indigo-50 px-1.5 py-0.5 font-mono text-[10px] text-indigo-600">
+                  <span className="shrink-0 rounded-lg bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] text-blue-600">
                     {"{"}{token.field}{"}"}
                   </span>
                 </div>

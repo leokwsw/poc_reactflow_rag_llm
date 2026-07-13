@@ -50,7 +50,7 @@ function IconTrash({className}: {className?: string}) {
 }
 
 const selectLightClass =
-  "w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
+  "w-full rounded-xl border border-zinc-200 bg-white px-2.5 py-2 text-sm text-zinc-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100";
 
 const retrievalOptions: Array<{value: RetrievalSource; label: string; description: string}> = [
   {value: "vector", label: "Vector", description: "Elasticsearch dense-vector KNN"},
@@ -244,68 +244,68 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
             ))}
           </select>
         </PanelField>
-        <p className="text-xs text-gray-500">僅能從清單選擇一個變數作為查詢來源，無法輸入自訂文字。</p>
+        <p className="text-xs text-zinc-500">僅能從清單選擇一個變數作為查詢來源，無法輸入自訂文字。</p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
-        <div className="border-b border-gray-200 pb-2.5 text-sm font-semibold tracking-wide text-gray-900">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-3 text-zinc-900 shadow-sm">
+        <div className="border-b border-zinc-200 pb-2.5 text-sm font-semibold tracking-wide text-zinc-900">
           RAG modes
         </div>
         <div className="mt-3 grid gap-2">
           {ragModeOptions.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition hover:bg-gray-100"
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 transition hover:bg-zinc-100"
             >
               <input
                 checked={ragModes.includes(option.value)}
-                className="mt-1 h-4 w-4 accent-indigo-600"
+                className="mt-1 h-4 w-4 accent-blue-600"
                 type="checkbox"
                 onChange={() => toggleRagMode(option.value)}
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-gray-800">{option.label}</span>
-                <span className="block text-xs text-gray-500">{option.description}</span>
+                <span className="block text-sm font-medium text-zinc-800">{option.label}</span>
+                <span className="block text-xs text-zinc-500">{option.description}</span>
               </span>
             </label>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
-        <div className="border-b border-gray-200 pb-2.5 text-sm font-semibold tracking-wide text-gray-900">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-3 text-zinc-900 shadow-sm">
+        <div className="border-b border-zinc-200 pb-2.5 text-sm font-semibold tracking-wide text-zinc-900">
           Retrieval sources
         </div>
         <div className="mt-3 grid gap-2">
           {retrievalOptions.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition hover:bg-gray-100"
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 transition hover:bg-zinc-100"
             >
               <input
                 checked={retrievalSources.includes(option.value)}
-                className="mt-1 h-4 w-4 accent-indigo-600"
+                className="mt-1 h-4 w-4 accent-blue-600"
                 type="checkbox"
                 onChange={() => toggleRetrievalSource(option.value)}
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-gray-800">{option.label}</span>
-                <span className="block text-xs text-gray-500">{option.description}</span>
+                <span className="block text-sm font-medium text-zinc-800">{option.label}</span>
+                <span className="block text-xs text-zinc-500">{option.description}</span>
               </span>
             </label>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-3 text-gray-900 shadow-sm">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-3 text-zinc-900 shadow-sm">
         <div ref={pickerWrapRef} className="relative">
-          <div className="flex items-center justify-between gap-2 border-b border-gray-200 pb-2.5">
-            <div className="flex min-w-0 items-center gap-1 text-sm font-semibold tracking-wide text-gray-900">
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-200 pb-2.5">
+            <div className="flex min-w-0 items-center gap-1 text-sm font-semibold tracking-wide text-zinc-900">
               <span>知識庫</span>
             </div>
-            <div className="flex shrink-0 items-center gap-2 text-xs text-gray-500">
+            <div className="flex shrink-0 items-center gap-2 text-xs text-zinc-500">
               <button
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={selectOptions.length === 0}
                 title="新增知識庫"
                 type="button"
@@ -321,18 +321,18 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
 
           {pickerOpen ? (
             <div
-              className="absolute right-0 top-full z-20 mt-1 max-h-56 w-64 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+              className="absolute right-0 top-full z-20 mt-1 max-h-56 w-64 overflow-y-auto rounded-2xl border border-zinc-200 bg-white py-1 shadow-lg"
               onMouseDown={(e) => e.stopPropagation()}
             >
               {availableToAdd.length === 0 ? (
-                <div className="px-3 py-2.5 text-center text-xs text-gray-500">
+                <div className="px-3 py-2.5 text-center text-xs text-zinc-500">
                   {selectOptions.length === 0 ? "尚無資料集，請先到 Datasets 建立。" : "已加入全部資料集。"}
                 </div>
               ) : (
                 availableToAdd.map((d) => (
                   <button
                     key={d.id}
-                    className="block w-full truncate px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50"
+                    className="block w-full truncate px-3 py-2 text-left text-sm text-zinc-700 transition hover:bg-zinc-50"
                     type="button"
                     onClick={() => addDataset(d.id, d.title)}
                   >
@@ -346,14 +346,14 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
 
         <div className="mt-3 space-y-2">
           {datasets.length === 0 ? (
-            <div className="flex min-h-[92px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 text-center text-xs leading-relaxed text-gray-500">
+            <div className="flex min-h-[92px] items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 text-center text-xs leading-relaxed text-zinc-500">
               點選「+」按鈕新增知識庫
             </div>
           ) : (
             datasets.map((dataset, index) => (
               <div
                 key={`${dataset.id || "new"}-${index}`}
-                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5"
+                className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5"
               >
                 <div
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-base"
@@ -382,14 +382,14 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
                       ))}
                     </select>
                   ) : (
-                    <p className="truncate text-sm font-medium text-gray-700" title={dataset.name || dataset.id}>
+                    <p className="truncate text-sm font-medium text-zinc-700" title={dataset.name || dataset.id}>
                       {dataset.name || (dataset.id ? dataset.id : "未選擇")}
                     </p>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-0.5">
                   <button
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-red-50 hover:text-red-500"
                     title="移除"
                     type="button"
                     onClick={() => removeAt(index)}

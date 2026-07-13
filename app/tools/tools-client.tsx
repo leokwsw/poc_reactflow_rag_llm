@@ -268,14 +268,14 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
                     {group.isOpenApiGroup ? (
                       <>
                         <button
-                          className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"
+                          className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"
                           type="button"
                           onClick={() => startUpdate(group.importId)}
                         >
                           Update
                         </button>
                         <button
-                          className="rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                          className="rounded-lg border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
                           type="button"
                           onClick={() => void deleteImportGroup(group.importId)}
                         >
