@@ -1,7 +1,8 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import type {ToolRecord} from "@/app/tools/data";
+import type {ToolRecord} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type AuthMethod = "none" | "header" | "query";
 type HeaderAuthType = "basic" | "bearer" | "custom";
@@ -53,7 +54,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
   }, [tools]);
 
   const refreshTools = async () => {
-    const response = await fetch("/api/tools");
+    const response = await fetch(backendApiUrl("/tools"));
     const payload = (await response.json()) as {tools?: ToolRecord[]};
     setTools(payload.tools ?? []);
   };
@@ -81,7 +82,7 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     setStatus("Importing OpenAPI...");
     setError("");
     try {
-      const response = await fetch("/api/tools/import-openapi", {
+      const response = await fetch(backendApiUrl("/tools/openapi-imports"), {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -132,10 +133,8 @@ export default function ToolsClient({initialTools}: {initialTools: ToolRecord[]}
     setStatus(`Deleting ${importId}...`);
     setError("");
     try {
-      const response = await fetch("/api/tools/import-openapi", {
+      const response = await fetch(backendApiUrl(`/tools/openapi-imports/${encodeURIComponent(importId)}`), {
         method: "DELETE",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({import_id: importId}),
       });
       const result = (await response.json().catch(() => ({}))) as {error?: string};
       if (!response.ok) throw new Error(result.error ?? `Delete failed with status ${response.status}.`);

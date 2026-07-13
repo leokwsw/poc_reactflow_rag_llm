@@ -1,38 +1,53 @@
 module.exports = {
-    apps: [
-        {
-            name: "poc-reactflow-rag-llm",
-            script: "npm",
-            args: "run start",
-            instances: 1,
-            env_production: {
-                NODE_ENV: "production",
-                PORT: 3000,
-                ELASTICSEARCH_HOSTNAME:"10.0.0.106",
-                ELASTICSEARCH_PORT:9200,
-                ELASTICSEARCH_USERNAME:"elastic",
-                ELASTICSEARCH_PASSWORD:"password",
-                ELASTICSEARCH_PROTOCOL:"http",
-                ELASTICSEARCH_RAG_CHUNKS_INDEX:"rag_chunks",
-                POSTGRES_HOST:"10.0.0.209",
-                POSTGRES_PORT:5432,
-                POSTGRES_USER:"postgres",
-                POSTGRES_PASSWORD:"password",
-                POSTGRES_DATABASE:"postgres",
-                POSTGRES_SCHEMA:"public"
-            },
-        },
-    ],
-
-    deploy: {
-        production: {
-            user: "root",
-            host: "10.0.0.110",
-            ref: "origin/main",
-            repo: "git@github.com:leonard-park/poc_reactflow_rag_llm.git",
-            path: "/root/poc_reactflow_rag_llm",
-            'pre-deploy': 'git fetch && git reset --hard origin/main',
-            "post-deploy": "npm install && npm run build && pm2 reload ecosystem.config.cjs --env production",
-        },
+  apps: [
+    {
+      name: "rag-workflow-frontend",
+      cwd: __dirname,
+      script: "npm",
+      args: "run start:frontend",
+      instances: 1,
+      env_production: {
+        NODE_ENV: "production",
+        PORT: 3000,
+        HOSTNAME: "0.0.0.0",
+        BACKEND_API_URL: process.env.BACKEND_API_URL || "http://127.0.0.1:3001/api/v1",
+      },
     },
-};
+    {
+      name: "rag-workflow-backend",
+      cwd: `${__dirname}/backend`,
+      script: "dist/main.js",
+      node_args: "-r module-alias/register",
+      instances: 1,
+      env_production: {
+        NODE_ENV: "production",
+        BACKEND_PORT: 3001,
+        BACKEND_CORS_ORIGINS: process.env.BACKEND_CORS_ORIGINS || "http://localhost:3000",
+        DATABASE_URL: process.env.DATABASE_URL,
+        POSTGRES_HOST: process.env.POSTGRES_HOST,
+        POSTGRES_PORT: process.env.POSTGRES_PORT,
+        POSTGRES_USER: process.env.POSTGRES_USER,
+        POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
+        POSTGRES_DATABASE: process.env.POSTGRES_DATABASE,
+        POSTGRES_SCHEMA: process.env.POSTGRES_SCHEMA || "public",
+        ELASTICSEARCH_HOSTNAME: process.env.ELASTICSEARCH_HOSTNAME,
+        ELASTICSEARCH_PORT: process.env.ELASTICSEARCH_PORT,
+        ELASTICSEARCH_USERNAME: process.env.ELASTICSEARCH_USERNAME,
+        ELASTICSEARCH_PASSWORD: process.env.ELASTICSEARCH_PASSWORD,
+        ELASTICSEARCH_PROTOCOL: process.env.ELASTICSEARCH_PROTOCOL || "http",
+        ELASTICSEARCH_RAG_CHUNKS_INDEX: process.env.ELASTICSEARCH_RAG_CHUNKS_INDEX || "rag_chunks",
+      },
+    },
+  ],
+  deploy: {
+    production: {
+      user: "root",
+      host: "10.0.0.110",
+      ref: "origin/main",
+      repo: "git@github.com:leonard-park/poc_reactflow_rag_llm.git",
+      path: "/root/poc_reactflow_rag_llm",
+      "pre-deploy": "git fetch && git reset --hard origin/main",
+      "post-deploy": "npm install && npm install --prefix backend && npm run build && npm --prefix backend run build && pm2 startOrReload ecosystem.config.cjs --env production --update-env",
+    },
+  },
+}

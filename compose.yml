@@ -1,0 +1,120 @@
+name: rag-workflow
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}/api/v1
+    environment:
+      BACKEND_API_URL: http://backend:3001/api/v1
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      BACKEND_PORT: 3001
+      BACKEND_CORS_ORIGINS: http://localhost:${FRONTEND_PORT:-3000}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-rag_workflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_workflow}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-rag_workflow}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
+      ELASTICSEARCH_HOSTNAME: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_PROTOCOL: http
+      GRAPH_RAG_NEO4J_ENABLED: ${GRAPH_RAG_NEO4J_ENABLED:-false}
+      NEO4J_URI: ${NEO4J_URI:-http://neo4j:7474}
+      NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-please-change-me}
+      NEO4J_DATABASE: ${NEO4J_DATABASE:-neo4j}
+      GRAPH_RAG_ARANGODB_ENABLED: ${GRAPH_RAG_ARANGODB_ENABLED:-false}
+      ARANGODB_URL: ${ARANGODB_URL:-http://arangodb:8529}
+      ARANGODB_USERNAME: ${ARANGODB_USERNAME:-root}
+      ARANGODB_PASSWORD: ${ARANGODB_PASSWORD:-please-change-me}
+      ARANGODB_DATABASE: ${ARANGODB_DATABASE:-_system}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - uploads:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rag_workflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_workflow}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-rag_workflow}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rag_workflow} -d ${POSTGRES_DATABASE:-rag_workflow}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.1
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "${ELASTICSEARCH_HOST_PORT:-9200}:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5-community
+    profiles: ["graph-neo4j"]
+    environment:
+      NEO4J_AUTH: ${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-please-change-me}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+
+  arangodb:
+    image: arangodb:3.12
+    profiles: ["graph-arangodb"]
+    environment:
+      ARANGO_ROOT_PASSWORD: ${ARANGODB_PASSWORD:-please-change-me}
+    ports:
+      - "8529:8529"
+    volumes:
+      - arangodb-data:/var/lib/arangodb3
+
+volumes:
+  uploads:
+  postgres-data:
+  elasticsearch-data:
+  neo4j-data:
+  arangodb-data:

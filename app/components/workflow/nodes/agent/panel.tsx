@@ -6,6 +6,7 @@ import type {NodePanelProps} from "@/app/components/workflow/nodes/panel-types";
 import {getContextOptions, getPromptVariableOptions} from "@/app/components/workflow/nodes/prompt-variable-options";
 import ModelProfileSelect from "@/app/components/workflow/nodes/_base/model-profile-select";
 import WorkflowPromptEditor from "../../prompt-editor";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type AgentMessage = {
   role: "system" | "user" | "assistant";
@@ -63,7 +64,7 @@ export default function AgentPanel({node, patchNodeData, allNodes, allEdges}: No
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/mcp/tools")
+    fetch(backendApiUrl("/mcp/tools"))
       .then(async (response) => {
         const payload = await response.json();
         if (!response.ok) {

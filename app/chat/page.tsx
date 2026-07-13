@@ -1,17 +1,20 @@
 import ChatClient from "@/app/chat/chat-client";
-import {listConversationMessages, listConversations} from "@/app/chat/data";
-import {listWorkflows} from "@/app/workflow/data";
+import type {ConversationMessageRecord, ConversationRecord} from "@/app/types/domain";
+import type {WorkflowRecord} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChatPage() {
-  const [workflows, conversations] = await Promise.all([
-    listWorkflows(),
-    listConversations(),
+  const [workflowResult, conversationResult] = await Promise.all([
+    backendFetch<{workflows: WorkflowRecord[]}>("/workflows"),
+    backendFetch<{conversations: ConversationRecord[]}>("/conversations"),
   ]);
+  const {workflows} = workflowResult;
+  const {conversations} = conversationResult;
   const selectedConversationId = conversations[0]?.id ?? "";
   const initialMessages = selectedConversationId
-    ? await listConversationMessages(selectedConversationId, {includeRuns: true})
+    ? (await backendFetch<{messages: ConversationMessageRecord[]}>(`/conversations/${selectedConversationId}/messages`)).messages
     : [];
 
   return (

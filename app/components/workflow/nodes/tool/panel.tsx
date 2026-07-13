@@ -3,7 +3,8 @@
 import {useEffect, useMemo, useState} from "react";
 import {PanelCard, PanelField, PanelInput} from "@/app/components/workflow/nodes/_base/panel-form";
 import type {NodePanelProps} from "@/app/components/workflow/nodes/panel-types";
-import type {ToolRecord} from "@/app/tools/data";
+import type {ToolRecord} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type InputMappingRow = {
   id?: string;
@@ -114,7 +115,7 @@ export default function ToolPanel({node, patchNodeData}: NodePanelProps) {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch("/api/tools");
+        const response = await fetch(backendApiUrl("/tools"));
         const payload = (await response.json()) as {tools?: ToolRecord[]; error?: string};
         if (!response.ok) throw new Error(payload.error ?? `Failed to load tools (${response.status}).`);
         if (!cancelled) {

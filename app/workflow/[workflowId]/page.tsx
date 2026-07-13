@@ -1,5 +1,6 @@
 import {notFound} from "next/navigation";
-import {getWorkflowById, listWorkflowRuns} from "@/app/workflow/data";
+import type {WorkflowRecord, WorkflowRunRecord} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 import WorkflowStudio from "./workflow-studio";
 
 type WorkflowStudioPageProps = {
@@ -12,12 +13,13 @@ export const dynamic = "force-dynamic";
 
 export default async function WorkflowStudioPage({params}: WorkflowStudioPageProps) {
   const {workflowId} = await params;
-  const workflow = await getWorkflowById(workflowId);
+  const result = await backendFetch<{workflow: WorkflowRecord}>(`/workflows/${workflowId}`).catch(() => null);
+  const workflow = result?.workflow;
   if (!workflow) {
     notFound();
   }
 
-  const recentRuns = await listWorkflowRuns(workflow.id, 10);
+  const {runs: recentRuns} = await backendFetch<{runs: WorkflowRunRecord[]}>(`/workflows/${workflow.id}/runs?limit=10`);
 
   return (
     <WorkflowStudio

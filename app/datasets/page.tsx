@@ -1,21 +1,23 @@
 import Link from "next/link";
 import {revalidatePath} from "next/cache";
 import ConfirmSubmitButton from "@/app/components/confirm-submit-button";
-import {deleteDataset, formatDate, formatFileSize, getDatasets, getDatasetStats} from "@/app/datasets/data";
+import type {Dataset} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 
 export const dynamic = "force-dynamic";
 
+const formatDate = (value: string) => new Intl.DateTimeFormat("en", {year: "numeric", month: "short", day: "numeric"}).format(new Date(value));
+const formatFileSize = (bytes: number) => bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+type DatasetWithStats = Dataset & {stats: {status: string; documentCount: number; chunkCount: number; totalSize: number}};
+
 export default async function DatasetsPage() {
-  const rawDatasets = await getDatasets();
-  const datasets = await Promise.all(rawDatasets.map(async (dataset) => ({
-    ...dataset,
-    stats: await getDatasetStats(dataset),
-  })));
+  const {datasets} = await backendFetch<{datasets: DatasetWithStats[]}>("/datasets");
 
   async function deleteDatasetAction(formData: FormData) {
     "use server";
     const datasetId = String(formData.get("dataset_id") ?? "");
-    await deleteDataset(datasetId);
+    await backendFetch(`/datasets/${datasetId}`, {method: "DELETE"});
     revalidatePath("/datasets");
   }
 

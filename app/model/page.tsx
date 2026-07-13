@@ -1,5 +1,6 @@
 import {revalidatePath} from "next/cache";
-import {deleteModelConfig, listModelConfigs, upsertModelConfig, updateModelConfig} from "@/app/model/data";
+import type {ModelConfig} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 import ProviderIcon from "@/app/model/provider-icon";
 import {
   MODEL_PROVIDER_SDKS,
@@ -24,7 +25,7 @@ const formatDateTime = (value?: string | null) =>
     : "Never";
 
 export default async function ModelPage() {
-  const configs = await listModelConfigs();
+  const {models: configs} = await backendFetch<{models: ModelConfig[]}>("/models");
 
   async function saveModelConfigAction(formData: FormData) {
     "use server";
@@ -37,7 +38,7 @@ export default async function ModelPage() {
     const provider = String(formData.get("provider") ?? "");
     const sdk = String(formData.get("sdk") ?? "");
 
-    await updateModelConfig(id, {
+    await backendFetch(`/models/${encodeURIComponent(id)}`, {method: "PUT", body: JSON.stringify({
       label,
       api_base_url,
       api_key: raw_api_key.trim() ? raw_api_key : undefined,
@@ -45,7 +46,7 @@ export default async function ModelPage() {
       model_type: isModelType(model_type) ? model_type : undefined,
       provider: isModelProvider(provider) ? provider : undefined,
       sdk: isModelProviderSdk(sdk) ? sdk : undefined,
-    });
+    })});
     revalidatePath("/model");
   }
 
@@ -60,7 +61,8 @@ export default async function ModelPage() {
     const model = String(formData.get("model") ?? "");
     const raw_api_key = String(formData.get("api_key") ?? "");
 
-    await upsertModelConfig(id, {
+    await backendFetch("/models", {method: "POST", body: JSON.stringify({
+      id,
       label,
       api_base_url,
       api_key: raw_api_key.trim() ? raw_api_key : undefined,
@@ -68,14 +70,14 @@ export default async function ModelPage() {
       model_type: isModelType(model_type) ? model_type : undefined,
       provider: isModelProvider(provider) ? provider : undefined,
       sdk: isModelProviderSdk(sdk) ? sdk : undefined,
-    });
+    })});
     revalidatePath("/model");
   }
 
   async function deleteModelConfigAction(formData: FormData) {
     "use server";
     const id = String(formData.get("id") ?? "");
-    await deleteModelConfig(id);
+    await backendFetch(`/models/${encodeURIComponent(id)}`, {method: "DELETE"});
     revalidatePath("/model");
   }
 

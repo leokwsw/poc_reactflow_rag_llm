@@ -1,6 +1,7 @@
 import {revalidatePath} from "next/cache";
 import ConfirmSubmitButton from "@/app/components/confirm-submit-button";
-import {createMcpServer, deleteMcpServer, listMcpServers, refreshMcpServerTools, updateMcpServer} from "@/app/mcp/data";
+import type {McpServer} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 
 export const dynamic = "force-dynamic";
 
@@ -15,37 +16,38 @@ const formatDateTime = (value?: string | null) =>
     : "Never";
 
 export default async function McpPage() {
-  const servers = await listMcpServers();
+  const {servers} = await backendFetch<{servers: McpServer[]}>("/mcp/servers");
 
   async function createMcpServerAction(formData: FormData) {
     "use server";
-    await createMcpServer({
+    await backendFetch("/mcp/servers", {method: "POST", body: JSON.stringify({
       name: String(formData.get("name") ?? ""),
       server_identifier: String(formData.get("server_identifier") ?? ""),
       server_url: String(formData.get("server_url") ?? ""),
-    });
+    })});
     revalidatePath("/mcp");
   }
 
   async function updateMcpServerAction(formData: FormData) {
     "use server";
-    await updateMcpServer(String(formData.get("id") ?? ""), {
+    const id = String(formData.get("id") ?? "");
+    await backendFetch(`/mcp/servers/${id}`, {method: "PUT", body: JSON.stringify({
       name: String(formData.get("name") ?? ""),
       server_identifier: String(formData.get("server_identifier") ?? ""),
       server_url: String(formData.get("server_url") ?? ""),
-    });
+    })});
     revalidatePath("/mcp");
   }
 
   async function deleteMcpServerAction(formData: FormData) {
     "use server";
-    await deleteMcpServer(String(formData.get("id") ?? ""));
+    await backendFetch(`/mcp/servers/${String(formData.get("id") ?? "")}`, {method: "DELETE"});
     revalidatePath("/mcp");
   }
 
   async function refreshMcpServerToolsAction(formData: FormData) {
     "use server";
-    await refreshMcpServerTools(String(formData.get("id") ?? ""));
+    await backendFetch(`/mcp/servers/${String(formData.get("id") ?? "")}/refresh`, {method: "POST"});
     revalidatePath("/mcp");
   }
 

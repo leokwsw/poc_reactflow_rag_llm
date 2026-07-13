@@ -9,7 +9,8 @@ import type {Node} from "reactflow";
 import Workflow from "@/app/components/workflow";
 import type {WorkflowDataType} from "@/app/components/workflow/types";
 import type {WorkflowTraceItem} from "@/app/components/workflow/nodes/execution-types";
-import type {WorkflowRunRecord} from "@/app/workflow/data";
+import type {WorkflowRunRecord} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type WorkflowRunResponse = {
   success: boolean;
@@ -240,7 +241,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
 
   const saveWorkflow = useCallback(async (next: WorkflowDataType, nextTitle = title) => {
     setSaveStatus("saving");
-    const response = await fetch(`/api/workflows/${workflowId}`, {
+    const response = await fetch(backendApiUrl(`/workflows/${workflowId}`), {
       method: "PUT",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -332,7 +333,7 @@ export default function WorkflowStudio({workflowId, workflowTitle, initialData, 
         formData.append("files", file);
       });
 
-      const response = await fetch("/api/workflow/run", {
+      const response = await fetch(backendApiUrl(`/workflows/${workflowId}/run`), {
         method: "POST",
         body: formData,
         headers: {

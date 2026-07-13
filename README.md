@@ -1,6 +1,33 @@
 # RAG Workflow
 
-RAG Workflow is a production-oriented Next.js app for building and running visual AI workflows. It combines a React Flow workflow editor, chat-triggered workflow execution, dataset ingestion, Native/Hybrid/Graph RAG, dynamic OpenAPI tools, MCP integrations, and model profile management.
+## Application Services
+
+The application is split into independently deployable services:
+
+- The Next.js App Router application is a frontend-only UI with no route handlers or direct data-store access.
+- `backend/` is the NestJS API on port `3001` and owns all business logic, execution and integrations.
+- PostgreSQL is the metadata source of truth and Elasticsearch is the default RAG index.
+- Neo4j and ArangoDB are optional Docker Compose profiles.
+
+Run both application services locally:
+
+```bash
+npm install --prefix backend
+npm run dev:backend
+npm run dev:frontend
+```
+
+Or start the container stack:
+
+```bash
+docker compose up --build
+```
+
+Backend Swagger UI is available at `http://localhost:3001/docs`. See
+[`docs/architecture/backend-frontend-separation.md`](docs/architecture/backend-frontend-separation.md)
+for domain scope and migration rules.
+
+RAG Workflow is a production-oriented Next.js frontend and NestJS backend for building and running visual AI workflows. It combines a React Flow workflow editor, chat-triggered workflow execution, dataset ingestion, Native/Hybrid/Graph RAG, dynamic OpenAPI tools, MCP integrations, automation, workflow API keys, and model profile management.
 
 ## What This Project Does
 
@@ -14,10 +41,11 @@ RAG Workflow is a production-oriented Next.js app for building and running visua
 ## Tech Stack
 
 - Next.js App Router
+- NestJS REST API and Swagger
 - React 19
 - React Flow
 - PostgreSQL
-- TypeORM entity mappings plus local schema bootstrap helpers
+- Backend TypeORM entity mappings plus feature-local schema bootstrap helpers
 - Elasticsearch
 - Neo4j
 - ArangoDB
@@ -26,11 +54,13 @@ RAG Workflow is a production-oriented Next.js app for building and running visua
 
 ## Getting Started
 
-Install dependencies and run the dev server:
+Install dependencies and run both services:
 
 ```bash
 npm install
-npm run dev
+npm install --prefix backend
+npm run dev:backend
+npm run dev:frontend
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -40,6 +70,8 @@ Useful checks:
 ```bash
 npm run lint
 npm run build
+npm --prefix backend run lint
+npm --prefix backend run build
 ```
 
 ## Main Routes
@@ -49,6 +81,8 @@ npm run build
 - `/chat/[conversationId]` - direct conversation view
 - `/workflow` - workflow list
 - `/workflow/[workflowId]` - React Flow workflow studio
+- `/workflow/[workflowId]/api-keys` - workflow-scoped API key management
+- `/automation` - manual, webhook, and interval workflow automations
 - `/datasets` - dataset list
 - `/datasets/new` - dataset creation and document/source ingestion
 - `/tools` - OpenAPI Swagger import and tool group management

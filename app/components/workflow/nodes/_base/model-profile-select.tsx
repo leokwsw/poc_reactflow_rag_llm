@@ -2,8 +2,9 @@
 
 import {useEffect, useMemo, useState} from "react";
 import {DEFAULT_MODEL_PROFILE_ID, isModelProfileId} from "@/app/model/profiles";
-import type {ModelConfig} from "@/app/model/data";
+import type {ModelConfig} from "@/app/types/domain";
 import type {ModelProfileId} from "@/app/model/profiles";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type ModelProfileSelectProps = {
   value?: string;
@@ -21,7 +22,7 @@ export default function ModelProfileSelect({value, onChange}: ModelProfileSelect
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch("/api/models");
+        const response = await fetch(backendApiUrl("/models"));
         const payload = (await response.json()) as {models?: ModelConfig[]; error?: string};
         if (!response.ok) throw new Error(payload.error ?? `Failed to load models (${response.status}).`);
         if (!cancelled) {

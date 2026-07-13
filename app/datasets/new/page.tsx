@@ -3,7 +3,8 @@
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent} from "react";
-import {allowedExtensions, maxFileSize} from "@/app/api/file/upload-limits";
+import {allowedExtensions, maxFileSize} from "@/app/datasets/upload-limits";
+import {backendApiUrl} from "@/app/lib/backend-api";
 import {DEFAULT_EMBEDDING_MODEL_PROFILE_ID, DEFAULT_RERANKING_MODEL_PROFILE_ID} from "@/app/model/profiles";
 
 const acceptedFileTypes = ".pdf,.txt,.rtx,.rtf,.html,.csv,.xls,.xlsx,.doc,.docx,.ppt,.pptx";
@@ -86,7 +87,7 @@ export default function NewDatasetPage() {
       setModelsLoading(true);
       setModelsError(null);
       try {
-        const res = await fetch("/api/models", {
+        const res = await fetch(backendApiUrl("/models"), {
           headers: {Accept: "application/json"},
           signal: controller.signal,
         });
@@ -250,7 +251,7 @@ export default function NewDatasetPage() {
       for (const file of selectedFiles) {
         const body = new FormData();
         body.set("file", file);
-        const res = await fetch("/api/file/upload", {method: "POST", body});
+        const res = await fetch(backendApiUrl("/datasets/uploads"), {method: "POST", body});
         const payload = (await res.json().catch(() => ({}))) as {
           error?: string;
           id?: string;
@@ -278,7 +279,7 @@ export default function NewDatasetPage() {
       }
 
       setPhase("creating");
-      const res = await fetch("/api/datasets", {
+      const res = await fetch(backendApiUrl("/datasets"), {
         method: "POST",
         headers: {"Content-Type": "application/json", Accept: "application/json"},
         body: JSON.stringify({

@@ -1,0 +1,54 @@
+{
+  "name": "rag-workflow-backend",
+  "version": "0.1.0",
+  "private": true,
+  "overrides": {
+    "uuid": "11.1.1"
+  },
+  "_moduleAliases": {
+    "@": "dist"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node -r module-alias/register dist/main.js",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@elastic/elasticsearch": "8.19.1",
+    "@langchain/textsplitters": "^1.0.1",
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.11",
+    "@nestjs/platform-express": "^11.1.11",
+    "@nestjs/swagger": "^11.2.6",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
+    "chardet": "^2.1.1",
+    "cheerio": "^1.2.0",
+    "csv-parse": "^6.2.1",
+    "exceljs": "^4.4.0",
+    "iconv-lite": "^0.7.2",
+    "js-yaml": "^4.1.1",
+    "module-alias": "^2.2.3",
+    "officeparser": "^6.1.1",
+    "pg": "^8.20.0",
+    "reactflow": "^11.11.4",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.28",
+    "undici": "^7.22.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.16",
+    "@types/express": "^5.0.6",
+    "@types/js-yaml": "^4.0.9",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^20.19.28",
+    "@types/pg": "^8.16.0",
+    "eslint": "^9.39.2",
+    "typescript-eslint": "^8.53.0",
+    "typescript": "^5.9.3"
+  }
+}

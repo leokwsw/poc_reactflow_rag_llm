@@ -4,8 +4,9 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {FormEvent, useMemo, useRef, useState} from "react";
 import Markdown from "@/app/components/markdown";
-import type {ConversationMessageRecord, ConversationRecord} from "@/app/chat/data";
-import type {WorkflowRecord} from "@/app/workflow/data";
+import type {ConversationMessageRecord, ConversationRecord} from "@/app/types/domain";
+import type {WorkflowRecord} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type ChatEvent = {
   event: string;
@@ -86,7 +87,7 @@ export default function ChatClient({
     router.push(`/chat/${conversationId}`);
 
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/messages`);
+      const response = await fetch(backendApiUrl(`/conversations/${conversationId}/messages`));
       const payload = (await response.json()) as {messages?: ConversationMessageRecord[]; error?: string};
       if (!response.ok) throw new Error(payload.error ?? `Could not load messages (${response.status}).`);
       setMessages(payload.messages ?? []);
@@ -97,7 +98,7 @@ export default function ChatClient({
   };
 
   const refreshConversations = async () => {
-    const response = await fetch("/api/conversations");
+    const response = await fetch(backendApiUrl("/conversations"));
     const payload = (await response.json()) as {conversations?: ConversationRecord[]};
     setConversations(payload.conversations ?? []);
   };
@@ -107,7 +108,7 @@ export default function ChatClient({
     setIsCreating(true);
     setError("");
     try {
-      const response = await fetch("/api/conversations", {
+      const response = await fetch(backendApiUrl("/conversations"), {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({workflow_id: newWorkflowId}),
@@ -128,7 +129,7 @@ export default function ChatClient({
   };
 
   const deleteConversation = async (conversationId: string) => {
-    const response = await fetch(`/api/conversations/${conversationId}`, {method: "DELETE"});
+    const response = await fetch(backendApiUrl(`/conversations/${conversationId}`), {method: "DELETE"});
     if (!response.ok) {
       const payload = (await response.json().catch(() => ({}))) as {error?: string};
       setError(payload.error ?? `Could not delete conversation (${response.status}).`);
@@ -155,7 +156,7 @@ export default function ChatClient({
     setIsRunning(true);
 
     try {
-      const response = await fetch(`/api/conversations/${activeConversation.id}/messages`, {
+      const response = await fetch(backendApiUrl(`/conversations/${activeConversation.id}/messages`), {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({content}),

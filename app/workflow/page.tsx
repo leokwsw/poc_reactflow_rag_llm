@@ -1,7 +1,8 @@
 import Link from "next/link";
 import {revalidatePath} from "next/cache";
 import {redirect} from "next/navigation";
-import {cloneWorkflow, createWorkflow, deleteWorkflow, listWorkflows} from "@/app/workflow/data";
+import type {WorkflowRecord} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
 import ConfirmSubmitButton from "@/app/components/confirm-submit-button";
 
 export const dynamic = "force-dynamic";
@@ -17,18 +18,21 @@ const formatDateTime = (value?: string | null) =>
     : "Never";
 
 export default async function WorkflowListPage() {
-  const workflows = await listWorkflows();
+  const {workflows} = await backendFetch<{workflows: WorkflowRecord[]}>("/workflows");
 
   async function createWorkflowAction() {
     "use server";
-    const workflow = await createWorkflow("Untitled Workflow");
+    const {workflow} = await backendFetch<{workflow: WorkflowRecord}>("/workflows", {
+      method: "POST",
+      body: JSON.stringify({title: "Untitled Workflow"}),
+    });
     redirect(`/workflow/${workflow.id}`);
   }
 
   async function cloneWorkflowAction(formData: FormData) {
     "use server";
     const workflowId = String(formData.get("workflow_id") ?? "");
-    const workflow = await cloneWorkflow(workflowId);
+    const {workflow} = await backendFetch<{workflow?: WorkflowRecord}>(`/workflows/${workflowId}/clone`, {method: "POST"});
     if (workflow) {
       redirect(`/workflow/${workflow.id}`);
     }
@@ -38,7 +42,7 @@ export default async function WorkflowListPage() {
   async function deleteWorkflowAction(formData: FormData) {
     "use server";
     const workflowId = String(formData.get("workflow_id") ?? "");
-    await deleteWorkflow(workflowId);
+    await backendFetch(`/workflows/${workflowId}`, {method: "DELETE"});
     revalidatePath("/workflow");
   }
 
@@ -99,6 +103,12 @@ export default async function WorkflowListPage() {
               </Link>
 
               <div className="mt-4 flex gap-2 border-t border-zinc-100 pt-3">
+                <Link
+                  className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50"
+                  href={`/workflow/${workflow.id}/api-keys`}
+                >
+                  API Keys
+                </Link>
                 <form action={cloneWorkflowAction} className="flex-1">
                   <input name="workflow_id" type="hidden" value={workflow.id} />
                   <button

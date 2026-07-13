@@ -1,13 +1,11 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
-import {
-  documentGridColumns,
-  formatDate,
-  formatFileSize,
-  getChunksForDocument,
-  getDatasetById,
-  getDocumentsForDataset,
-} from "@/app/datasets/data";
+import type {Dataset, DatasetDocument} from "@/app/types/domain";
+import {backendFetch} from "@/app/lib/backend-api";
+
+const documentGridColumns = "minmax(360px, 1fr) 120px 120px 150px 120px";
+const formatDate = (value: string) => new Intl.DateTimeFormat("en", {year: "numeric", month: "short", day: "numeric"}).format(new Date(value));
+const formatFileSize = (bytes: number) => bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 type DatasetDetailsPageProps = {
   params: Promise<{
@@ -19,17 +17,17 @@ export const dynamic = "force-dynamic";
 
 export default async function DatasetDetailsPage({params}: DatasetDetailsPageProps) {
   const {datasetId} = await params;
-  const dataset = await getDatasetById(datasetId);
+  const result = await backendFetch<{
+    dataset: Dataset;
+    documents: Array<DatasetDocument & {chunkCount: number}>;
+  }>(`/datasets/${datasetId}`).catch(() => null);
+  const dataset = result?.dataset;
 
   if (!dataset) {
     notFound();
   }
 
-  const datasetDocuments = await getDocumentsForDataset(dataset.id);
-  const documents = await Promise.all(datasetDocuments.map(async (document) => ({
-    ...document,
-    chunkCount: (await getChunksForDocument(document.id)).length,
-  })));
+  const documents = result?.documents ?? [];
 
   return (
     <div className="min-h-full bg-[#f5f7fb] px-6 py-6">

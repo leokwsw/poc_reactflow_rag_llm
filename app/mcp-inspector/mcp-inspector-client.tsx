@@ -1,7 +1,8 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import type {McpTool} from "@/app/mcp/data";
+import type {McpTool} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type InspectorResponse = {
   tools?: McpTool[];
@@ -64,7 +65,7 @@ export default function McpInspectorClient() {
   );
 
   const requestInspector = async (payload: Record<string, unknown>) => {
-    const response = await fetch("/api/mcp/inspect", {
+    const response = await fetch(backendApiUrl("/mcp/inspect"), {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),

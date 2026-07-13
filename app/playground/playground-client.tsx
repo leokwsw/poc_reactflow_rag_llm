@@ -1,7 +1,8 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import type {WorkflowRecord} from "@/app/workflow/data";
+import type {WorkflowRecord} from "@/app/types/domain";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type PlaygroundEvent = {
   event: string;
@@ -54,7 +55,7 @@ export default function PlaygroundClient({workflows}: {workflows: WorkflowRecord
       formData.set("workflow", JSON.stringify(workflow.graph));
       formData.set("query", query);
 
-      const response = await fetch("/api/workflow/run", {
+      const response = await fetch(backendApiUrl(`/workflows/${workflow.id}/run`), {
         method: "POST",
         body: formData,
       });

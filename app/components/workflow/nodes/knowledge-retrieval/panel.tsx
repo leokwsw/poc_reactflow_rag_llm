@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from "react";
 import {PanelField, PanelInput} from "@/app/components/workflow/nodes/_base/panel-form";
 import type {NodePanelProps} from "@/app/components/workflow/nodes/panel-types";
 import {getContextOptions} from "@/app/components/workflow/nodes/prompt-variable-options";
+import {backendApiUrl} from "@/app/lib/backend-api";
 
 type Dataset = {
   id: string;
@@ -96,7 +97,7 @@ export default function KnowledgeRetrievalPanel({node, patchNodeData, allNodes, 
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/datasets");
+        const res = await fetch(backendApiUrl("/datasets"));
         const payload = (await res.json().catch(() => ({}))) as {datasets?: ApiDataset[]; error?: string};
         if (!res.ok) {
           throw new Error(payload.error ?? `Failed to load datasets (${res.status})`);
