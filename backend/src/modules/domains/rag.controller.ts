@@ -1,7 +1,9 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 
 import { saveRagFeedback } from '@/app/lib/rag-feedback'
 
+@ApiTags('RAG')
 @Controller('rag')
 export class RagController {
   @Post('feedback')

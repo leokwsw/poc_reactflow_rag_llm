@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 
 import {
   callMcpTool,
@@ -12,6 +13,7 @@ import {
 
 type ServerBody = { name: string; server_identifier: string; server_url: string }
 
+@ApiTags('MCP')
 @Controller('mcp')
 export class McpController {
   @Get('servers')
