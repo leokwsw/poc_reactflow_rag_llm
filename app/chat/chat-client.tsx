@@ -231,9 +231,9 @@ export default function ChatClient({
   };
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#f5f7fb]">
+    <div className="apple-chat min-h-[calc(100vh-3.5rem)] bg-[#f5f7fb]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
+        <aside className="apple-sidebar rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
           <div className="border-b border-zinc-200 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Chat</p>
             <h1 className="mt-1 text-xl font-semibold text-zinc-950">Conversations</h1>
@@ -311,7 +311,7 @@ export default function ChatClient({
           </div>
         </aside>
 
-        <main className="grid min-h-[calc(100vh-5.5rem)] grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <main className="apple-chat-workspace grid min-h-[calc(100vh-5.5rem)] grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
           <section className="flex min-h-0 flex-col rounded-2xl border border-zinc-200/80 bg-white shadow-sm">
             <div className="border-b border-zinc-200 p-4">
               {activeConversation ? (

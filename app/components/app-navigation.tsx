@@ -4,36 +4,51 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 
 const navItems = [
-  {href: "/chat", label: "Chat"},
-  {href: "/workflow", label: "Workflow"},
-  {href: "/automation", label: "Automation"},
-  {href: "/datasets", label: "Datasets"},
-  {href: "/tools", label: "Tools"},
+  {href: "/chat", label: "對話"},
+  {href: "/workflow", label: "工作流"},
+  {href: "/datasets", label: "知識庫"},
+  {href: "/tools", label: "工具"},
+  {href: "/automation", label: "自動化"},
+  {href: "/model", label: "模型"},
+];
+
+const moreItems = [
   {href: "/playground", label: "Playground"},
-  {href: "/model", label: "Model"},
   {href: "/mcp", label: "MCP"},
   {href: "/mcp-inspector", label: "MCP Inspector"},
 ];
+
+function Mark() {
+  return (
+    <span aria-hidden="true" className="brand-mark">
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
 
 export default function AppNavigation() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center border-b border-zinc-200/80 bg-white/95 px-5 shadow-sm backdrop-blur">
-      <div className="flex w-full min-w-0 items-center justify-between gap-4">
-        <Link className="text-sm font-semibold text-zinc-950" href="/">
-          RAG Workflow
+    <header className="app-navigation sticky top-0 z-40 shrink-0">
+      <a className="skip-link" href="#main-content">跳到主要內容</a>
+      <div className="mx-auto flex h-16 w-full max-w-[1600px] min-w-0 items-center gap-3 px-4 sm:px-6">
+        <Link className="brand-link" href="/" aria-label="RAG Workflow 首頁">
+          <Mark />
+          <span className="hidden text-sm font-semibold tracking-[-0.01em] text-zinc-950 sm:block">RAG Workflow</span>
         </Link>
-        <nav className="flex max-w-full overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-100 p-1">
+        <nav aria-label="主要導覽" className="nav-track">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                className={`nav-item ${
                   isActive
-                    ? "bg-white text-zinc-950 shadow-sm"
-                    : "text-zinc-600 hover:bg-white/70 hover:text-zinc-900"
+                    ? "nav-item-active"
+                    : "text-zinc-600 hover:text-zinc-950"
                 }`}
                 href={item.href}
               >
@@ -42,6 +57,17 @@ export default function AppNavigation() {
             );
           })}
         </nav>
+        <details className="nav-more relative shrink-0">
+          <summary aria-label="更多功能" className="nav-more-trigger"><span /><span /><span /></summary>
+          <div className="nav-menu">
+            <p>開發工具</p>
+            {moreItems.map((item) => (
+              <Link key={item.href} className={pathname.startsWith(item.href) ? "nav-menu-active" : ""} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </details>
       </div>
     </header>
   );

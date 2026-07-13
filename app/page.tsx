@@ -63,7 +63,7 @@ const workflowNodes = [
 
 function FlowPreview() {
   return (
-    <div className="relative w-full max-w-[520px] rounded-lg border border-zinc-200 bg-white p-4 shadow-[0_24px_80px_rgba(24,24,27,0.10)]">
+    <div className="home-flow relative w-full max-w-[520px] overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/72 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.14)] backdrop-blur-2xl">
       <div className="mb-4 flex items-center justify-between border-b border-zinc-100 pb-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">React Flow Canvas</p>
@@ -103,27 +103,30 @@ function FlowPreview() {
 
 export default function HomePage() {
   return (
-    <div className="bg-white text-zinc-950">
-      <section className="border-b border-zinc-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7faf9_100%)]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-6 py-14 lg:flex-row lg:justify-between lg:py-20">
+    <div className="home-page text-zinc-950">
+      <section className="home-hero relative overflow-hidden">
+        <div className="home-orb home-orb-one" aria-hidden="true" />
+        <div className="home-orb home-orb-two" aria-hidden="true" />
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-12 px-6 py-16 lg:flex-row lg:justify-between lg:py-24">
           <div className="w-full max-w-3xl lg:max-w-2xl">
-            <h1 className="text-4xl font-semibold leading-[1.05] tracking-normal text-zinc-950 sm:text-5xl lg:text-6xl">
-              Build RAG workflows with visual AI orchestration.
+            <p className="mb-5 text-sm font-semibold tracking-[-0.01em] text-blue-600">Visual intelligence workspace</p>
+            <h1 className="text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-zinc-950 sm:text-6xl lg:text-7xl">
+              讓知識流動。<br /><span className="home-gradient-text">讓 AI 真正工作。</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">
-              EZChat RAG Workflow is a Next.js production project for composing native RAG, hybrid RAG, graph RAG, tools, agents, and model calls on a React Flow canvas. It connects PostgreSQL metadata, Elasticsearch retrieval, Neo4j and ArangoDB graph context, dynamic OpenAPI tools, and multi-modal dataset ingestion into one developer-facing workspace.
+            <p className="mt-7 max-w-xl text-lg leading-8 tracking-[-0.01em] text-zinc-600 sm:text-xl">
+              在一個視覺化工作空間，連接知識、模型與工具。設計可理解、可控制、可投入生產的 RAG 工作流。
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link className="rounded-lg bg-zinc-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-zinc-800 sm:w-auto" href="/workflow">
-                Open Workflow
+              <Link className="home-primary-button rounded-full px-6 py-3 text-center text-sm font-semibold text-white sm:w-auto" href="/workflow">
+                開始建立工作流 <span aria-hidden="true">→</span>
               </Link>
-              <Link className="rounded-lg border border-zinc-300 bg-white px-5 py-3 text-center text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50 sm:w-auto" href="/datasets">
-                Manage Datasets
+              <Link className="home-secondary-button rounded-full px-6 py-3 text-center text-sm font-semibold text-zinc-800 sm:w-auto" href="/datasets">
+                管理知識庫
               </Link>
             </div>
             <div className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
               {["Native RAG", "Hybrid RAG", "Graph RAG", "Agentic RAG"].map((item) => (
-                <div key={item} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm">
+                <div key={item} className="rounded-full border border-white/80 bg-white/60 px-3 py-2 text-center text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur-xl">
                   {item}
                 </div>
               ))}
@@ -135,17 +138,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-zinc-200 px-6 py-14">
+      <section className="home-section px-6 py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <h2 className="text-3xl font-semibold leading-tight text-zinc-950">RAG modes supported</h2>
+            <p className="home-eyebrow">One canvas, every strategy</p>
+            <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.035em] text-zinc-950">為每一個問題，選擇合適的檢索方式。</h2>
             <p className="mt-4 text-sm leading-6 text-zinc-600">
               The project is designed to compare and compose different retrieval strategies in one workflow, from standard document grounding to graph traversal, agent planning, and adaptive routing.
             </p>
           </div>
           <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {ragModes.map((item) => (
-              <div key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+              <div key={item.title} className="home-card rounded-[1.35rem] border border-white/80 bg-white/70 p-6 shadow-sm backdrop-blur-xl">
                 <h3 className="text-base font-semibold text-zinc-950">{item.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-zinc-600">{item.text}</p>
               </div>
@@ -154,18 +158,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-zinc-200 px-6 py-12">
+      <section className="home-section home-section-alt px-6 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
             <div>
-              <h2 className="text-2xl font-semibold text-zinc-950">Architecture At A Glance</h2>
+              <p className="home-eyebrow">Built for production</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-zinc-950">清晰架構，完整掌控。</h2>
               <p className="mt-3 text-sm leading-6 text-zinc-600">
                 The project is built as a full-stack workflow lab: ingestion writes chunks and graph facts, retrieval plans combine vector, keyword, and graph context, and workflow nodes turn that context into model or tool actions.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {stack.map((item) => (
-                <div key={item.name} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <div key={item.name} className="home-card rounded-2xl border border-white bg-white/75 p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-zinc-950">{item.name}</h3>
                   <p className="mt-2 text-sm leading-6 text-zinc-600">{item.detail}</p>
                 </div>
@@ -175,10 +180,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-6 py-14">
+      <section className="home-section px-6 py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div>
-            <h2 className="text-3xl font-semibold leading-tight text-zinc-950">What this project is doing</h2>
+            <p className="home-eyebrow">Connect everything</p>
+            <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.035em] text-zinc-950">從資料到答案，全程可見。</h2>
             <p className="mt-4 text-sm leading-6 text-zinc-600">
               It brings together workflow authoring, model profile CRUD, document ingestion, graph construction, retrieval tuning, feedback capture, and generated HTTP tools. The goal is to move from a PoC React Flow RAG system into a production-ready project while keeping each subsystem visible and hackable for developers.
             </p>
@@ -192,7 +198,7 @@ export default function HomePage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {capabilities.map((item) => (
-              <div key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+              <div key={item.title} className="home-card rounded-[1.35rem] border border-white/80 bg-white/75 p-6 shadow-sm">
                 <h3 className="text-base font-semibold text-zinc-950">{item.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-zinc-600">{item.text}</p>
               </div>
@@ -201,7 +207,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-zinc-200 bg-zinc-950 px-6 py-12 text-white">
+      <section className="home-cta mx-4 mb-4 rounded-[2rem] px-6 py-14 text-white sm:mx-6">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div>
             <h2 className="text-2xl font-semibold">Developer entry points</h2>

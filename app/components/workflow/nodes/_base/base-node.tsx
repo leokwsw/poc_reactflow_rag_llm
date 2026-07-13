@@ -183,7 +183,7 @@ export default function BaseNode({
   return (
     <div className={'relative'}>
       <div
-        className={`relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}
+        className={`workflow-node-material relative ${minWidthClassName} overflow-hidden rounded-2xl border bg-white shadow-sm transition ${toneClass.border} ${runStatusClassName}`.trim()}
       >
         <div
           className={`border-b px-3 py-2.5 ${toneClass.border} ${toneClass.headerBg}`}

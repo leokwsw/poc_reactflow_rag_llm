@@ -78,7 +78,7 @@ export default function Operator({ handleUndo, handleRedo, canUndo, canRedo }: O
   return (
     <>
       <div className="absolute bottom-4 left-4 z-10">
-        <div className="flex items-center gap-1 rounded-2xl border border-zinc-200/80 bg-white/92 p-1.5 shadow-[0_12px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur">
+        <div className="workflow-floating-control flex items-center gap-1 rounded-2xl border border-zinc-200/80 bg-white/92 p-1.5 shadow-[0_12px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur">
           <button
             className="rounded-xl px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleUndo}
@@ -106,7 +106,7 @@ export default function Operator({ handleUndo, handleRedo, canUndo, canRedo }: O
             className="m-0! h-24! w-[132px]! rounded-2xl! border border-zinc-200/80! bg-white/88! shadow-[0_12px_40px_-20px_rgba(15,23,42,0.35)] backdrop-blur"
           />
         </div>
-        <div className="relative flex items-center gap-1 rounded-2xl border border-zinc-200/80 bg-white/92 p-1.5 shadow-[0_12px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur">
+        <div className="workflow-floating-control relative flex items-center gap-1 rounded-2xl border border-zinc-200/80 bg-white/92 p-1.5 shadow-[0_12px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur">
           <button
             className="rounded-xl px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100"
             onClick={() => setExportOpen((value) => !value)}
