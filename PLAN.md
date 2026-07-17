@@ -637,3 +637,186 @@ A portfolio-ready release should include:
 The project should be described as:
 
 > A visual AI workflow and multimodal RAG platform with durable execution, extensible typed nodes, native hybrid retrieval, and unified OpenAPI and MCP tool integration.
+
+## 15. Execution TODO List
+
+This checklist translates the roadmap into an implementation sequence. Complete the
+phases in order unless a task is explicitly independent. The critical path is:
+
+```text
+Contracts and Versioning
+        ↓
+Validation and Compilation
+        ↓
+Durable Runtime
+        ↓
+Node SDK
+        ↓
+RAG and Artifacts
+        ↓
+Unified Tools
+        ↓
+Production Controls
+```
+
+### P0 — Repository and Demo Foundation
+
+- [ ] Align the README with the frontend, NestJS backend, and deployment architecture.
+- [ ] Document all environment variables and maintain a complete `.env.example`.
+- [ ] Provide a complete Docker Compose development environment.
+- [ ] Add system architecture and primary data-flow diagrams.
+- [ ] Add repeatable demo seed scripts without reintroducing JSON seed files.
+- [ ] Prepare sample workflows and sample datasets.
+- [ ] Standardize lint, type-check, test, and build commands.
+- [ ] Add frontend and backend CI checks for every pull request.
+- [ ] Document the Native Hybrid RAG, MCP/OpenAPI Agent, and Multimodal demos.
+- [ ] Verify that a clean environment can start the platform using only the README.
+
+### P1 — Workflow Contracts and Versioning
+
+- [ ] Inventory backend dependencies on frontend workflow models and paths.
+- [ ] Create a standalone workflow contracts package.
+- [ ] Define versioned Workflow JSON Schemas.
+- [ ] Define shared node, port, edge, and workflow contracts.
+- [ ] Implement graph structure and node configuration validation.
+- [ ] Validate input/output ports and edge compatibility.
+- [ ] Introduce workflow draft and published states.
+- [ ] Store published workflows as immutable versions.
+- [ ] Require every WorkflowRun to reference one immutable WorkflowVersion.
+- [ ] Add optimistic locking for draft editing.
+- [ ] Add migrations between workflow schema versions.
+- [ ] Prevent invalid workflows from being published.
+- [ ] Remove backend imports from frontend component paths.
+
+### P2 — Workflow Compiler and Durable Runtime
+
+- [ ] Define the compiled execution plan schema.
+- [ ] Compile validated workflow definitions into execution plans.
+- [ ] Implement dependency-aware scheduling.
+- [ ] Define and implement branch, join, and merge semantics.
+- [ ] Persist WorkflowRun, NodeRun, and WorkflowEvent records.
+- [ ] Add Redis and BullMQ.
+- [ ] Move workflow execution into dedicated workers.
+- [ ] Decouple workflow lifetime from synchronous HTTP requests.
+- [ ] Add node and workflow timeouts.
+- [ ] Add retries with configurable backoff.
+- [ ] Add idempotency keys and protect completed side effects from duplicate delivery.
+- [ ] Add cancellation and resumable runs.
+- [ ] Add workflow and node concurrency limits.
+- [ ] Preserve SSE or WebSocket event streaming for the UI.
+- [ ] Verify parallel branches and joins with automated tests.
+- [ ] Verify that runs survive API and worker restarts.
+
+### P3 — Node SDK and Plugin Model
+
+- [ ] Create the `node-sdk` package.
+- [ ] Define node manifests and versioned identifiers such as `llm@1`.
+- [ ] Define typed input and output ports.
+- [ ] Define configuration JSON Schemas and capability declarations.
+- [ ] Define validation and execution interfaces.
+- [ ] Add node-level test utilities.
+- [ ] Add a node registry API.
+- [ ] Support multiple versions of a node concurrently.
+- [ ] Generate node configuration UI from schemas.
+- [ ] Define sandbox boundaries for code execution.
+- [ ] Verify that adding a node does not require workflow engine changes.
+- [ ] Implement the initial Flow nodes: Start, End, If/Else, Switch, Merge,
+      Parallel, Loop, Iterator/Map, Retry, Delay, Human Approval, and Subworkflow.
+- [ ] Implement the initial AI nodes: LLM, Structured Output, Embedding, and Reranker.
+- [ ] Implement the initial Data nodes: JSON Transform, Template, and File Parser.
+- [ ] Implement the initial Integration nodes: HTTP, OpenAPI Operation, MCP Tool,
+      and Webhook.
+
+### P4 — Dataset and Native RAG
+
+- [ ] Separate Dataset, DataSource, Document, DocumentVersion, Chunk, and IngestionRun.
+- [ ] Version document updates instead of destructively overwriting them.
+- [ ] Add ingestion statuses and configurable chunking strategies.
+- [ ] Add embedding model profiles and checksum-based ingestion deduplication.
+- [ ] Implement keyword, vector, and hybrid retrieval.
+- [ ] Add metadata filters and reranking.
+- [ ] Add reusable RetrievalProfiles.
+- [ ] Preserve the relationship from each chunk to its exact document version.
+- [ ] Add chunk-level citations.
+- [ ] Add reproducible reindex and re-embedding workflows.
+- [ ] Add retrieval evaluation datasets and tests.
+- [ ] Verify that ingestion is reproducible and auditable.
+
+### P5 — Artifacts and Multimodal Ingestion
+
+- [ ] Define the common Artifact domain model.
+- [ ] Add S3-compatible object storage.
+- [ ] Add artifact metadata, checksums, and lifecycle management.
+- [ ] Add file uploads and signed download URLs.
+- [ ] Define artifact retention and deletion policies.
+- [ ] Make workflow nodes exchange typed artifacts instead of local file paths.
+- [ ] Add image metadata extraction and OCR.
+- [ ] Add audio transcription and segmentation.
+- [ ] Add video audio extraction, transcription, keyframes, and scene segmentation.
+- [ ] Add website crawling, sanitization, and content extraction.
+- [ ] Allow workflow nodes to produce artifact outputs.
+- [ ] Make ingestion pipelines asynchronous, retryable, and resumable.
+
+### P6 — Unified Tool Platform and Security
+
+- [ ] Define common ToolDefinition, ToolOperation, and ToolExecution contracts.
+- [ ] Create a unified tool registry and native tool providers.
+- [ ] Complete OpenAPI import and operation selection.
+- [ ] Separate OpenAPI connections, credentials, operations, and node instances.
+- [ ] Add MCP connections and capability discovery.
+- [ ] Add workflow-as-tool publishing.
+- [ ] Define tool input and output schemas.
+- [ ] Add tool execution logs, health checks, permissions, and rate limits.
+- [ ] Store credentials separately from workflow definitions.
+- [ ] Encrypt secrets at rest and redact them from logs and traces.
+- [ ] Block localhost, private networks, and cloud metadata endpoints by default.
+- [ ] Validate redirect targets and support approved-host allowlists.
+- [ ] Enforce request/response size limits and connection/execution timeouts.
+
+### P7 — Observability and Automated Testing
+
+- [ ] Add a workflow run timeline with node status, duration, and retry history.
+- [ ] Add redacted input/output inspection.
+- [ ] Display model token usage and cost.
+- [ ] Display tool requests/responses and retrieved chunks, scores, and citations.
+- [ ] Add error classification and artifact previews.
+- [ ] Collect success rate, failure rate, latency, utilization, cost, and throughput metrics.
+- [ ] Add unit tests for validation, compilation, nodes, branches, joins, and retries.
+- [ ] Add PostgreSQL, Elasticsearch, Redis/BullMQ, and object-storage integration tests.
+- [ ] Add OpenAPI and MCP integration tests.
+- [ ] Add publish, run, stream, retry, cancel, resume, and RAG citation E2E tests.
+- [ ] Test API restart, worker restart, and duplicate job delivery scenarios.
+- [ ] Test provider timeout, partial branch failure, Elasticsearch outage, and Redis outage.
+
+### P8 — Production Foundation
+
+- [ ] Add Workspace, User, Membership, Role, and Permission models.
+- [ ] Add authentication and RBAC.
+- [ ] Enforce workspace isolation in every repository query.
+- [ ] Add secret management and hashed, scoped API keys.
+- [ ] Add immutable audit logs.
+- [ ] Add usage metering and model token/cost tracking.
+- [ ] Add workspace quotas and rate limits.
+- [ ] Define data retention policies.
+- [ ] Document backup and restore procedures.
+- [ ] Define environment promotion, deployment, and rollback procedures.
+- [ ] Require explicit authorization for sensitive and destructive actions.
+
+### Portfolio Release Gate
+
+- [ ] A new developer can reproduce the local environment from the documentation.
+- [ ] Product, architecture, operations, and demo documentation are complete.
+- [ ] Workflow versions are immutable.
+- [ ] Execution is durable, asynchronous, retryable, cancellable, and resumable.
+- [ ] Nodes are typed, versioned, testable, and extensible.
+- [ ] Hybrid RAG includes citations and retrieval evaluation.
+- [ ] At least one OpenAPI integration is production-ready.
+- [ ] At least one MCP integration is production-ready.
+- [ ] At least one multimodal ingestion flow is production-ready.
+- [ ] Execution traces expose latency, retries, tokens, and cost.
+- [ ] All three demo workflows have been rehearsed end to end.
+- [ ] CI, core E2E tests, and reliability tests pass.
+
+The first implementation milestone should contain P0, P1, and P2. Later phases
+should not expand until workflow contracts, publishing, and durable execution meet
+their success criteria.
